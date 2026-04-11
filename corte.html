@@ -22,25 +22,32 @@
   <!-- NAVBAR -->
   <nav class="navbar-obs" role="navigation" aria-label="Navegação principal">
     <div class="container">
-      <div class="d-flex align-items-center justify-content-between w-100 flex-wrap gap-2">
-        <a class="navbar-brand" href="index.html" aria-label="Voltar à página inicial">
+      <div class="d-flex align-items-center justify-content-between w-100">
+        <a class="navbar-brand" href="index.html" aria-label="Projeto Cerrado — página inicial">
           <span class="brand-icon" aria-hidden="true">🌿</span>
-          <span class="d-none d-sm-inline">Projeto Cerrado · Goiás</span>
-          <span class="d-sm-none">Obs. Agropecuário</span>
+          <span>Projeto Cerrado · Goiás</span>
         </a>
-        <div class="d-flex align-items-center gap-2">
-          <ul class="desktop-nav nav d-none d-lg-flex" role="list">
-            <li><a class="nav-link" href="index.html">Início</a></li>
-            <li><a class="nav-link" href="leite.html">Leite</a></li>
-            <li><a class="nav-link active-page" href="corte.html">Corte</a></li>
-            <li><a class="nav-link" href="florestas.html">Florestas</a></li>
-          </ul>
-          <a class="back-link" href="index.html" aria-label="Voltar para a página inicial">← Início</a>
-        </div>
+        <ul class="desktop-nav nav d-none d-md-flex" role="list">
+          <li><a class="nav-link" href="index.html">Início</a></li>
+          <li><a class="nav-link" href="leite.html">Pecuária de Leite</a></li>
+          <li><a class="nav-link active-page" href="corte.html">Pecuária de Corte</a></li>
+          <li><a class="nav-link" href="florestas.html">Florestas Plantadas</a></li>
+        </ul>
+        <button class="navbar-toggler d-md-none border-0 bg-transparent" type="button" data-bs-toggle="collapse"
+          data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false" aria-label="Abrir menu">
+          <span style="color:#fff;font-size:1.4rem;">&#9776;</span>
+        </button>
+      </div>
+      <div class="collapse d-md-none" id="mobileNav">
+        <ul class="nav flex-column py-2" role="list">
+          <li><a class="nav-link" href="index.html">Início</a></li>
+          <li><a class="nav-link" href="leite.html">Pecuária de Leite</a></li>
+          <li><a class="nav-link active-page" href="corte.html">Pecuária de Corte</a></li>
+          <li><a class="nav-link" href="florestas.html">Florestas Plantadas</a></li>
+        </ul>
       </div>
     </div>
   </nav>
-
   <!-- HERO -->
   <header class="page-hero page-hero--corte" role="banner">
     <div class="container position-relative">
