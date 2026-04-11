@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Projeto Cerrado de Goiás — dados e indicadores sobre pecuária e florestas no Cerrado." />
+  <title>Projeto Cerrado · Goiás</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,600;1,8..60,300&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="index.css" />
+</head>
+
+<body>
+
+  <a class="skip-link" href="#main-content">Ir para o conteúdo principal</a>
+
+  <!-- ── NAVBAR ───────────────────────────────────────────── -->
+  <nav class="navbar-obs" role="navigation" aria-label="Navegação principal">
+    <div class="container">
+      <div class="d-flex align-items-center justify-content-between w-100">
+        <a class="navbar-brand" href="index.html" aria-label="Projeto Cerrado — página inicial">
+          <span class="brand-icon" aria-hidden="true">🌿</span>
+          <span>Projeto Cerrado · Goiás</span>
+        </a>
+        <ul class="desktop-nav nav d-none d-md-flex" role="list">
+          <li><a class="nav-link active-page" href="index.html">Início</a></li>
+          <li><a class="nav-link" href="leite.html">Pecuária de Leite</a></li>
+          <li><a class="nav-link" href="corte.html">Pecuária de Corte</a></li>
+          <li><a class="nav-link" href="florestas.html">Florestas Plantadas</a></li>
+        </ul>
+        <button class="navbar-toggler d-md-none border-0 bg-transparent" type="button" data-bs-toggle="collapse"
+          data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false" aria-label="Abrir menu">
+          <span style="color:#fff;font-size:1.4rem;">&#9776;</span>
+        </button>
+      </div>
+      <div class="collapse d-md-none" id="mobileNav">
+        <ul class="nav flex-column py-2" role="list">
+          <li><a class="nav-link active-page" href="index.html">Início</a></li>
+          <li><a class="nav-link" href="leite.html">Pecuária de Leite</a></li>
+          <li><a class="nav-link" href="corte.html">Pecuária de Corte</a></li>
+          <li><a class="nav-link" href="florestas.html">Florestas Plantadas</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── HOME HERO ─────────────────────────────────────────── -->
+  <header class="home-hero" role="banner">
+    <div class="container position-relative">
+      <span class="home-hero__eyebrow">Cerrado Goiano · 2012–2023</span>
+      <h1>Dados &amp; Indicadores<br>Agropecuários de Goiás</h1>
+      <p>Monitoramento contínuo das principais cadeias produtivas do Cerrado — pecuária de leite, pecuária de corte e
+        florestas plantadas (heveicultura).</p>
+      <div class="home-hero__stats" aria-label="Estatísticas de destaque">
+        <div class="hero-stat">
+          <div class="hero-stat__val">35,3 bi</div>
+          <div class="hero-stat__lbl">Litros de leite — Brasil 2021</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat__val">224,6 mi</div>
+          <div class="hero-stat__lbl">Cabeças bovinas — Brasil 2021</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat__val">59,4 mil t</div>
+          <div class="hero-stat__lbl">Borracha natural — CO 2021</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat__val">3 cadeias</div>
+          <div class="hero-stat__lbl">Monitoradas neste observatório</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── MAIN ──────────────────────────────────────────────── -->
+  <main id="main-content">
+
+    <section class="tema-section" aria-labelledby="temas-title">
+      <div class="container">
+        <p class="tema-section__title">Temas Monitorados</p>
+        <h2 id="temas-title">Selecione uma cadeia produtiva</h2>
+        <p class="tema-section__sub">Cada painel apresenta indicadores de produção, área, produtividade, preços e
+          projeções com filtros interativos.</p>
+
+        <div class="row g-4">
+
+          <!-- LEITE -->
+          <div class="col-md-4 fade-up">
+            <a class="tema-card" href="leite.html" aria-label="Acessar painel de Pecuária de Leite">
+              <div class="tema-card__cover tema-card__cover--leite">
+                <span class="tema-card__badge">Pecuária</span>
+                <span class="tema-card__title-cover">Pecuária de Leite</span>
+                <span class="tema-card__icon" aria-hidden="true">🐄</span>
+              </div>
+              <div class="tema-card__body">
+                <p class="tema-card__desc">Produção, produtividade e rebanho leiteiro em Goiás, mesorregiões e
+                  municípios destaque — série 2013–2021.</p>
+                <div class="tema-card__kpis">
+                  <div class="tema-kpi-item">
+                    <div class="tema-kpi-val">3,1 bi L</div>
+                    <div class="tema-kpi-lbl">Goiás 2021</div>
+                  </div>
+                  <div class="tema-kpi-item">
+                    <div class="tema-kpi-val">3º</div>
+                    <div class="tema-kpi-lbl">Maior produtor</div>
+                  </div>
+                  <div class="tema-kpi-item">
+                    <div class="tema-kpi-val">79%</div>
+                    <div class="tema-kpi-lbl">Do Centro-Oeste</div>
+                  </div>
+                </div>
+                <span class="tema-card__cta tema-card__cta--leite">Ver painel completo →</span>
+              </div>
+            </a>
+          </div>
+
+          <!-- CORTE -->
+          <div class="col-md-4 fade-up">
+            <a class="tema-card" href="corte.html" aria-label="Acessar painel de Pecuária de Corte">
+              <div class="tema-card__cover tema-card__cover--corte">
+                <span class="tema-card__badge">Pecuária</span>
+                <span class="tema-card__title-cover">Pecuária de Corte</span>
+                <span class="tema-card__icon" aria-hidden="true">🥩</span>
+              </div>
+              <div class="tema-card__body">
+                <p class="tema-card__desc">Rebanho bovino, abate, preços e produção mundial de carne bovina — do
+                  Centro-Oeste ao mercado global.</p>
+                <div class="tema-card__kpis">
+                  <div class="tema-kpi-item">
+                    <div class="tema-kpi-val">24,3 mi</div>
+                    <div class="tema-kpi-lbl">Cabeças GO 2021</div>
+                  </div>
+                  <div class="tema-kpi-item">
+                    <div class="tema-kpi-val">R$ 305</div>
+                    <div class="tema-kpi-lbl">/@ boi gordo 2021</div>
+                  </div>
+                  <div class="tema-kpi-item">
+                    <div class="tema-kpi-val">2º</div>
+                    <div class="tema-kpi-lbl">Exportador mundial</div>
+                  </div>
+                </div>
+                <span class="tema-card__cta tema-card__cta--corte">Ver painel completo →</span>
+              </div>
+            </a>
+          </div>
+
+          <!-- FLORESTAS -->
+          <div class="col-md-4 fade-up">
+            <a class="tema-card" href="florestas.html" aria-label="Acessar painel de Florestas Plantadas">
+              <div class="tema-card__cover tema-card__cover--floresta">
+                <span class="tema-card__badge">Florestas</span>
+                <span class="tema-card__title-cover">Florestas Plantadas</span>
+                <span class="tema-card__icon" aria-hidden="true">🌳</span>
+              </div>
+              <div class="tema-card__body">
+                <p class="tema-card__desc">Heveicultura (borracha natural) no Centro-Oeste: produção, área,
+                  produtividade, custos e posição mundial do Brasil.</p>
+                <div class="tema-card__kpis">
+                  <div class="tema-kpi-item">
+                    <div class="tema-kpi-val">59,4 mil t</div>
+                    <div class="tema-kpi-lbl">CO 2021</div>
+                  </div>
+                  <div class="tema-kpi-item">
+                    <div class="tema-kpi-val">R$ 196 mi</div>
+                    <div class="tema-kpi-lbl">Receita CO 2021</div>
+                  </div>
+                  <div class="tema-kpi-item">
+                    <div class="tema-kpi-val">7º</div>
+                    <div class="tema-kpi-lbl">Brasil no mundo</div>
+                  </div>
+                </div>
+                <span class="tema-card__cta tema-card__cta--floresta">Ver painel completo →</span>
+              </div>
+            </a>
+          </div>
+
+        </div><!-- /row -->
+      </div>
+    </section>
+
+    <!-- ABOUT STRIP -->
+    <section class="about-strip" aria-label="Sobre o Observatório">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-md-4">
+            <h3>Sobre o Observatório</h3>
+            <p>Painel de indicadores agropecuários do Cerrado goiano, com dados sistematizados de pesquisas oficiais do
+              IBGE, MAPA e OECD-FAO.</p>
+          </div>
+          <div class="col-md-1 d-none d-md-flex justify-content-center">
+            <div class="about-strip__divider"></div>
+          </div>
+          <div class="col-md-3">
+            <h3>Fontes de Dados</h3>
+            <p>IBGE (PPM, PTA, Censo Agropecuário), MAPA (Projeções do Agronegócio), OECD-FAO Agricultural Outlook
+              2022–2031.</p>
+          </div>
+          <div class="col-md-1 d-none d-md-flex justify-content-center">
+            <div class="about-strip__divider"></div>
+          </div>
+          <div class="col-md-3">
+            <h3>Período Coberto</h3>
+            <p>Séries históricas de 2001 a 2023, com projeções até 2031/2032 para as principais cadeias produtivas.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="row g-3">
+        <div class="col-lg-5">
+          <div class="footer__title">Projeto Cerrado · Goiás</div>
+          <p>Monitoramento de cadeias produtivas do Cerrado. Dados baseados em pesquisas oficiais.</p>
+        </div>
+        <div class="col-lg-4">
+          <div class="footer__title">Cadeias Monitoradas</div>
+          <p><a href="leite.html" style="color:rgba(255,255,255,.6)">Pecuária de Leite</a><br>
+            <a href="corte.html" style="color:rgba(255,255,255,.6)">Pecuária de Corte</a><br>
+            <a href="florestas.html" style="color:rgba(255,255,255,.6)">Florestas Plantadas (Borracha)</a>
+          </p>
+        </div>
+        <div class="col-lg-3">
+          <div class="footer__title">Acessibilidade</div>
+          <p>Site desenvolvido seguindo as diretrizes WCAG 2.1 AA. Navegação por teclado disponível.</p>
+        </div>
+      </div>
+      <div class="footer__bottom d-flex flex-wrap justify-content-between gap-2">
+        <span>© 2024 Projeto Cerrado · Goiás. Dados: IBGE / MAPA / OECD.</span>
+        <span>Bootstrap 5 · amCharts 5</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="shared.js"></script>
+</body>
+
+</html>

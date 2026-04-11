@@ -1,0 +1,300 @@
+    /* ── HOME HERO ─────────────────────────────────────── */
+    .home-hero {
+        background: linear-gradient(135deg, var(--verde) 0%, #1e4a1a 55%, var(--dourado) 100%);
+        color: #fff;
+        padding: 5rem 0 4rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .home-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 75% 25%, rgba(200, 148, 58, .2) 0%, transparent 50%),
+            radial-gradient(circle at 15% 75%, rgba(74, 124, 63, .25) 0%, transparent 50%);
+    }
+
+    .home-hero__eyebrow {
+        font-family: var(--font-d);
+        font-size: .7rem;
+        font-weight: 600;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        background: rgba(255, 255, 255, .15);
+        display: inline-block;
+        padding: .3rem .9rem;
+        border-radius: 20px;
+        margin-bottom: 1rem;
+    }
+
+    .home-hero h1 {
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 700;
+        line-height: 1.15;
+        margin-bottom: .75rem;
+    }
+
+    .home-hero p {
+        font-size: 1.05rem;
+        opacity: .88;
+        max-width: 560px;
+        font-weight: 300;
+    }
+
+    .home-hero__stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        margin-top: 2.5rem;
+    }
+
+    .hero-stat {
+        border-left: 3px solid rgba(255, 255, 255, .3);
+        padding-left: 1rem;
+    }
+
+    .hero-stat__val {
+        font-family: var(--font-d);
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .hero-stat__lbl {
+        font-family: var(--font-d);
+        font-size: .7rem;
+        opacity: .7;
+        margin-top: .1rem;
+    }
+
+    /* ── TEMA CARDS ─────────────────────────────────────── */
+    .tema-section {
+        padding: 3.5rem 0;
+    }
+
+    .tema-section__title {
+        font-family: var(--font-d);
+        font-size: .68rem;
+        font-weight: 600;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--dourado);
+        margin-bottom: .3rem;
+    }
+
+    .tema-section h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: .4rem;
+    }
+
+    .tema-section__sub {
+        font-size: .9rem;
+        color: var(--cinza-med);
+        max-width: 540px;
+        margin-bottom: 2.5rem;
+    }
+
+    .tema-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        transition: box-shadow .25s, transform .25s;
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        height: 100%;
+    }
+
+    .tema-card:hover {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, .13);
+        transform: translateY(-4px);
+        color: inherit;
+    }
+
+    .tema-card__cover {
+        height: 180px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .tema-card__cover--leite {
+        background: linear-gradient(135deg, #4a7c3f, #2d5c24);
+    }
+
+    .tema-card__cover--corte {
+        background: linear-gradient(135deg, #8b3a1a, #6b2a10);
+    }
+
+    .tema-card__cover--floresta {
+        background: linear-gradient(135deg, #2d5c24, #1a3a18);
+    }
+
+    .tema-card__icon {
+        font-size: 4rem;
+        opacity: .45;
+        position: absolute;
+        right: 1.5rem;
+        bottom: .5rem;
+        line-height: 1;
+        user-select: none;
+    }
+
+    .tema-card__badge {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        font-family: var(--font-d);
+        font-size: .65rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        background: rgba(255, 255, 255, .2);
+        color: #fff;
+        padding: .25rem .7rem;
+        border-radius: 20px;
+    }
+
+    .tema-card__title-cover {
+        font-family: var(--font-d);
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #fff;
+        z-index: 1;
+        text-align: center;
+        padding: 0 1.5rem;
+    }
+
+    .tema-card__body {
+        padding: 1.5rem 1.5rem 1.8rem;
+    }
+
+    .tema-card__desc {
+        font-size: .85rem;
+        color: var(--cinza-med);
+        line-height: 1.6;
+        margin-bottom: 1.2rem;
+    }
+
+    .tema-card__kpis {
+        display: flex;
+        gap: 1.2rem;
+        margin-bottom: 1.4rem;
+    }
+
+    .tema-kpi-item {
+        flex: 1;
+    }
+
+    .tema-kpi-val {
+        font-family: var(--font-d);
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--cinza-esc);
+    }
+
+    .tema-kpi-lbl {
+        font-family: var(--font-d);
+        font-size: .62rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: var(--cinza-med);
+    }
+
+    .tema-card__cta {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        font-family: var(--font-d);
+        font-size: .78rem;
+        font-weight: 600;
+        padding: .5rem 1.1rem;
+        border-radius: 8px;
+        border: 2px solid;
+        transition: all .18s;
+    }
+
+    .tema-card__cta--leite {
+        color: var(--verde);
+        border-color: var(--verde);
+    }
+
+    .tema-card__cta--corte {
+        color: var(--terra);
+        border-color: var(--terra);
+    }
+
+    .tema-card__cta--floresta {
+        color: #2d5c24;
+        border-color: #2d5c24;
+    }
+
+    .tema-card:hover .tema-card__cta--leite {
+        background: var(--verde);
+        color: #fff;
+    }
+
+    .tema-card:hover .tema-card__cta--corte {
+        background: var(--terra);
+        color: #fff;
+    }
+
+    .tema-card:hover .tema-card__cta--floresta {
+        background: #2d5c24;
+        color: #fff;
+    }
+
+    /* ── ABOUT STRIP ────────────────────────────────────── */
+    .about-strip {
+        background: var(--cinza-esc);
+        color: rgba(255, 255, 255, .75);
+        padding: 2.5rem 0;
+    }
+
+    .about-strip h3 {
+        font-family: var(--font-d);
+        font-size: 1rem;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: .5rem;
+    }
+
+    .about-strip p {
+        font-size: .82rem;
+        line-height: 1.7;
+    }
+
+    .about-strip__divider {
+        width: 1px;
+        background: rgba(255, 255, 255, .12);
+    }
+
+
+    @media (max-width: 767px) {
+        .home-hero {
+            padding: 3rem 0 2.5rem;
+        }
+
+        .home-hero h1 {
+            font-size: 2rem;
+        }
+
+        .hero-stat {
+            border-left: none;
+            border-top: 2px solid rgba(255, 255, 255, .25);
+            padding: .75rem 0 0;
+        }
+
+        .home-hero__stats {
+            gap: 1rem;
+        }
+
+        .about-strip__divider {
+            display: none;
+        }
+    }
