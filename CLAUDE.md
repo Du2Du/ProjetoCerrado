@@ -340,4 +340,4 @@ window.onFilterChange = function(filterId) {
 
 ---
 
-*Gerado em abril de 2024 · Projeto: Projeto Cerrado · Goiás*
+*Gerado em abril de 2026 · Projeto: Projeto Cerrado · Goiás*
