@@ -53,9 +53,8 @@
     <div class="container position-relative">
       <span class="page-hero__label">Eucalipto</span>
       <h1>Floresta Plantada do Eucalipto</h1>
-      <p>Produção, área, produtividade e custos da heveicultura no Centro-Oeste — posição do Brasil no mercado mundial
-        de borracha.</p>
-      <p class="page-hero__meta">Fonte: IBGE (LSPA) · MAPA · 2012–2021</p>
+      <p>Área plantada, produção madeireira, consumo industrial e produtividade do eucalipto no Centro-Oeste.</p>
+      <p class="page-hero__meta">Fonte: IBGE (Tabelas 5930 e 291) · IBÁ / FGV IBRE · 2012–2021</p>
     </div>
   </header>
 
@@ -94,168 +93,109 @@
         <div data-tab-content="fl-co" class="active" role="tabpanel" id="fl-co" aria-labelledby="btn-fl-co">
           <div class="row mb-2">
             <div class="col-12">
-              <p class="section-label">Heveicultura</p>
-              <h2 class="section-title">Borracha Natural no Centro-Oeste</h2>
+              <p class="section-label">Eucalipto</p>
+              <h2 class="section-title">Floresta de Eucalipto no Centro-Oeste</h2>
               <div class="section-divider"></div>
             </div>
           </div>
           <div class="row g-3 mb-4">
             <div class="col-6 col-md-3 fade-up">
               <div class="kpi-card">
-                <div class="kpi-label">Produção CO 2021</div>
-                <div class="kpi-value">59,4<span class="kpi-unit">mil t</span></div><span
-                  class="kpi-badge kpi-badge--up">▲ pico histórico</span>
+                <div class="kpi-label">Área plantada CO (2021)</div>
+                <div class="kpi-value">1.385<span class="kpi-unit">mil ha</span></div><span
+                  class="kpi-badge kpi-badge--up">▲ +40,1% desde 2013</span>
               </div>
             </div>
             <div class="col-6 col-md-3 fade-up">
               <div class="kpi-card kpi-card--gold">
-                <div class="kpi-label">Receita CO 2021</div>
-                <div class="kpi-value">R$ 196<span class="kpi-unit">mi</span></div><span
-                  class="kpi-badge kpi-badge--up">▲ maior valor</span>
+                <div class="kpi-label">MS: maior produtor CO</div>
+                <div class="kpi-value">75,5<span class="kpi-unit">%</span></div><span
+                  class="kpi-badge kpi-badge--neutral">da área plantada CO</span>
               </div>
             </div>
             <div class="col-6 col-md-3 fade-up">
               <div class="kpi-card kpi-card--terra">
-                <div class="kpi-label">Área Colhida 2021</div>
-                <div class="kpi-value">33,5<span class="kpi-unit">mil ha</span></div><span
-                  class="kpi-badge kpi-badge--up">▲ expansão</span>
+                <div class="kpi-label">Madeira papel/celulose</div>
+                <div class="kpi-value">13,1<span class="kpi-unit">mi m³</span></div><span
+                  class="kpi-badge kpi-badge--up">▲ 2021 — Tabela 291</span>
               </div>
             </div>
             <div class="col-6 col-md-3 fade-up">
               <div class="kpi-card kpi-card--light">
-                <div class="kpi-label">Produtividade 2021</div>
-                <div class="kpi-value">1.771<span class="kpi-unit">kg/ha</span></div><span
-                  class="kpi-badge kpi-badge--neutral">kg/hectare</span>
+                <div class="kpi-label">Produtividade Brasil (2021)</div>
+                <div class="kpi-value">38,9<span class="kpi-unit">m³/ha/ano</span></div><span
+                  class="kpi-badge kpi-badge--neutral">IBÁ / FGV IBRE</span>
               </div>
             </div>
           </div>
           <div class="row g-4">
-            <div class="col-lg-8" data-category="producao">
+            <div class="col-lg-8" data-category="area">
               <div class="chart-card" role="figure"
-                aria-label="Gráfico: Produção e produtividade da borracha no Centro-Oeste — 2012–2021">
-                <div class="chart-card__title">Produção &amp; Produtividade — Centro-Oeste</div>
-                <div class="chart-card__sub">Toneladas e kg/hectare (2012–2021)</div>
-                <div id="chartBorrachaProd" class="chart-area chart-area--tall" aria-hidden="true"></div>
+                aria-label="Gráfico: Área plantada de eucalipto no Centro-Oeste por estado — 2013–2021">
+                <div class="chart-card__title">Área Plantada CO por Estado — IBGE Tabela 5930</div>
+                <div class="chart-card__sub">Hectares (2013–2021)</div>
+                <div id="chartEucaliptoArea" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
-            <div class="col-lg-4" data-category="area">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Área plantada vs colhida — 2012–2021">
-                <div class="chart-card__title">Área Plantada vs Colhida</div>
-                <div class="chart-card__sub">Hectares (2012–2021)</div>
-                <div id="chartBorrachaArea" class="chart-area chart-area--tall" aria-hidden="true"></div>
+            <div class="col-lg-4" data-category="producao">
+              <div class="chart-card" role="figure"
+                aria-label="Gráfico: Produtividade do eucalipto no Brasil — 2014–2021">
+                <div class="chart-card__title">Produtividade do Eucalipto — Brasil</div>
+                <div class="chart-card__sub">m³/ha/ano (2014–2021) — IBÁ / FGV IBRE</div>
+                <div id="chartEucaliptoProdut" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
           </div>
           <div class="row g-4">
-            <div class="col-lg-6" data-category="custo">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Custo de produção por hectare — 2012–2021">
-                <div class="chart-card__title">Custo de Produção por Hectare</div>
-                <div class="chart-card__sub">R$ / hectare (2012–2021)</div>
-                <div id="chartBorrachaCusto" class="chart-area" aria-hidden="true"></div>
+            <div class="col-lg-6" data-category="producao">
+              <div class="chart-card" role="figure"
+                aria-label="Gráfico: Consumo industrial de eucalipto no Brasil — 2013–2021">
+                <div class="chart-card__title">Consumo Industrial Brasil</div>
+                <div class="chart-card__sub">Milhões de m³ (2013–2021) — IBÁ</div>
+                <div id="chartEucaliptoConsumo" class="chart-area" aria-hidden="true"></div>
               </div>
             </div>
             <div class="col-lg-6">
               <div class="table-card">
                 <div class="table-card__head">
-                  <div class="chart-card__title">Série Histórica — Centro-Oeste</div>
-                  <div class="chart-card__sub">Principais indicadores da heveicultura</div>
+                  <div class="chart-card__title">Produção CO por Produto — Tabela 291</div>
+                  <div class="chart-card__sub">IBGE — Silvicultura (2012–2021)</div>
                 </div>
                 <div class="table-responsive">
-                  <table class="table table-obs" aria-label="Indicadores da borracha natural no Centro-Oeste">
+                  <table class="table table-obs" aria-label="Produção de eucalipto no Centro-Oeste por produto — 2012–2021">
                     <thead>
                       <tr>
                         <th scope="col">Ano</th>
-                        <th scope="col" class="text-end">Produção (t)</th>
-                        <th scope="col" class="text-end">kg/ha</th>
-                        <th scope="col" class="text-end">R$/kg</th>
-                        <th scope="col" class="text-end">Receita (mi R$)</th>
+                        <th scope="col" class="text-end">Mad. celulose (m³)</th>
+                        <th scope="col" class="text-end">Lenha (m³)</th>
+                        <th scope="col" class="text-end">Carvão (t)</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td>2012</td>
-                        <td class="text-end num">42.384</td>
-                        <td class="text-end num">1.484</td>
-                        <td class="text-end num">2,52</td>
-                        <td class="text-end num">126,3</td>
-                      </tr>
-                      <tr>
-                        <td>2013</td>
-                        <td class="text-end num">45.038</td>
-                        <td class="text-end num">1.668</td>
-                        <td class="text-end num">2,24</td>
-                        <td class="text-end num">113,3</td>
-                      </tr>
-                      <tr>
-                        <td>2014</td>
-                        <td class="text-end num">45.186</td>
-                        <td class="text-end num">1.617</td>
-                        <td class="text-end num">2,93</td>
-                        <td class="text-end num">120,9</td>
-                      </tr>
-                      <tr>
-                        <td>2015</td>
-                        <td class="text-end num">43.497</td>
-                        <td class="text-end num">1.692</td>
-                        <td class="text-end num">3,10</td>
-                        <td class="text-end num">88,9</td>
-                      </tr>
-                      <tr>
-                        <td>2016</td>
-                        <td class="text-end num">46.725</td>
-                        <td class="text-end num">1.689</td>
-                        <td class="text-end num">3,30</td>
-                        <td class="text-end num">107,2</td>
-                      </tr>
-                      <tr>
-                        <td>2017</td>
-                        <td class="text-end num">53.215</td>
-                        <td class="text-end num">1.712</td>
-                        <td class="text-end num">3,20</td>
-                        <td class="text-end num">136,1</td>
-                      </tr>
-                      <tr>
-                        <td>2018</td>
-                        <td class="text-end num">44.023</td>
-                        <td class="text-end num">1.581</td>
-                        <td class="text-end num">3,15</td>
-                        <td class="text-end num">93,2</td>
-                      </tr>
-                      <tr>
-                        <td>2019</td>
-                        <td class="text-end num">52.379</td>
-                        <td class="text-end num">1.778</td>
-                        <td class="text-end num">3,40</td>
-                        <td class="text-end num">117,6</td>
-                      </tr>
-                      <tr>
-                        <td>2020</td>
-                        <td class="text-end num">55.012</td>
-                        <td class="text-end num">1.849</td>
-                        <td class="text-end num">3,54</td>
-                        <td class="text-end num">130,5</td>
-                      </tr>
-                      <tr>
-                        <td><strong>2021</strong></td>
-                        <td class="text-end num"><strong>59.404</strong></td>
-                        <td class="text-end num"><strong>1.771</strong></td>
-                        <td class="text-end num"><strong>3,89</strong></td>
-                        <td class="text-end num"><strong>196,2</strong></td>
-                      </tr>
+                      <tr><td>2012</td><td class="text-end num">4.968.944</td><td class="text-end num">4.065.556</td><td class="text-end num">93.462</td></tr>
+                      <tr><td>2013</td><td class="text-end num">8.033.052</td><td class="text-end num">6.230.147</td><td class="text-end num">145.073</td></tr>
+                      <tr><td>2014</td><td class="text-end num">8.293.047</td><td class="text-end num">6.472.880</td><td class="text-end num">139.192</td></tr>
+                      <tr><td>2015</td><td class="text-end num">9.419.761</td><td class="text-end num">5.358.997</td><td class="text-end num">70.908</td></tr>
+                      <tr><td>2016</td><td class="text-end num">9.958.927</td><td class="text-end num">4.994.371</td><td class="text-end num">52.945</td></tr>
+                      <tr><td>2017</td><td class="text-end num">12.860.798</td><td class="text-end num">4.910.293</td><td class="text-end num">65.997</td></tr>
+                      <tr><td>2018</td><td class="text-end num">17.511.680</td><td class="text-end num">4.795.454</td><td class="text-end num">134.453</td></tr>
+                      <tr><td>2019</td><td class="text-end num">14.602.994</td><td class="text-end num">5.369.619</td><td class="text-end num">169.969</td></tr>
+                      <tr><td>2020</td><td class="text-end num">14.661.653</td><td class="text-end num">5.883.302</td><td class="text-end num">187.119</td></tr>
+                      <tr><td><strong>2021</strong></td><td class="text-end num"><strong>13.144.044</strong></td><td class="text-end num"><strong>5.998.155</strong></td><td class="text-end num"><strong>179.191</strong></td></tr>
                     </tbody>
                   </table>
                 </div>
               </div>
             </div>
           </div>
-          <!-- Custo receita comparativo -->
+          <!-- Produção CO por produto -->
           <div class="row g-4">
             <div class="col-12" data-category="producao">
               <div class="chart-card" role="figure"
-                aria-label="Gráfico: Receita total da heveicultura no Centro-Oeste — 2012–2021">
-                <div class="chart-card__title">Receita Total da Heveicultura — Centro-Oeste</div>
-                <div class="chart-card__sub">Milhões de R$ (2012–2021)</div>
-                <div id="chartReceita" class="chart-area" aria-hidden="true"></div>
+                aria-label="Gráfico: Produção de eucalipto no Centro-Oeste por produto — Tabela 291 IBGE">
+                <div class="chart-card__title">Produção CO por Produto — Tabela 291 (IBGE)</div>
+                <div class="chart-card__sub">Madeira para papel/celulose e lenha, metros cúbicos (2012–2021)</div>
+                <div id="chartEucaliptoProducao" class="chart-area" aria-hidden="true"></div>
               </div>
             </div>
           </div>
@@ -389,9 +329,9 @@
                   brasiliensis</em>, possui grande potencial de expansão, especialmente nas regiões de Cerrado, que
                 oferecem condições climáticas favoráveis para a heveicultura.</div>
               <div class="chart-card" role="figure"
-                aria-label="Gráfico: Evolução do custo de produção vs custo por kg no Centro-Oeste">
-                <div class="chart-card__title">Custo/ha vs Custo/kg — CO</div>
-                <div class="chart-card__sub">Evolução comparada (2012–2021)</div>
+                aria-label="Gráfico: Área plantada de eucalipto — Centro-Oeste vs Brasil — 2012–2021">
+                <div class="chart-card__title">Área Plantada CO vs Brasil — IBÁ</div>
+                <div class="chart-card__sub">Hectares (2012–2021) — IBÁ / FGV IBRE e CANOPY</div>
                 <div id="chartCustoComp" class="chart-area" aria-hidden="true"></div>
               </div>
             </div>

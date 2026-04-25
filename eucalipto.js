@@ -2,45 +2,48 @@ const P = ["#2d5c24", "#c8943a", "#a0622b", "#4a7c3f", "#6fa65e", "#e8a84c", "#7
 function ax(a) { a.get("renderer").labels.template.setAll({ fontSize: 11, fontFamily: "'Sora',sans-serif", fill: am5.color("#5a5a5a") }); }
 function leg(chart, root) { const l = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 8 })); l.labels.template.setAll({ fontSize: 11, fontFamily: "'Sora',sans-serif" }); return l; }
 
-const anos = ["2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021"];
-const prod = [42384, 45038, 45186, 43497, 46725, 53215, 44023, 52379, 55012, 59404];
-const produt = [1484, 1668, 1617, 1692, 1689, 1712, 1581, 1778, 1849, 1771];
-const plantada = [28565, 27006, 46151, 35103, 36417, 35236, 27946, 36618, 30777, 33644];
-const colhida = [28565, 27006, 27945, 25707, 27670, 31082, 27843, 29455, 29747, 33541];
-const custo_ha = [3151, 3308, 3693, 3905, 4118, 7942, 7736, 8388, 8834, 8874];
-const custo_kg = [2.52, 2.24, 2.93, 3.10, 3.30, 3.20, 3.15, 3.40, 3.54, 3.89];
-const receita = [126.3, 113.3, 120.9, 88.9, 107.2, 136.1, 93.2, 117.6, 130.5, 196.2];
+// IBGE Tabela 5930 — Área plantada CO por estado (ha)
+const anosArea = ["2013","2015","2016","2017","2018","2019","2020","2021"];
+const areaMS = [651088,921404,993807,1117740,1117935,1124969,1135543,1045765];
+const areaMT = [202490,213838,191995,189297,187947,218563,214903,218883];
+const areaGO = [133018,133907,164830,167755,168610,159943,128798,119300];
+const areaDF = [2585,2809,2700,3492,3200,3000,1450,1500];
 
-// ── PRODUÇÃO DUAL AXIS ──
-(function () {
-    const root = am5.Root.new("chartBorrachaProd"); root.setThemes([am5themes_Animated.new(root)]);
-    const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
-    const xA = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 40 }), tooltip: am5.Tooltip.new(root, {}) }));
-    const yA = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
-    const yA2 = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, { opposite: true }) }));
-    ax(xA); ax(yA); ax(yA2);
-    const data = anos.map((a, i) => ({ ano: a, prod: prod[i], produt: produt[i] }));
-    xA.data.setAll(data);
-    const col = chart.series.push(am5xy.ColumnSeries.new(root, { name: "Produção (t)", xAxis: xA, yAxis: yA, valueYField: "prod", categoryXField: "ano", fill: am5.color(P[0]), stroke: am5.color(P[0]), tooltip: am5.Tooltip.new(root, { labelText: "Produção: {valueY} t" }) }));
-    col.columns.template.setAll({ cornerRadiusTL: 3, cornerRadiusTR: 3, width: am5.percent(60) }); col.data.setAll(data);
-    const line = chart.series.push(am5xy.LineSeries.new(root, { name: "Produtividade (kg/ha)", xAxis: xA, yAxis: yA2, valueYField: "produt", categoryXField: "ano", stroke: am5.color(P[1]), fill: am5.color(P[1]), tooltip: am5.Tooltip.new(root, { labelText: "Produtividade: {valueY} kg/ha" }) }));
-    line.strokes.template.setAll({ strokeWidth: 2.5 });
-    line.bullets.push(() => am5.Bullet.new(root, { sprite: am5.Circle.new(root, { radius: 4, fill: line.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2 }) }));
-    line.data.setAll(data);
-    leg(chart, root).data.setAll(chart.series.values); chart.appear(1000, 100);
-})();
+// IBÁ / FGV IBRE — Produtividade Brasil (m³/ha/ano)
+const anosProdut = ["2014","2015","2016","2017","2018","2019","2020","2021"];
+const produtBR = [35.8,35.8,35.7,35.3,36.0,38.6,36.8,38.9];
 
-// ── ÁREA ──
+// IBÁ — Consumo industrial Brasil (milhões de m³)
+const anosConsumo = ["2013","2014","2015","2016","2017","2018","2019","2020","2021"];
+const consumoBR = [138.2,143.2,151.2,154.0,154.8,138.2,166.0,164.2,173.9];
+
+// IBGE Tabela 291 — Produção CO por produto
+const anosT291 = ["2012","2013","2014","2015","2016","2017","2018","2019","2020","2021"];
+const madCelulose = [4968944,8033052,8293047,9419761,9958927,12860798,17511680,14602994,14661653,13144044];
+const lenha       = [4065556,6230147,6472880,5358997,4994371,4910293,4795454,5369619,5883302,5998155];
+const carvao      = [93462,145073,139192,70908,52945,65997,134453,169969,187119,179191];
+
+// IBÁ — Área plantada CO e Brasil (ha)
+const anosIBA    = ["2012","2013","2014","2015","2016","2017","2018","2019","2020","2021"];
+const areaIBA_CO = [887505,1007593,1115086,1138451,1190215,1210450,1408953,1460518,1304950,1332560];
+const areaIBA_BR = [5304163,5473176,5558653,5630607,5673784,5687209,6785387,7568074,7407257,7528148];
+
+// ── ÁREA PLANTADA CO POR ESTADO ──
 (function () {
-    const root = am5.Root.new("chartBorrachaArea"); root.setThemes([am5themes_Animated.new(root)]);
+    const root = am5.Root.new("chartEucaliptoArea"); root.setThemes([am5themes_Animated.new(root)]);
     const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
     const xA = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 40 }), tooltip: am5.Tooltip.new(root, {}) }));
     const yA = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
     ax(xA); ax(yA);
-    const data = anos.map((a, i) => ({ ano: a, plantada: plantada[i], colhida: colhida[i] }));
+    const data = anosArea.map((a, i) => ({ ano: a, ms: areaMS[i], mt: areaMT[i], go: areaGO[i], df: areaDF[i] }));
     xA.data.setAll(data);
-    [{ f: "plantada", n: "Área Plantada", c: P[3] }, { f: "colhida", n: "Área Colhida", c: P[2] }].forEach(cfg => {
-        const s = chart.series.push(am5xy.LineSeries.new(root, { name: cfg.n, xAxis: xA, yAxis: yA, valueYField: cfg.f, categoryXField: "ano", stroke: am5.color(cfg.c), fill: am5.color(cfg.c), tooltip: am5.Tooltip.new(root, { labelText: `${cfg.n}: {valueY} ha` }) }));
+    [
+        { f: "ms", n: "Mato Grosso do Sul", c: P[0] },
+        { f: "mt", n: "Mato Grosso",        c: P[1] },
+        { f: "go", n: "Goiás",              c: P[2] },
+        { f: "df", n: "Distrito Federal",   c: P[4] }
+    ].forEach(cfg => {
+        const s = chart.series.push(am5xy.LineSeries.new(root, { name: cfg.n, xAxis: xA, yAxis: yA, valueYField: cfg.f, categoryXField: "ano", stroke: am5.color(cfg.c), fill: am5.color(cfg.c), tooltip: am5.Tooltip.new(root, { labelText: cfg.n + ": {valueY} ha" }) }));
         s.strokes.template.setAll({ strokeWidth: 2 });
         s.bullets.push(() => am5.Bullet.new(root, { sprite: am5.Circle.new(root, { radius: 3, fill: s.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2 }) }));
         s.data.setAll(data);
@@ -48,35 +51,56 @@ const receita = [126.3, 113.3, 120.9, 88.9, 107.2, 136.1, 93.2, 117.6, 130.5, 19
     leg(chart, root).data.setAll(chart.series.values); chart.appear(1000, 100);
 })();
 
-// ── CUSTO ──
+// ── PRODUTIVIDADE BRASIL ──
 (function () {
-    const root = am5.Root.new("chartBorrachaCusto"); root.setThemes([am5themes_Animated.new(root)]);
-    const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false }));
+    const root = am5.Root.new("chartEucaliptoProdut"); root.setThemes([am5themes_Animated.new(root)]);
+    const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
     const xA = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 40 }), tooltip: am5.Tooltip.new(root, {}) }));
     const yA = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
     ax(xA); ax(yA);
-    const data = anos.map((a, i) => ({ ano: a, v: custo_ha[i] }));
+    const data = anosProdut.map((a, i) => ({ ano: a, v: produtBR[i] }));
     xA.data.setAll(data);
-    const s = chart.series.push(am5xy.ColumnSeries.new(root, { name: "R$/ha", xAxis: xA, yAxis: yA, valueYField: "v", categoryXField: "ano", fill: am5.color(P[2]), stroke: am5.color(P[2]), tooltip: am5.Tooltip.new(root, { labelText: "R$ {valueY}/ha" }) }));
-    s.columns.template.setAll({ cornerRadiusTL: 3, cornerRadiusTR: 3, width: am5.percent(65) }); s.data.setAll(data); chart.appear(1000, 100);
-})();
-
-// ── RECEITA ──
-(function () {
-    const root = am5.Root.new("chartReceita"); root.setThemes([am5themes_Animated.new(root)]);
-    const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false }));
-    const xA = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 40 }), tooltip: am5.Tooltip.new(root, {}) }));
-    const yA = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
-    ax(xA); ax(yA);
-    const data = anos.map((a, i) => ({ ano: a, v: receita[i] }));
-    xA.data.setAll(data);
-    const s = chart.series.push(am5xy.ColumnSeries.new(root, { name: "Receita (mi R$)", xAxis: xA, yAxis: yA, valueYField: "v", categoryXField: "ano", tooltip: am5.Tooltip.new(root, { labelText: "R$ {valueY} mi" }) }));
-    s.columns.template.setAll({ cornerRadiusTL: 3, cornerRadiusTR: 3, width: am5.percent(65) });
-    s.columns.template.adapters.add("fill", (f, t) => { const v = t.dataItem?.get("valueY") || 0; return am5.color(v > 150 ? P[0] : P[4]); });
+    const s = chart.series.push(am5xy.LineSeries.new(root, { name: "Produtividade (m³/ha/ano)", xAxis: xA, yAxis: yA, valueYField: "v", categoryXField: "ano", stroke: am5.color(P[1]), fill: am5.color(P[1]), tooltip: am5.Tooltip.new(root, { labelText: "{valueY} m³/ha/ano" }) }));
+    s.strokes.template.setAll({ strokeWidth: 2.5 });
+    s.bullets.push(() => am5.Bullet.new(root, { sprite: am5.Circle.new(root, { radius: 4, fill: s.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2 }) }));
     s.data.setAll(data); chart.appear(1000, 100);
 })();
 
-// ── MUNDO BARRAS ──
+// ── CONSUMO INDUSTRIAL BRASIL ──
+(function () {
+    const root = am5.Root.new("chartEucaliptoConsumo"); root.setThemes([am5themes_Animated.new(root)]);
+    const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false }));
+    const xA = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 40 }), tooltip: am5.Tooltip.new(root, {}) }));
+    const yA = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
+    ax(xA); ax(yA);
+    const data = anosConsumo.map((a, i) => ({ ano: a, v: consumoBR[i] }));
+    xA.data.setAll(data);
+    const s = chart.series.push(am5xy.ColumnSeries.new(root, { name: "Consumo (mi m³)", xAxis: xA, yAxis: yA, valueYField: "v", categoryXField: "ano", fill: am5.color(P[0]), stroke: am5.color(P[0]), tooltip: am5.Tooltip.new(root, { labelText: "{valueY} mi m³" }) }));
+    s.columns.template.setAll({ cornerRadiusTL: 3, cornerRadiusTR: 3, width: am5.percent(65) });
+    s.data.setAll(data); chart.appear(1000, 100);
+})();
+
+// ── PRODUÇÃO CO POR PRODUTO (Tabela 291) ──
+(function () {
+    const root = am5.Root.new("chartEucaliptoProducao"); root.setThemes([am5themes_Animated.new(root)]);
+    const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
+    const xA = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 40 }), tooltip: am5.Tooltip.new(root, {}) }));
+    const yA = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
+    ax(xA); ax(yA);
+    const data = anosT291.map((a, i) => ({ ano: a, celulose: madCelulose[i], lenha: lenha[i] }));
+    xA.data.setAll(data);
+    [
+        { f: "celulose", n: "Madeira papel/celulose (m³)", c: P[0] },
+        { f: "lenha",    n: "Lenha (m³)",                  c: P[1] }
+    ].forEach(cfg => {
+        const s = chart.series.push(am5xy.ColumnSeries.new(root, { name: cfg.n, xAxis: xA, yAxis: yA, valueYField: cfg.f, categoryXField: "ano", fill: am5.color(cfg.c), stroke: am5.color(cfg.c), tooltip: am5.Tooltip.new(root, { labelText: cfg.n + ": {valueY}" }) }));
+        s.columns.template.setAll({ cornerRadiusTL: 2, cornerRadiusTR: 2, width: am5.percent(55) });
+        s.data.setAll(data);
+    });
+    leg(chart, root).data.setAll(chart.series.values); chart.appear(1000, 100);
+})();
+
+// ── MUNDO BARRAS (seringueira — contexto mundial existente) ──
 (function () {
     const root = am5.Root.new("chartMundo"); root.setThemes([am5themes_Animated.new(root)]);
     const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false }));
@@ -103,6 +127,25 @@ const receita = [126.3, 113.3, 120.9, 88.9, 107.2, 136.1, 93.2, 117.6, 130.5, 19
     const l = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 10 })); l.labels.template.setAll({ fontSize: 10, fontFamily: "'Sora',sans-serif" }); l.data.setAll(s.dataItems); chart.appear(1000, 100);
 })();
 
+// ── IBÁ — ÁREA PLANTADA CO vs BRASIL ──
+(function () {
+    const root = am5.Root.new("chartCustoComp"); root.setThemes([am5themes_Animated.new(root)]);
+    const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
+    const xA = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 40 }), tooltip: am5.Tooltip.new(root, {}) }));
+    const yA  = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
+    const yA2 = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, { opposite: true }) }));
+    ax(xA); ax(yA); ax(yA2);
+    const data = anosIBA.map((a, i) => ({ ano: a, co: areaIBA_CO[i], br: areaIBA_BR[i] }));
+    xA.data.setAll(data);
+    const col = chart.series.push(am5xy.ColumnSeries.new(root, { name: "CO (ha)", xAxis: xA, yAxis: yA, valueYField: "co", categoryXField: "ano", fill: am5.color(P[0]), stroke: am5.color(P[0]), tooltip: am5.Tooltip.new(root, { labelText: "CO: {valueY} ha" }) }));
+    col.columns.template.setAll({ cornerRadiusTL: 3, cornerRadiusTR: 3, width: am5.percent(55) }); col.data.setAll(data);
+    const line = chart.series.push(am5xy.LineSeries.new(root, { name: "Brasil (ha)", xAxis: xA, yAxis: yA2, valueYField: "br", categoryXField: "ano", stroke: am5.color(P[1]), fill: am5.color(P[1]), tooltip: am5.Tooltip.new(root, { labelText: "Brasil: {valueY} ha" }) }));
+    line.strokes.template.setAll({ strokeWidth: 2.5 });
+    line.bullets.push(() => am5.Bullet.new(root, { sprite: am5.Circle.new(root, { radius: 4, fill: line.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2 }) }));
+    line.data.setAll(data);
+    leg(chart, root).data.setAll(chart.series.values); chart.appear(1000, 100);
+})();
+
 // ── FILTER LOGIC ──
 window.onFilterChange = function (filterId, group) {
     if (group === "escala") {
@@ -110,7 +153,6 @@ window.onFilterChange = function (filterId, group) {
         if (tabMap[filterId]) {
             document.querySelector(`[data-tab="${tabMap[filterId]}"]`).click();
         }
-        // Reset indicator filter to "all" and show everything
         document.querySelectorAll('[data-filter-group="ind"] .filter-btn')
             .forEach(b => b.classList.toggle("active", b.dataset.filter === "all"));
         document.querySelectorAll("[data-category]").forEach(el => { el.style.display = ""; });
@@ -124,22 +166,3 @@ window.onFilterChange = function (filterId, group) {
         });
     }
 };
-
-// ── CUSTO COMPARADO ──
-(function () {
-    const root = am5.Root.new("chartCustoComp"); root.setThemes([am5themes_Animated.new(root)]);
-    const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
-    const xA = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 40 }), tooltip: am5.Tooltip.new(root, {}) }));
-    const yA = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
-    const yA2 = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, { opposite: true }) }));
-    ax(xA); ax(yA); ax(yA2);
-    const data = anos.map((a, i) => ({ ano: a, ha: custo_ha[i], kg: custo_kg[i] }));
-    xA.data.setAll(data);
-    const col = chart.series.push(am5xy.ColumnSeries.new(root, { name: "R$/ha", xAxis: xA, yAxis: yA, valueYField: "ha", categoryXField: "ano", fill: am5.color(P[0]), stroke: am5.color(P[0]), tooltip: am5.Tooltip.new(root, { labelText: "R$ {valueY}/ha" }) }));
-    col.columns.template.setAll({ cornerRadiusTL: 3, cornerRadiusTR: 3, width: am5.percent(55) }); col.data.setAll(data);
-    const line = chart.series.push(am5xy.LineSeries.new(root, { name: "R$/kg", xAxis: xA, yAxis: yA2, valueYField: "kg", categoryXField: "ano", stroke: am5.color(P[1]), fill: am5.color(P[1]), tooltip: am5.Tooltip.new(root, { labelText: "R$ {valueY}/kg" }) }));
-    line.strokes.template.setAll({ strokeWidth: 2.5 });
-    line.bullets.push(() => am5.Bullet.new(root, { sprite: am5.Circle.new(root, { radius: 4, fill: line.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2 }) }));
-    line.data.setAll(data);
-    leg(chart, root).data.setAll(chart.series.values); chart.appear(1000, 100);
-})();
