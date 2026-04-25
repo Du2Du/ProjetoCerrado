@@ -219,6 +219,29 @@ window.onFilterChange = function (filterId, group) {
     }
 };
 
+// ── CUSTO PASTAGENS DEGRADADAS ──
+(function () {
+    const root = mkRoot("chartCustoPastagens");
+    const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
+    const xA = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "nivel", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 10 }) }));
+    const yA = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
+    ax(xA); ax(yA);
+    xA.get("renderer").labels.template.setAll({ fontSize: 10, fontFamily: "'Sora',sans-serif", oversizedBehavior: "truncate", maxWidth: 100 });
+    const data = [
+        { nivel: "Manutenção (Baixa)", custoAtual: 272.86, custoProjetado: 317.77 },
+        { nivel: "Moderada", custoAtual: 1159.62, custoProjetado: 1351.66 },
+        { nivel: "Severa", custoAtual: 1727.99, custoProjetado: 2019.13 }
+    ];
+    xA.data.setAll(data);
+    [{ f: "custoAtual", n: "Custo Atual (R$/ha)", c: P[2] }, { f: "custoProjetado", n: "Projeção 2033 (R$/ha)", c: P[0] }].forEach(cfg => {
+        const s = chart.series.push(am5xy.ColumnSeries.new(root, { name: cfg.n, xAxis: xA, yAxis: yA, valueYField: cfg.f, categoryXField: "nivel", clustered: true, tooltip: am5.Tooltip.new(root, { labelText: `${cfg.n}: R$ {valueY}/ha` }) }));
+        s.columns.template.setAll({ cornerRadiusTL: 3, cornerRadiusTR: 3, width: am5.percent(40), fill: am5.color(cfg.c), stroke: am5.color(cfg.c) });
+        s.data.setAll(data);
+    });
+    leg(chart, root).data.setAll(chart.series.values);
+    chart.appear(1000, 100);
+})();
+
 // ── ESTADOS PASTAGENS ──
 (function () {
     const root = mkRoot("chartEstadosPast");

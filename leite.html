@@ -29,7 +29,8 @@
           <li><a class="nav-link" href="index.html">Início</a></li>
           <li><a class="nav-link active-page" href="leite.html">Pecuária de Leite</a></li>
           <li><a class="nav-link" href="corte.html">Pecuária de Corte</a></li>
-          <li><a class="nav-link" href="florestas.html">Florestas Plantadas</a></li>
+          <li><a class="nav-link" href="eucalipto.html">Floresta Plantada do Eucalipto</a></li>
+          <li><a class="nav-link" href="seringueira.html">Floresta Plantada da Seringueira</a></li>
         </ul>
         <button class="navbar-toggler d-md-none border-0 bg-transparent" type="button" data-bs-toggle="collapse"
           data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false" aria-label="Abrir menu">
@@ -41,7 +42,8 @@
           <li><a class="nav-link" href="index.html">Início</a></li>
           <li><a class="nav-link active-page" href="leite.html">Pecuária de Leite</a></li>
           <li><a class="nav-link" href="corte.html">Pecuária de Corte</a></li>
-          <li><a class="nav-link" href="florestas.html">Florestas Plantadas</a></li>
+          <li><a class="nav-link" href="eucalipto.html">Floresta Plantada do Eucalipto</a></li>
+          <li><a class="nav-link" href="seringueira.html">Floresta Plantada da Seringueira</a></li>
         </ul>
       </div>
     </div>
@@ -81,6 +83,8 @@
     <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="lt-goias" id="btn-lt-goias">Goiás</button>
     <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="lt-municipios"
       id="btn-lt-municipios">Municípios</button>
+    <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="lt-plano"
+      id="btn-lt-plano">Plano de Intervenção</button>
   </div>
 
   <main id="main-content">
@@ -386,6 +390,182 @@
           </div>
         </div>
 
+        <!-- ══ TAB: PLANO DE INTERVENÇÃO ════════════════════════ -->
+        <div data-tab-content="lt-plano" role="tabpanel" id="lt-plano" aria-labelledby="btn-lt-plano">
+          <div class="row mb-2">
+            <div class="col-12">
+              <p class="section-label">Centro-Oeste</p>
+              <h2 class="section-title">Pecuária de Leite no Centro-Oeste</h2>
+              <div class="section-divider"></div>
+            </div>
+          </div>
+          <div class="info-bar" role="note">
+            <span aria-hidden="true">📋</span>
+            A pecuária de leite no Centro-Oeste enfrenta queda de 24,1% na produção entre 2013 e 2022 — de 5,016 para
+            3,809 bilhões de litros. Goiás concentra 78,6% da produção regional. A produtividade média no Centro-Oeste é
+            de 1.816 litros/vaca/ano, menos da metade do Sul (3.864 L) e bem abaixo do Sudeste (2.602 L). As principais
+            causas são o alto custo de produção, as importações de lácteos da Argentina e Uruguai, a instabilidade no
+            preço pago ao produtor e a ausência de políticas públicas de incentivo.
+          </div>
+          <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3 fade-up">
+              <div class="kpi-card">
+                <div class="kpi-label">Produção no CO (2022)</div>
+                <div class="kpi-value">3,8<span class="kpi-unit">bi litros</span></div>
+                <span class="kpi-badge kpi-badge--down">▼ -24,1% vs 2013</span>
+              </div>
+            </div>
+            <div class="col-6 col-md-3 fade-up">
+              <div class="kpi-card kpi-card--gold">
+                <div class="kpi-label">Goiás no Centro-Oeste</div>
+                <div class="kpi-value">78,6<span class="kpi-unit">%</span></div>
+                <span class="kpi-badge kpi-badge--up">maior estado do CO</span>
+              </div>
+            </div>
+            <div class="col-6 col-md-3 fade-up">
+              <div class="kpi-card kpi-card--terra">
+                <div class="kpi-label">Produtividade CO</div>
+                <div class="kpi-value">1.816<span class="kpi-unit">L/vaca/ano</span></div>
+                <span class="kpi-badge kpi-badge--neutral">média regional</span>
+              </div>
+            </div>
+            <div class="col-6 col-md-3 fade-up">
+              <div class="kpi-card kpi-card--light">
+                <div class="kpi-label">Produtividade Sul</div>
+                <div class="kpi-value">3.864<span class="kpi-unit">L/vaca/ano</span></div>
+                <span class="kpi-badge kpi-badge--up">referência nacional</span>
+              </div>
+            </div>
+          </div>
+          <div class="row g-4">
+            <div class="col-lg-7">
+              <div class="chart-card" role="figure"
+                aria-label="Gráfico: Produção de leite por estado do Centro-Oeste — 2013 vs 2022">
+                <div class="chart-card__title">Produção de Leite — Centro-Oeste (2013 vs 2022)</div>
+                <div class="chart-card__sub">Mil litros — variação por estado</div>
+                <div id="chartLeiteProducaoCO" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-lg-5">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Projeções Monte Carlo 2022–2033">
+                <div class="chart-card__title">Projeções — Monte Carlo (2022–2033)</div>
+                <div class="chart-card__sub">Bilhões de litros — 3 cenários · 1.000 simulações · 95% de probabilidade
+                </div>
+                <div id="chartLeiteProjecoes" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+          <div class="row mt-4 mb-2">
+            <div class="col-12">
+              <p class="section-label">Eventos</p>
+              <h3 class="section-title">Linha do Tempo</h3>
+              <div class="section-divider"></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-8">
+              <div class="timeline">
+                <div class="timeline-item">
+                  <div class="timeline-date">Fev/2025</div>
+                  <div class="timeline-card">
+                    <span class="timeline-tipo">Dia de Campo</span>
+                    <h4 class="timeline-titulo">Dia de Campo da Pecuária de Leite</h4>
+                    <p class="timeline-detalhe"><strong>Local:</strong> Caiapônia/GO — Sindicato Rural de Caiapônia</p>
+                    <p class="timeline-detalhe"><strong>Participantes:</strong> Mais de 75 no 1º dia e 60 no 2º dia</p>
+                    <p class="timeline-detalhe"><strong>Resultado:</strong> Apresentação, discussão e validação do Plano
+                      de Intervenção; capacitação sobre manejo de pastagem</p>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-date">2025</div>
+                  <div class="timeline-card">
+                    <span class="timeline-tipo">Plano de Intervenção</span>
+                    <h4 class="timeline-titulo">Entrega do Plano de Intervenção ao MAPA</h4>
+                    <p class="timeline-detalhe"><strong>Local:</strong> Região Centro-Oeste</p>
+                    <p class="timeline-detalhe"><strong>Resultado:</strong> 7 ações estratégicas em 5 segmentos
+                      entregues ao Ministério da Agricultura</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row mt-2 mb-2">
+            <div class="col-12">
+              <p class="section-label">Plano de Intervenção</p>
+              <h3 class="section-title">Ações Estratégicas — Pecuária de Leite</h3>
+              <div class="section-divider"></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <div class="table-card">
+                <div class="table-responsive">
+                  <table class="table table-obs table--mobile-cards"
+                    aria-label="Ações estratégicas do Plano de Intervenção — Pecuária de Leite">
+                    <thead>
+                      <tr>
+                        <th scope="col">Segmento</th>
+                        <th scope="col">Componente</th>
+                        <th scope="col">Ações Propostas</th>
+                        <th scope="col">Partes Interessadas</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Indústria</td>
+                        <td>Nichos de mercado</td>
+                        <td>Explorar produtos com certificação; alto valor proteico; sem lactose</td>
+                        <td>Agroindústrias</td>
+                      </tr>
+                      <tr>
+                        <td>Comercialização</td>
+                        <td>Associativismo e cooperativismo</td>
+                        <td>Incentivar cooperativas; contratos formais; remuneração por qualidade (proteína e gordura);
+                          Programa Mais Leite Saudável (PLMS)</td>
+                        <td>Produtores e agroindústrias</td>
+                      </tr>
+                      <tr>
+                        <td>Comercialização</td>
+                        <td>Barreiras às importações</td>
+                        <td>Propor impostos sobre importação de lácteos de países com subsídios; campanhas de
+                          valorização da produção local</td>
+                        <td>Produtores e agroindústrias</td>
+                      </tr>
+                      <tr>
+                        <td>Comercialização</td>
+                        <td>Políticas</td>
+                        <td>Incentivar aquisição de produtos de pequenos produtores; tramitação do PL 10.556/2018
+                          (nomenclatura de produtos lácteos)</td>
+                        <td>Produtores e agroindústrias</td>
+                      </tr>
+                      <tr>
+                        <td>Produção</td>
+                        <td>Manejo</td>
+                        <td>Capacitação em boas práticas: alimentação do rebanho, rotação de pastagens, ILPF, controle
+                          zootécnico, suplementação de bovinos em pastagem</td>
+                        <td>Produtores, associações, ATERs, institutos e universidades</td>
+                      </tr>
+                      <tr>
+                        <td>Sustentabilidade</td>
+                        <td>Energia</td>
+                        <td>Incentivar instalação de biodigestores e sistemas fotovoltaicos em propriedades rurais</td>
+                        <td>Produtores, associações, ATERs</td>
+                      </tr>
+                      <tr>
+                        <td>Infraestrutura</td>
+                        <td>Estradas e logística</td>
+                        <td>Melhoria de infraestrutura rodoviária e pavimentação; renovação da frota de caminhões
+                          tanque terceirizados; capacitação de motoristas sobre transporte de leite</td>
+                        <td>Produtores e agroindústrias</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
   </main>
@@ -399,9 +579,10 @@
         </div>
         <div class="col-lg-4">
           <div class="footer__title">Outros Painéis</div>
-          <p><a href="corte.html" style="color:rgba(255,255,255,.6)">→ Pecuária de Corte</a><br><a href="florestas.html"
-              style="color:rgba(255,255,255,.6)">→ Florestas Plantadas</a><br><a href="index.html"
-              style="color:rgba(255,255,255,.6)">→ Página Inicial</a></p>
+          <p><a href="corte.html" style="color:rgba(255,255,255,.6)">→ Pecuária de Corte</a><br>
+            <a href="eucalipto.html" style="color:rgba(255,255,255,.6)">→ Eucalipto</a><br>
+            <a href="seringueira.html" style="color:rgba(255,255,255,.6)">→ Seringueira</a><br>
+            <a href="index.html" style="color:rgba(255,255,255,.6)">→ Página Inicial</a></p>
         </div>
         <div class="col-lg-4">
           <div class="footer__title">Fonte</div>

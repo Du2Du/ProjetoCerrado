@@ -647,3 +647,184 @@
             flex-direction: row-reverse;
         }
     }
+
+    /* ── RESPONSIVIDADE MOBILE — 480px ──────────────────────── */
+    @media (max-width: 480px) {
+        body {
+            font-size: 1rem;
+        }
+
+        .kpi-value {
+            font-size: 1.2rem;
+        }
+
+        .chart-area {
+            height: 300px;
+        }
+
+        .chart-area--tall {
+            height: 300px;
+        }
+
+        .chart-area--sm {
+            height: 240px;
+        }
+
+        .tab-nav__btn {
+            font-size: .75rem;
+            padding: .7rem .75rem;
+            min-height: 44px;
+        }
+
+        .filter-btn {
+            min-height: 44px;
+            padding: .45rem .8rem;
+        }
+
+        /* Tabelas de ações estratégicas viram cards empilhados */
+        .table-obs.table--mobile-cards thead {
+            display: none;
+        }
+
+        .table-obs.table--mobile-cards tbody tr {
+            display: block;
+            border: 1px solid var(--cinza-claro);
+            border-radius: var(--radius);
+            margin-bottom: .75rem;
+            padding: .75rem 1rem;
+        }
+
+        .table-obs.table--mobile-cards tbody td {
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px dashed var(--cinza-claro);
+            padding: .4rem 0;
+            font-size: .82rem;
+        }
+
+        .table-obs.table--mobile-cards tbody td:last-child {
+            border-bottom: none;
+        }
+
+        .table-obs.table--mobile-cards tbody td::before {
+            content: attr(data-label);
+            font-family: var(--font-d);
+            font-size: .65rem;
+            font-weight: 600;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: var(--cinza-med);
+            margin-bottom: .15rem;
+        }
+
+        /* Linha do tempo em mobile: lista vertical simples */
+        .timeline {
+            padding-left: 1.2rem;
+        }
+
+        .timeline-item::before {
+            left: -1rem;
+        }
+
+        .timeline-card {
+            padding: .8rem 1rem;
+        }
+
+        .timeline-titulo {
+            font-size: .85rem;
+        }
+
+        /* Touch areas para links e botões */
+        .tema-card__cta {
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .nav-link {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+        }
+    }
+
+    /* ── TIMELINE ───────────────────────────────────────────── */
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+        margin-bottom: 1.4rem;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: .5rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--cinza-claro);
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1.4rem;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -1.625rem;
+        top: .4rem;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--verde);
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 2px var(--verde);
+    }
+
+    .timeline-date {
+        font-family: var(--font-d);
+        font-size: .68rem;
+        font-weight: 600;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--dourado);
+        margin-bottom: .2rem;
+    }
+
+    .timeline-card {
+        background: #fff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        padding: 1rem 1.2rem;
+        border-left: 3px solid var(--verde);
+    }
+
+    .timeline-tipo {
+        font-family: var(--font-d);
+        font-size: .66rem;
+        font-weight: 600;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--cinza-med);
+        background: var(--creme);
+        display: inline-block;
+        padding: .15rem .5rem;
+        border-radius: 4px;
+        margin-bottom: .35rem;
+    }
+
+    .timeline-titulo {
+        font-family: var(--font-d);
+        font-size: .9rem;
+        font-weight: 600;
+        color: var(--cinza-esc);
+        margin-bottom: .4rem;
+    }
+
+    .timeline-detalhe {
+        font-size: .8rem;
+        color: var(--cinza-med);
+        margin-bottom: .2rem;
+    }

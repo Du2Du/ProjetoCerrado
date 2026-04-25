@@ -31,7 +31,8 @@
           <li><a class="nav-link" href="index.html">Início</a></li>
           <li><a class="nav-link" href="leite.html">Pecuária de Leite</a></li>
           <li><a class="nav-link active-page" href="corte.html">Pecuária de Corte</a></li>
-          <li><a class="nav-link" href="florestas.html">Florestas Plantadas</a></li>
+          <li><a class="nav-link" href="eucalipto.html">Floresta Plantada do Eucalipto</a></li>
+          <li><a class="nav-link" href="seringueira.html">Floresta Plantada da Seringueira</a></li>
         </ul>
         <button class="navbar-toggler d-md-none border-0 bg-transparent" type="button" data-bs-toggle="collapse"
           data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false" aria-label="Abrir menu">
@@ -43,7 +44,8 @@
           <li><a class="nav-link" href="index.html">Início</a></li>
           <li><a class="nav-link" href="leite.html">Pecuária de Leite</a></li>
           <li><a class="nav-link active-page" href="corte.html">Pecuária de Corte</a></li>
-          <li><a class="nav-link" href="florestas.html">Florestas Plantadas</a></li>
+          <li><a class="nav-link" href="eucalipto.html">Floresta Plantada do Eucalipto</a></li>
+          <li><a class="nav-link" href="seringueira.html">Floresta Plantada da Seringueira</a></li>
         </ul>
       </div>
     </div>
@@ -91,6 +93,8 @@
       id="btn-ct-projecoes">Projeções</button>
     <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="ct-pastagens" aria-controls="ct-pastagens"
       id="btn-ct-pastagens">Pastagens</button>
+    <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="ct-plano" aria-controls="ct-plano"
+      id="btn-ct-plano">Plano de Intervenção</button>
   </div>
 
   <main id="main-content">
@@ -694,6 +698,265 @@
           </div>
         </div><!-- /tab pastagens -->
 
+        <!-- ══ TAB: PLANO DE INTERVENÇÃO ════════════════════════ -->
+        <div data-tab-content="ct-plano" role="tabpanel" id="ct-plano" aria-labelledby="btn-ct-plano">
+          <div class="row mb-2">
+            <div class="col-12">
+              <p class="section-label">Plano de Intervenção</p>
+              <h2 class="section-title">Bovinocultura de Corte no Centro-Oeste</h2>
+              <div class="section-divider"></div>
+            </div>
+          </div>
+          <div class="info-bar" role="note">
+            <span aria-hidden="true">📋</span>
+            O Brasil possui aproximadamente 160 milhões de hectares de pastagens, mas 52% delas (89 milhões ha)
+            apresentam algum nível de degradação. No bioma Cerrado, o custo de recuperação varia de R$ 272,86/ha (baixa
+            degradação) a R$ 1.727,99/ha (degradação severa) — valores que crescerão mais de 16% nos próximos dez anos.
+            O rebanho cresce em média 1,54% ao ano. A cadeia convive com grande heterogeneidade: frigoríficos de alto
+            padrão tecnológico ao lado de abatedouros que dificilmente preenchem requisitos mínimos de legislação
+            sanitária.
+          </div>
+          <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3 fade-up">
+              <div class="kpi-card">
+                <div class="kpi-label">Pastagens no Brasil</div>
+                <div class="kpi-value">160<span class="kpi-unit">mi ha</span></div>
+                <span class="kpi-badge kpi-badge--neutral">área total</span>
+              </div>
+            </div>
+            <div class="col-6 col-md-3 fade-up">
+              <div class="kpi-card kpi-card--terra">
+                <div class="kpi-label">Com alguma degradação</div>
+                <div class="kpi-value">52<span class="kpi-unit">%</span></div>
+                <span class="kpi-badge kpi-badge--down">89 mi ha</span>
+              </div>
+            </div>
+            <div class="col-6 col-md-3 fade-up">
+              <div class="kpi-card kpi-card--gold">
+                <div class="kpi-label">Custo recuperação severa (2033)</div>
+                <div class="kpi-value">R$ 2.019<span class="kpi-unit">/ha</span></div>
+                <span class="kpi-badge kpi-badge--down">▲ +16,85% projetado</span>
+              </div>
+            </div>
+            <div class="col-6 col-md-3 fade-up">
+              <div class="kpi-card kpi-card--light">
+                <div class="kpi-label">Crescimento médio do rebanho</div>
+                <div class="kpi-value">1,54<span class="kpi-unit">%/ano</span></div>
+                <span class="kpi-badge kpi-badge--up">média histórica</span>
+              </div>
+            </div>
+          </div>
+          <div class="row g-4">
+            <div class="col-lg-8">
+              <div class="chart-card" role="figure"
+                aria-label="Gráfico: Custo de recuperação de pastagens degradadas no Cerrado">
+                <div class="chart-card__title">Custo de Recuperação de Pastagens — Cerrado</div>
+                <div class="chart-card__sub">R$/hectare — custo atual vs. projeção 2033</div>
+                <div id="chartCustoPastagens" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-lg-4">
+              <div class="table-card">
+                <div class="table-card__head">
+                  <div class="chart-card__title">Custo por Nível de Degradação</div>
+                  <div class="chart-card__sub">R$/hectare e projeção de aumento em 10 anos</div>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-obs"
+                    aria-label="Custo de recuperação de pastagens por nível de degradação">
+                    <thead>
+                      <tr>
+                        <th scope="col">Nível</th>
+                        <th scope="col" class="text-end">Atual (R$/ha)</th>
+                        <th scope="col" class="text-end">2033 (R$/ha)</th>
+                        <th scope="col" class="text-end">Aumento</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Manutenção / Baixa</td>
+                        <td class="text-end num">272,86</td>
+                        <td class="text-end num">317,77</td>
+                        <td class="text-end"><span class="kpi-badge kpi-badge--down">+16,46%</span></td>
+                      </tr>
+                      <tr>
+                        <td>Moderada</td>
+                        <td class="text-end num">1.159,62</td>
+                        <td class="text-end num">1.351,66</td>
+                        <td class="text-end"><span class="kpi-badge kpi-badge--down">+16,56%</span></td>
+                      </tr>
+                      <tr>
+                        <td>Severa</td>
+                        <td class="text-end num">1.727,99</td>
+                        <td class="text-end num">2.019,13</td>
+                        <td class="text-end"><span class="kpi-badge kpi-badge--down">+16,85%</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row mt-4 mb-2">
+            <div class="col-12">
+              <p class="section-label">Eventos</p>
+              <h3 class="section-title">Linha do Tempo</h3>
+              <div class="section-divider"></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-8">
+              <div class="timeline">
+                <div class="timeline-item">
+                  <div class="timeline-date">Set/2024</div>
+                  <div class="timeline-card">
+                    <span class="timeline-tipo">Dia de Campo</span>
+                    <h4 class="timeline-titulo">Dia de Campo da Bovinocultura de Corte — Nova Crixás/GO</h4>
+                    <p class="timeline-detalhe"><strong>Local:</strong> Nova Crixás, Goiás</p>
+                    <p class="timeline-detalhe"><strong>Participantes:</strong> Produtores rurais, técnicos
+                      extensionistas, consultores e representantes da comunidade local</p>
+                    <p class="timeline-detalhe"><strong>Resultado:</strong> Primeiro evento do projeto; discussão e
+                      validação prévia do Plano de Intervenção</p>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-date">Abr/2025</div>
+                  <div class="timeline-card">
+                    <span class="timeline-tipo">Dia de Campo</span>
+                    <h4 class="timeline-titulo">Dia de Campo da Bovinocultura de Corte — Cáceres/MT</h4>
+                    <p class="timeline-detalhe"><strong>Local:</strong> Cáceres, Mato Grosso — IFMT Campus Cáceres e
+                      Sindicato Rural de Cáceres</p>
+                    <p class="timeline-detalhe"><strong>Participantes:</strong> Mais de 100 pessoas</p>
+                    <p class="timeline-detalhe"><strong>Resultado:</strong> 13 novas ações específicas geradas; versão
+                      final do Plano de Intervenção validada e entregue ao MAPA</p>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-date">2025</div>
+                  <div class="timeline-card">
+                    <span class="timeline-tipo">Plano de Intervenção</span>
+                    <h4 class="timeline-titulo">Entrega do Plano de Intervenção ao MAPA</h4>
+                    <p class="timeline-detalhe"><strong>Local:</strong> Região Centro-Oeste</p>
+                    <p class="timeline-detalhe"><strong>Resultado:</strong> 21 ações estratégicas em 5 segmentos e 13
+                      componentes</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row mt-2 mb-2">
+            <div class="col-12">
+              <p class="section-label">Plano de Intervenção</p>
+              <h3 class="section-title">Ações Estratégicas — Bovinocultura de Corte</h3>
+              <div class="section-divider"></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <div class="table-card">
+                <div class="table-responsive">
+                  <table class="table table-obs table--mobile-cards"
+                    aria-label="Ações estratégicas do Plano de Intervenção — Bovinocultura de Corte">
+                    <thead>
+                      <tr>
+                        <th scope="col">Segmento</th>
+                        <th scope="col">Componente</th>
+                        <th scope="col">Ações Propostas</th>
+                        <th scope="col">Partes Interessadas</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Insumos</td>
+                        <td>Alimentação / Reserva estratégica</td>
+                        <td>Suplementação mineral e proteica; uso de silagem; monitoramento da qualidade da pastagem via
+                          rotação, ILPF e análises; monitoramento climático</td>
+                        <td>Produtores, Associações de Classes, ATERs</td>
+                      </tr>
+                      <tr>
+                        <td>Insumos</td>
+                        <td>Saúde Animal</td>
+                        <td>Vacinação e controle de parasitas</td>
+                        <td>Secretarias Municipais e Estaduais de Saúde e MAPA</td>
+                      </tr>
+                      <tr>
+                        <td>Insumos</td>
+                        <td>Genética</td>
+                        <td>Programa de Melhoramento Genético; reprodutores de alta qualidade; reprodução assistida</td>
+                        <td>Produtores, Associações de Classes, ATERs</td>
+                      </tr>
+                      <tr>
+                        <td>Insumos</td>
+                        <td>Manejo</td>
+                        <td>Nutrição e manejo adequado do rebanho por funcionários preparados</td>
+                        <td>Produtores, Associações de Classes, ATERs</td>
+                      </tr>
+                      <tr>
+                        <td>Produção</td>
+                        <td>Assistência Técnica e Extensão Rural</td>
+                        <td>Criação de Fóruns Territoriais de ATER; treinamento em: nutrição animal, melhoramento
+                          genético, sanidade animal, sustentabilidade e gestão de negócios</td>
+                        <td>Emater, Senar, Produtores, Associações, Cooperativas, Universidades, Secretarias de
+                          Agricultura</td>
+                      </tr>
+                      <tr>
+                        <td>Indústria</td>
+                        <td>Abatedouros certificados</td>
+                        <td>Elaboração de Planos de Negócio para abatedouros e frigoríficos</td>
+                        <td>Produtores e Agroindústrias</td>
+                      </tr>
+                      <tr>
+                        <td>Indústria</td>
+                        <td>Diversificação de produtos</td>
+                        <td>Desenvolvimento de novos cortes e produtos de maior valor agregado</td>
+                        <td>Produtores e Agroindústrias</td>
+                      </tr>
+                      <tr>
+                        <td>Comercialização</td>
+                        <td>Canais e mecanismos</td>
+                        <td>Uso de ambiente virtual e ferramentas digitais para ampliar acesso à informação; pesquisas
+                          sobre consumo por classes de renda</td>
+                        <td>Produtores e Agroindústrias</td>
+                      </tr>
+                      <tr>
+                        <td>Comercialização</td>
+                        <td>Mercado Externo</td>
+                        <td>Investimento em ações que favoreçam a comercialização em países estratégicos</td>
+                        <td>Produtores e Agroindústrias</td>
+                      </tr>
+                      <tr>
+                        <td>Logística e Infraestrutura</td>
+                        <td>Logística</td>
+                        <td>Infraestrutura adequada com transporte refrigerado, armazenamento e logística eficientes
+                        </td>
+                        <td>Produtores e Agroindústrias</td>
+                      </tr>
+                      <tr>
+                        <td>Logística e Infraestrutura</td>
+                        <td>Estradas vicinais</td>
+                        <td>Recuperação e manutenção das vias (pavimentação, recapeamento, drenagem e sinalização)</td>
+                        <td>Prefeitura, governo estadual, agências governamentais</td>
+                      </tr>
+                      <tr>
+                        <td>Sustentabilidade</td>
+                        <td>Pastagens Degradadas</td>
+                        <td>Investimento em programa de reforma, recuperação e manutenção de pastagens degradadas</td>
+                        <td>Governos federal e estadual, Produtores, Associações, ATERs</td>
+                      </tr>
+                      <tr>
+                        <td>Sustentabilidade</td>
+                        <td>Recursos hídricos e energéticos</td>
+                        <td>Desenvolver infraestrutura para gestão da água e fontes alternativas de energia</td>
+                        <td>Agências governamentais, organizações ambientais</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div><!-- /tab plano -->
+
       </div><!-- /container -->
     </section>
   </main>
@@ -709,7 +972,8 @@
         <div class="col-lg-4">
           <div class="footer__title">Outros Painéis</div>
           <p><a href="leite.html" style="color:rgba(255,255,255,.6)">→ Pecuária de Leite</a><br>
-            <a href="florestas.html" style="color:rgba(255,255,255,.6)">→ Florestas Plantadas</a><br>
+            <a href="eucalipto.html" style="color:rgba(255,255,255,.6)">→ Eucalipto</a><br>
+            <a href="seringueira.html" style="color:rgba(255,255,255,.6)">→ Seringueira</a><br>
             <a href="index.html" style="color:rgba(255,255,255,.6)">→ Página Inicial</a>
           </p>
         </div>

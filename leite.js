@@ -116,6 +116,55 @@ function leg(chart, root) { const l = chart.children.push(am5.Legend.new(root, {
     leg(chart, root).data.setAll(chart.series.values); chart.appear(1000, 100);
 })();
 
+// ── PRODUÇÃO CO BARRAS (2013 vs 2022) ──
+(function () {
+    const root = am5.Root.new("chartLeiteProducaoCO"); root.setThemes([am5themes_Animated.new(root)]);
+    const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
+    const xA = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "estado", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 10 }) }));
+    const yA = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
+    ax(xA); ax(yA);
+    xA.get("renderer").labels.template.setAll({ fontSize: 10, fontFamily: "'Sora',sans-serif", oversizedBehavior: "truncate", maxWidth: 80 });
+    const data = [
+        { estado: "MS", v2013: 523347, v2022: 295882 },
+        { estado: "MT", v2013: 681694, v2022: 489243 },
+        { estado: "GO", v2013: 3776803, v2022: 2995345 },
+        { estado: "DF", v2013: 34448, v2022: 29250 }
+    ];
+    xA.data.setAll(data);
+    [{ f: "v2013", n: "2013", c: P[0] }, { f: "v2022", n: "2022", c: P[1] }].forEach(cfg => {
+        const s = chart.series.push(am5xy.ColumnSeries.new(root, { name: cfg.n, xAxis: xA, yAxis: yA, valueYField: cfg.f, categoryXField: "estado", clustered: true, tooltip: am5.Tooltip.new(root, { labelText: `${cfg.n}: {valueY} mil L` }) }));
+        s.columns.template.setAll({ cornerRadiusTL: 3, cornerRadiusTR: 3, width: am5.percent(40), fill: am5.color(cfg.c), stroke: am5.color(cfg.c) });
+        s.data.setAll(data);
+    });
+    leg(chart, root).data.setAll(chart.series.values); chart.appear(1000, 100);
+})();
+
+// ── PROJEÇÕES MONTE CARLO ──
+(function () {
+    const root = am5.Root.new("chartLeiteProjecoes"); root.setThemes([am5themes_Animated.new(root)]);
+    const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
+    const xA = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 30 }) }));
+    const yA = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
+    ax(xA); ax(yA);
+    const anos = ["2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030", "2031", "2032", "2033"];
+    const ot = [3.809, 3.982, 4.164, 4.354, 4.552, 4.760, 4.977, 5.204, 5.441, 5.689, 5.948, 6.220];
+    const pe = [3.809, 3.836, 3.864, 3.891, 3.919, 3.948, 3.976, 4.005, 4.034, 4.063, 4.092, 4.122];
+    const ba = [3.809, 3.927, 4.049, 4.175, 4.304, 4.438, 4.576, 4.718, 4.863, 5.014, 5.170, 5.330];
+    const data = anos.map((a, i) => ({ ano: a, otimista: ot[i], pessimista: pe[i], base: ba[i] }));
+    xA.data.setAll(data);
+    [
+        { f: "otimista", n: "Otimista (4,56%/a) → 6,0 bi L", c: P[0] },
+        { f: "base", n: "Base (3,10%/a) → 5,0 bi L", c: P[1] },
+        { f: "pessimista", n: "Pessimista (0,72%/a) → 4,0 bi L", c: P[2] }
+    ].forEach(cfg => {
+        const s = chart.series.push(am5xy.LineSeries.new(root, { name: cfg.n, xAxis: xA, yAxis: yA, valueYField: cfg.f, categoryXField: "ano", stroke: am5.color(cfg.c), fill: am5.color(cfg.c), tooltip: am5.Tooltip.new(root, { labelText: "{name}: {valueY} bi L" }) }));
+        s.strokes.template.setAll({ strokeWidth: 2 });
+        s.bullets.push(() => am5.Bullet.new(root, { sprite: am5.Circle.new(root, { radius: 3, fill: s.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2 }) }));
+        s.data.setAll(data);
+    });
+    leg(chart, root).data.setAll(chart.series.values); chart.appear(1000, 100);
+})();
+
 // ── FILTER LOGIC ──
 window.onFilterChange = function (filterId, group) {
     if (group === "escala") {
