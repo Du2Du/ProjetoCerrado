@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Capacitações do Projeto Cerrado — cursos gratuitos, online e no formato MOOC pela plataforma IFG Virtual." />
+  <title>Capacitações · Projeto Cerrado</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,600;1,8..60,300&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    /* ── HERO CURSOS ──────────────────────────────────────── */
+    .page-hero--cursos {
+      background: linear-gradient(135deg, #3a6b4a 0%, #2d5c24 60%, #6fa65e 100%);
+    }
+
+    /* ── CONTEXT STRIP ────────────────────────────────────── */
+    .context-strip {
+      background: var(--areia);
+      padding: 2rem 0;
+      border-bottom: 1px solid var(--cinza-claro);
+    }
+
+    .context-strip__text {
+      font-size: .95rem;
+      color: var(--cinza-esc);
+      line-height: 1.7;
+    }
+
+    .context-strip__text strong {
+      color: var(--verde);
+    }
+
+    .plataforma-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: var(--verde);
+      color: #fff;
+      font-family: var(--font-d);
+      font-size: .78rem;
+      font-weight: 600;
+      padding: .4rem .9rem;
+      border-radius: 20px;
+      margin-top: .75rem;
+      text-decoration: none;
+      transition: background .2s;
+    }
+
+    .plataforma-badge:hover {
+      background: var(--verde-claro);
+      color: #fff;
+    }
+
+    /* ── ACESSO SECTION ───────────────────────────────────── */
+    .acesso-section {
+      padding: 3rem 0 2.5rem;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 767px) {
+      .steps-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .step-card {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 1.75rem 1.5rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .75rem;
+      border-top: 3px solid var(--verde);
+      transition: box-shadow .2s, transform .2s;
+    }
+
+    .step-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .step-card__num {
+      font-family: var(--font-d);
+      font-size: .65rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--verde);
+      background: #e8f5e3;
+      padding: .2rem .65rem;
+      border-radius: 20px;
+    }
+
+    .step-card__icon {
+      font-size: 2.2rem;
+      line-height: 1;
+    }
+
+    .step-card__title {
+      font-family: var(--font-d);
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--cinza-esc);
+      margin: 0;
+    }
+
+    .step-card__desc {
+      font-size: .84rem;
+      color: var(--cinza-med);
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    .step-card__link {
+      font-family: var(--font-d);
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--verde);
+    }
+
+    /* ── CURSOS GRID ──────────────────────────────────────── */
+    .cursos-section {
+      padding: 2.5rem 0 3rem;
+      background: var(--fundo);
+    }
+
+    .cursos-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 991px) {
+      .cursos-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .cursos-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .curso-card {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow .2s, transform .2s;
+      overflow: hidden;
+    }
+
+    .curso-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .curso-card__header {
+      padding: 1.25rem 1.4rem .9rem;
+      border-bottom: 1px solid var(--cinza-claro);
+    }
+
+    .curso-tag {
+      display: inline-block;
+      font-family: var(--font-d);
+      font-size: .64rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #fff;
+      padding: .2rem .65rem;
+      border-radius: 20px;
+      margin-bottom: .65rem;
+    }
+
+    .curso-card__num {
+      font-family: var(--font-d);
+      font-size: .7rem;
+      font-weight: 600;
+      color: var(--cinza-med);
+      margin-bottom: .15rem;
+    }
+
+    .curso-card__nome {
+      font-family: var(--font-d);
+      font-size: .97rem;
+      font-weight: 700;
+      color: var(--cinza-esc);
+      margin: 0 0 .6rem;
+      line-height: 1.3;
+    }
+
+    .curso-card__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+    }
+
+    .curso-meta-pill {
+      font-family: var(--font-d);
+      font-size: .68rem;
+      font-weight: 600;
+      padding: .2rem .6rem;
+      border-radius: 20px;
+      background: var(--creme);
+      color: var(--cinza-med);
+      border: 1px solid var(--cinza-claro);
+    }
+
+    .curso-card__body {
+      padding: 1rem 1.4rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: .85rem;
+    }
+
+    .curso-card__section-label {
+      font-family: var(--font-d);
+      font-size: .62rem;
+      font-weight: 700;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      color: var(--dourado);
+      margin-bottom: .2rem;
+    }
+
+    .curso-card__text {
+      font-size: .82rem;
+      color: var(--cinza-med);
+      line-height: 1.55;
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .curso-card__text--objetivo {
+      -webkit-line-clamp: 3;
+    }
+
+    .curso-card__unidades {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: .3rem;
+    }
+
+    .curso-card__unidades li {
+      font-family: var(--font-d);
+      font-size: .77rem;
+      color: var(--cinza-esc);
+      display: flex;
+      align-items: flex-start;
+      gap: .4rem;
+    }
+
+    .curso-card__unidades li::before {
+      content: '▸';
+      color: var(--verde);
+      flex-shrink: 0;
+      margin-top: .05rem;
+    }
+
+    .curso-card__stats {
+      display: flex;
+      gap: 1rem;
+      background: var(--creme);
+      border-radius: var(--radius);
+      padding: .6rem .9rem;
+    }
+
+    .curso-stat {
+      text-align: center;
+    }
+
+    .curso-stat__val {
+      font-family: var(--font-d);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--verde);
+    }
+
+    .curso-stat__lbl {
+      font-family: var(--font-d);
+      font-size: .62rem;
+      font-weight: 600;
+      color: var(--cinza-med);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .curso-card__footer {
+      padding: 1rem 1.4rem;
+      border-top: 1px solid var(--cinza-claro);
+      margin-top: auto;
+    }
+
+    .btn-curso {
+      display: block;
+      width: 100%;
+      background: var(--verde);
+      color: #fff;
+      font-family: var(--font-d);
+      font-size: .82rem;
+      font-weight: 700;
+      text-align: center;
+      padding: .7rem 1rem;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      transition: background .2s;
+      text-decoration: none;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+    }
+
+    .btn-curso:hover {
+      background: var(--verde-claro);
+      color: #fff;
+    }
+
+    /* ── MOOC PILARES ─────────────────────────────────────── */
+    .mooc-strip {
+      background: var(--verde);
+      padding: 2.5rem 0;
+    }
+
+    .mooc-strip__eyebrow {
+      font-family: var(--font-d);
+      font-size: .65rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, .6);
+      text-align: center;
+      margin-bottom: .3rem;
+    }
+
+    .mooc-strip__title {
+      font-family: var(--font-d);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 1.75rem;
+    }
+
+    .mooc-pilares {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 767px) {
+      .mooc-pilares {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .mooc-pilar {
+      background: rgba(255, 255, 255, .12);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .mooc-pilar__icon {
+      font-size: 2rem;
+      margin-bottom: .75rem;
+    }
+
+    .mooc-pilar__title {
+      font-family: var(--font-d);
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: .4rem;
+    }
+
+    .mooc-pilar__desc {
+      font-size: .83rem;
+      color: rgba(255, 255, 255, .8);
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    /* ── ATO AUTORIZATIVO ─────────────────────────────────── */
+    .ato-info {
+      font-family: var(--font-d);
+      font-size: .7rem;
+      color: var(--cinza-med);
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      margin-top: .5rem;
+    }
+
+    .ato-info span {
+      font-weight: 600;
+      color: var(--terra);
+    }
+
+    .badge-em-oferta {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      background: #fff8e8;
+      color: #856404;
+      border: 1px solid #f0c040;
+      font-family: var(--font-d);
+      font-size: .72rem;
+      font-weight: 700;
+      padding: .25rem .75rem;
+      border-radius: 20px;
+      letter-spacing: .04em;
+    }
+
+    .badge-em-oferta-note {
+      font-size: .72rem;
+      color: var(--cinza-med);
+      margin: .35rem 0 0;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+
+<body>
+
+  <a class="skip-link" href="#main-content">Ir para o conteúdo principal</a>
+
+  <!-- ── NAVBAR ───────────────────────────────────────────────── -->
+  <nav class="navbar-obs" role="navigation" aria-label="Navegação principal">
+    <div class="container">
+      <div class="d-flex align-items-center justify-content-between w-100">
+        <a class="navbar-brand" href="index.html" aria-label="Projeto Cerrado — página inicial">
+          <span class="brand-icon" aria-hidden="true">🌿</span>
+          <span>Projeto Cerrado · Goiás</span>
+        </a>
+        <ul class="desktop-nav nav d-none d-md-flex" role="list">
+          <li><a class="nav-link" href="index.html">Início</a></li>
+          <li><a class="nav-link" href="leite.html">Pecuária de Leite</a></li>
+          <li><a class="nav-link" href="corte.html">Pecuária de Corte</a></li>
+          <li><a class="nav-link" href="eucalipto.html">Floresta Plantada do Eucalipto</a></li>
+          <li><a class="nav-link" href="seringueira.html">Floresta Plantada da Seringueira</a></li>
+          <li><a class="nav-link active-page" href="cursos.html">Capacitações</a></li>
+        </ul>
+        <button class="navbar-toggler d-md-none border-0 bg-transparent" type="button" data-bs-toggle="collapse"
+          data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false" aria-label="Abrir menu">
+          <span style="color:#fff;font-size:1.4rem;">&#9776;</span>
+        </button>
+      </div>
+      <div class="collapse d-md-none" id="mobileNav">
+        <ul class="nav flex-column py-2" role="list">
+          <li><a class="nav-link" href="index.html">Início</a></li>
+          <li><a class="nav-link" href="leite.html">Pecuária de Leite</a></li>
+          <li><a class="nav-link" href="corte.html">Pecuária de Corte</a></li>
+          <li><a class="nav-link" href="eucalipto.html">Floresta Plantada do Eucalipto</a></li>
+          <li><a class="nav-link" href="seringueira.html">Floresta Plantada da Seringueira</a></li>
+          <li><a class="nav-link active-page" href="cursos.html">Capacitações</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── HERO ─────────────────────────────────────────────────── -->
+  <header class="page-hero page-hero--cursos" role="banner">
+    <div class="container position-relative">
+      <span class="page-hero__label">Projeto Cerrado · IFG</span>
+      <h1>Capacitações</h1>
+      <p>Cursos gratuitos, online e no formato MOOC — aprenda no seu ritmo, sem pré-requisito de horário,
+        pela plataforma IFG Virtual.</p>
+      <p class="page-hero__meta">Parceria: IFG · MAPA · TED nº 939472/2022</p>
+    </div>
+  </header>
+
+  <!-- ── CONTEXT STRIP ─────────────────────────────────────────── -->
+  <div class="context-strip" role="complementary" aria-label="Contexto do projeto">
+    <div class="container">
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-8">
+          <p class="context-strip__text">
+            O <strong>Projeto Cerrado</strong> oferece cursos de extensão gratuitos para produtores,
+            técnicos, estudantes e demais interessados nas cadeias produtivas do Cerrado. Os cursos são
+            ministrados no formato <strong>MOOC</strong> (Massive Open Online Course) pela
+            <strong>plataforma IFG Virtual</strong>, hospedada no Moodle, e seguem atos autorizativos
+            da Reitoria do IFG.
+          </p>
+          <p class="context-strip__text">
+            Todo o conteúdo é desenvolvido por pesquisadores e extensionistas do IFG em parceria com o
+            Ministério da Agricultura e Pecuária (MAPA), abrangendo temas transversais e específicos
+            de cada cadeia produtiva.
+          </p>
+          <a href="https://virtual.ifg.edu.br/" class="plataforma-badge" target="_blank" rel="noopener"
+            aria-label="Acessar a plataforma IFG Virtual (abre em nova aba)">
+            🎓 Acessar a Plataforma IFG Virtual →
+          </a>
+        </div>
+        <div class="col-lg-4">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="kpi-card kpi-card--gold">
+                <div class="kpi-label">Cursos disponíveis</div>
+                <div class="kpi-value">6</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="kpi-card">
+                <div class="kpi-label">Carga horária</div>
+                <div class="kpi-value">24<span class="kpi-unit">–25h</span></div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="kpi-card kpi-card--light">
+                <div class="kpi-label">Matriculados</div>
+                <div class="kpi-value">103<span class="kpi-unit">+</span></div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="kpi-card kpi-card--terra">
+                <div class="kpi-label">Formato</div>
+                <div class="kpi-value" style="font-size:1.1rem">MOOC</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main id="main-content">
+
+    <!-- ── COMO ACESSAR ──────────────────────────────────────────── -->
+    <section class="acesso-section" aria-labelledby="acesso-title">
+      <div class="container">
+        <p class="section-label">Passo a passo</p>
+        <h2 class="section-title" id="acesso-title">Como Acessar os Cursos</h2>
+        <div class="section-divider"></div>
+        <div class="steps-grid">
+          <div class="step-card fade-up">
+            <div class="step-card__num">Passo 1</div>
+            <div class="step-card__icon" aria-hidden="true">💻</div>
+            <h3 class="step-card__title">Acesse a plataforma</h3>
+            <p class="step-card__desc">
+              Acesse <a class="step-card__link" href="https://virtual.ifg.edu.br/" target="_blank"
+                rel="noopener">virtual.ifg.edu.br</a>
+              e cadastre-se gratuitamente. O cadastro é rápido e não exige comprovante de escolaridade.
+            </p>
+          </div>
+          <div class="step-card fade-up">
+            <div class="step-card__num">Passo 2</div>
+            <div class="step-card__icon" aria-hidden="true">🔍</div>
+            <h3 class="step-card__title">Busque o curso</h3>
+            <p class="step-card__desc">
+              Digite o nome do curso no campo de busca da plataforma e localize o curso desejado
+              entre as opções listadas.
+            </p>
+          </div>
+          <div class="step-card fade-up">
+            <div class="step-card__num">Passo 3</div>
+            <div class="step-card__icon" aria-hidden="true">▶️</div>
+            <h3 class="step-card__title">Comece a aprender</h3>
+            <p class="step-card__desc">
+              Clique no título do curso e inicie as atividades formativas no seu próprio ritmo —
+              sem horário fixo, de qualquer dispositivo.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── GRADE DE CURSOS ────────────────────────────────────────── -->
+    <section class="cursos-section" aria-labelledby="cursos-title">
+      <div class="container">
+        <p class="section-label">Oferta de cursos</p>
+        <h2 class="section-title" id="cursos-title">Cursos Disponíveis</h2>
+        <div class="section-divider"></div>
+
+        <div class="cursos-grid">
+
+          <!-- ── CURSO 1: Bioinsumos ── -->
+          <article class="curso-card fade-up" aria-labelledby="curso-bioinsumos-nome">
+            <div class="curso-card__header">
+              <span class="curso-tag" style="background:#6B8F3A">Transversal</span>
+              <div class="curso-card__num">Curso 1</div>
+              <h3 class="curso-card__nome" id="curso-bioinsumos-nome">Bioinsumos e suas Tecnologias</h3>
+              <div class="curso-card__meta">
+                <span class="curso-meta-pill">⏱ 24 horas</span>
+                <span class="curso-meta-pill">💻 EaD · MOOC</span>
+              </div>
+              <p class="ato-info" aria-label="Ato autorizativo">
+                📋 <span>Parecer n.º 11/2024</span> — REI-DEAD/REI-PROEN/REITORIA/IFG
+              </p>
+            </div>
+            <div class="curso-card__body">
+              <div>
+                <p class="curso-card__section-label">Público-alvo</p>
+                <p class="curso-card__text">
+                  Produtores, técnicos extensionistas, consultores, revendedores de insumos,
+                  pesquisadores e demais interessados em bioinsumos.
+                </p>
+              </div>
+              <div>
+                <p class="curso-card__section-label">Objetivo geral</p>
+                <p class="curso-card__text curso-card__text--objetivo">
+                  Preparar profissionais das ciências agrárias para atuarem no desenvolvimento e
+                  aplicação de bioinsumos para uso agropecuário, incluindo biocontroladores de insetos.
+                </p>
+              </div>
+              <div>
+                <p class="curso-card__section-label">Unidades do curso</p>
+                <ul class="curso-card__unidades" aria-label="Unidades do curso Bioinsumos e suas Tecnologias">
+                  <li>Unidade I — Bioinsumos</li>
+                  <li>Unidade II — Biopesticidas e Controle Biológico</li>
+                </ul>
+              </div>
+              <div class="curso-card__stats" aria-label="Dados de matrícula">
+                <div class="curso-stat">
+                  <div class="curso-stat__val">103</div>
+                  <div class="curso-stat__lbl">Matriculados</div>
+                </div>
+                <div class="curso-stat">
+                  <div class="curso-stat__val">19</div>
+                  <div class="curso-stat__lbl">Concluintes</div>
+                </div>
+                <div class="curso-stat d-flex flex-column align-items-center justify-content-between">
+                  <div class="curso-stat__val" style="font-size:.85rem">15 Abr/2025</div>
+                  <div class="curso-stat__lbl">Início</div>
+                </div>
+              </div>
+            </div>
+            <div class="curso-card__footer">
+              <a href="https://virtual.ifg.edu.br/" target="_blank" rel="noopener" class="btn-curso"
+                aria-label="Acessar o curso Bioinsumos e suas Tecnologias na plataforma IFG Virtual">
+                🎓 Acessar o Curso
+              </a>
+            </div>
+          </article>
+
+          <!-- ── CURSO 2: RAD ── -->
+          <article class="curso-card fade-up" aria-labelledby="curso-rad-nome">
+            <div class="curso-card__header">
+              <span class="curso-tag" style="background:#6B8F3A">Transversal</span>
+              <div class="curso-card__num">Curso 2</div>
+              <h3 class="curso-card__nome" id="curso-rad-nome">Recuperação de Áreas Degradadas</h3>
+              <div class="curso-card__meta">
+                <span class="curso-meta-pill">⏱ 24 horas</span>
+                <span class="curso-meta-pill">💻 EaD · MOOC</span>
+              </div>
+              <p class="ato-info" aria-label="Ato autorizativo">
+                📋 <span>Parecer n.º 11/2024</span> — REI-DEAD/REI-PROEN/REITORIA/IFG
+              </p>
+            </div>
+            <div class="curso-card__body">
+              <div>
+                <p class="curso-card__section-label">Público-alvo</p>
+                <p class="curso-card__text">
+                  Produtores, técnicos extensionistas, consultores, pesquisadores e demais
+                  interessados na recuperação de áreas degradadas.
+                </p>
+              </div>
+              <div>
+                <p class="curso-card__section-label">Objetivo geral</p>
+                <p class="curso-card__text curso-card__text--objetivo">
+                  Promover o conhecimento sobre o Cerrado e oferecer técnicas teórico-práticas
+                  da Recuperação de Áreas Degradadas (RAD).
+                </p>
+              </div>
+              <div>
+                <p class="curso-card__section-label">Unidades do curso</p>
+                <ul class="curso-card__unidades" aria-label="Unidades do curso Recuperação de Áreas Degradadas">
+                  <li>Unidade I — Degradação e o Cerrado</li>
+                  <li>Unidade II — Sistemas de Recuperação</li>
+                </ul>
+              </div>
+              <div class="curso-card__stats" aria-label="Dados de matrícula">
+                <div class="curso-stat">
+                  <div class="curso-stat__val">95</div>
+                  <div class="curso-stat__lbl">Matriculados</div>
+                </div>
+                <div class="curso-stat">
+                  <div class="curso-stat__val">24</div>
+                  <div class="curso-stat__lbl">Concluintes</div>
+                </div>
+                <div class="curso-stat d-flex flex-column align-items-center justify-content-between">
+                  <div class="curso-stat__val" style="font-size:.85rem">15 Abr/2025</div>
+                  <div class="curso-stat__lbl">Início</div>
+                </div>
+              </div>
+            </div>
+            <div class="curso-card__footer">
+              <a href="https://virtual.ifg.edu.br/" target="_blank" rel="noopener" class="btn-curso"
+                aria-label="Acessar o curso Recuperação de Áreas Degradadas na plataforma IFG Virtual">
+                🎓 Acessar o Curso
+              </a>
+            </div>
+          </article>
+
+          <!-- ── CURSO 3: Agroflorestais ── -->
+          <article class="curso-card fade-up" aria-labelledby="curso-agroflorestais-nome">
+            <div class="curso-card__header">
+              <span class="curso-tag" style="background:#6B8F3A">Transversal</span>
+              <div class="curso-card__num">Curso 3</div>
+              <h3 class="curso-card__nome" id="curso-agroflorestais-nome">Manejo de Sistemas Agroflorestais</h3>
+              <div class="curso-card__meta">
+                <span class="curso-meta-pill">⏱ 24 horas</span>
+                <span class="curso-meta-pill">💻 EaD · MOOC</span>
+              </div>
+              <p class="ato-info" aria-label="Ato autorizativo">
+                📋 <span>Parecer n.º 10/2025</span> — REI-DEAD/REI-PROEN/REITORIA/IFG
+              </p>
+            </div>
+            <div class="curso-card__body">
+              <div>
+                <p class="curso-card__section-label">Público-alvo</p>
+                <p class="curso-card__text">
+                  Estudantes, agricultores, técnicos extensionistas, pesquisadores e demais
+                  interessados em sistemas agroflorestais no Cerrado.
+                </p>
+              </div>
+              <div>
+                <p class="curso-card__section-label">Objetivo geral</p>
+                <p class="curso-card__text curso-card__text--objetivo">
+                  Preparar pessoas das ciências agrárias para atuarem no desenvolvimento de sistemas
+                  agroflorestais no bioma Cerrado, com foco em SAFs e manejo da produção.
+                </p>
+              </div>
+              <div>
+                <p class="curso-card__section-label">Unidades do curso</p>
+                <ul class="curso-card__unidades"
+                  aria-label="Unidades do curso Manejo de Sistemas Agroflorestais com Espécies Nativas do Cerrado">
+                  <li>Unidade I — Fundamentos dos SAFs</li>
+                  <li>Unidade II — Espécies, Gestão e Monitoramento</li>
+                </ul>
+              </div>
+              <div class="curso-card__stats" aria-label="Dados de matrícula">
+                <div class="curso-stat">
+                  <div class="curso-stat__val">1</div>
+                  <div class="curso-stat__lbl">Matriculado</div>
+                </div>
+                <div class="curso-stat d-flex flex-column align-items-center justify-content-between">
+                  <div class="curso-stat__val" style="font-size:.85rem">20 Ago/2025</div>
+                  <div class="curso-stat__lbl">Início</div>
+                </div>
+              </div>
+            </div>
+            <div class="curso-card__footer">
+              <a href="https://virtual.ifg.edu.br/" target="_blank" rel="noopener" class="btn-curso"
+                aria-label="Acessar o curso Manejo de Sistemas Agroflorestais com Espécies Nativas do Cerrado na plataforma IFG Virtual">
+                🎓 Acessar o Curso
+              </a>
+            </div>
+          </article>
+
+          <!-- ── CURSO 4: ILPF ── -->
+          <article class="curso-card fade-up" aria-labelledby="curso-ilpf-nome">
+            <div class="curso-card__header">
+              <span class="curso-tag" style="background:#2D6A4F">Eucalipto / Transversal</span>
+              <div class="curso-card__num">Curso 4</div>
+              <h3 class="curso-card__nome" id="curso-ilpf-nome">ILPF: Tecnologias de Produção Sustentáveis</h3>
+              <div class="curso-card__meta">
+                <span class="curso-meta-pill">⏱ 25 horas</span>
+                <span class="curso-meta-pill">💻 EaD · MOOC</span>
+              </div>
+              <p class="ato-info" aria-label="Ato autorizativo">
+                📋 <span>Parecer n.º 10/2025</span> — REI-DEAD/REI-PROEN/REITORIA/IFG
+              </p>
+            </div>
+            <div class="curso-card__body">
+              <div>
+                <p class="curso-card__section-label">Público-alvo</p>
+                <p class="curso-card__text">
+                  Estudantes, agricultores, técnicos extensionistas, representantes governamentais e
+                  interessados em tecnologias agropecuárias sustentáveis de ILPF.
+                </p>
+              </div>
+              <div>
+                <p class="curso-card__section-label">Objetivo geral</p>
+                <p class="curso-card__text curso-card__text--objetivo">
+                  Capacitar agricultores, estudantes e técnicos para a promoção de sistemas,
+                  produtos e processos sustentáveis no bioma Cerrado, via ILPF.
+                </p>
+              </div>
+              <div>
+                <p class="curso-card__section-label">Unidades do curso</p>
+                <ul class="curso-card__unidades"
+                  aria-label="Unidades do curso ILPF Tecnologias de Produção Sustentáveis">
+                  <li>Unidade I — Conceitos e Vantagens da ILPF</li>
+                  <li>Unidade II — Aplicação Prática no Cerrado</li>
+                </ul>
+              </div>
+              <div class="curso-card__stats" aria-label="Dados de matrícula">
+                <div class="curso-stat">
+                  <div class="curso-stat__val">1</div>
+                  <div class="curso-stat__lbl">Matriculado</div>
+                </div>
+                <div class="curso-stat d-flex flex-column align-items-center justify-content-between">
+                  <div class="curso-stat__val" style="font-size:.85rem">15 Abr/2025</div>
+                  <div class="curso-stat__lbl">Início</div>
+                </div>
+              </div>
+            </div>
+            <div class="curso-card__footer">
+              <a href="https://virtual.ifg.edu.br/" target="_blank" rel="noopener" class="btn-curso"
+                aria-label="Acessar o curso ILPF Tecnologias de Produção Sustentáveis Teoria e Prática no Bioma Cerrado na plataforma IFG Virtual">
+                🎓 Acessar o Curso
+              </a>
+            </div>
+          </article>
+
+          <!-- ── CURSO 5: Boas Práticas Leiteira ── -->
+          <article class="curso-card fade-up" aria-labelledby="curso-leiteira-nome">
+            <div class="curso-card__header">
+              <span class="curso-tag" style="background:#4A7C59">Pecuária de Leite</span>
+              <div class="curso-card__num">Curso 5</div>
+              <h3 class="curso-card__nome" id="curso-leiteira-nome">Boas Práticas na Pecuária Leiteira</h3>
+              <div class="curso-card__meta">
+                <span class="curso-meta-pill">⏱ 24 horas</span>
+                <span class="curso-meta-pill">💻 EaD · MOOC</span>
+              </div>
+              <p class="ato-info" aria-label="Ato autorizativo">
+                📋 <span>Parecer n.º 10/2025</span> — REI-DEAD/REI-PROEN/REITORIA/IFG
+              </p>
+            </div>
+            <div class="curso-card__body">
+              <div>
+                <p class="curso-card__section-label">Público-alvo</p>
+                <p class="curso-card__text">
+                  Produtores, técnicos extensionistas, consultores públicos e privados e demais
+                  profissionais da pecuária de leite.
+                </p>
+              </div>
+              <div>
+                <p class="curso-card__section-label">Objetivo geral</p>
+                <p class="curso-card__text curso-card__text--objetivo">
+                  Capacitar produtores e técnicos para atuar na pecuária de leite, aumentar
+                  produtividade e promover bem-estar animal no Centro-Oeste.
+                </p>
+              </div>
+              <div>
+                <p class="curso-card__section-label">Unidades do curso</p>
+                <ul class="curso-card__unidades" aria-label="Unidades do curso Boas Práticas na Pecuária Leiteira">
+                  <li>Unidade I — Qualidade do Leite e Ordenha</li>
+                  <li>Unidade II — Boas Práticas de Manejo Reprodutivo e Alimentar</li>
+                </ul>
+              </div>
+              <div class="curso-card__stats" aria-label="Dados de matrícula">
+                <div class="curso-stat">
+                  <div class="curso-stat__val">10</div>
+                  <div class="curso-stat__lbl">Matriculados</div>
+                </div>
+                <div class="curso-stat d-flex flex-column align-items-center justify-content-between">
+                  <div class="curso-stat__val" style="font-size:.85rem">21 Jan/2025</div>
+                  <div class="curso-stat__lbl">Início</div>
+                </div>
+              </div>
+            </div>
+            <div class="curso-card__footer">
+              <a href="https://virtual.ifg.edu.br/course/view.php?id=103" target="_blank" rel="noopener"
+                class="btn-curso"
+                aria-label="Acessar o curso Boas Práticas na Pecuária Leiteira na plataforma IFG Virtual">
+                🎓 Acessar o Curso
+              </a>
+            </div>
+          </article>
+
+          <!-- ── CURSO 6: Leite a Pasto ── -->
+          <article class="curso-card fade-up" aria-labelledby="curso-leite-pasto-nome">
+            <div class="curso-card__header">
+              <span class="curso-tag" style="background:#4A7C59">Pecuária de Leite</span>
+              <div class="curso-card__num">Curso 6</div>
+              <h3 class="curso-card__nome" id="curso-leite-pasto-nome">Boas Práticas na Produção de Leite a Pasto</h3>
+              <div class="curso-card__meta">
+                <span class="curso-meta-pill">⏱ 24 horas</span>
+                <span class="curso-meta-pill">💻 EaD · MOOC</span>
+              </div>
+              <p class="ato-info" aria-label="Ato autorizativo">
+                📋 <span>Parecer n.º 10/2025</span> — REI-DEAD/REI-PROEN/REITORIA/IFG
+              </p>
+            </div>
+            <div class="curso-card__body">
+              <div>
+                <p class="curso-card__section-label">Público-alvo</p>
+                <p class="curso-card__text">
+                  Produtores, técnicos extensionistas, consultores e interessados na pecuária
+                  de leite a pasto, com foco em agricultura familiar.
+                </p>
+              </div>
+              <div>
+                <p class="curso-card__section-label">Objetivo geral</p>
+                <p class="curso-card__text curso-card__text--objetivo">
+                  Capacitar profissionais na pecuária de leite a pasto para aumentar
+                  produtividade e promover bem-estar animal, com foco na agricultura familiar.
+                </p>
+              </div>
+              <div>
+                <p class="curso-card__section-label">Unidades do curso</p>
+                <ul class="curso-card__unidades"
+                  aria-label="Unidades do curso Boas Práticas na Produção de Leite a Pasto para Agricultura Familiar">
+                  <li>Unidade I — Pastagens e Produção de Leite</li>
+                  <li>Unidade II — Manejo e Suplementação</li>
+                </ul>
+              </div>
+              <div class="curso-card__stats" aria-label="Status de oferta" style="flex-direction:column;gap:.2rem">
+                <span class="badge-em-oferta" role="status">⏳ Em oferta</span>
+                <p class="badge-em-oferta-note">Dados de matrícula não disponíveis no momento do relatório</p>
+              </div>
+            </div>
+            <div class="curso-card__footer">
+              <a href="https://virtual.ifg.edu.br/" target="_blank" rel="noopener" class="btn-curso"
+                aria-label="Acessar o curso Boas Práticas na Produção de Leite a Pasto para Agricultura Familiar na plataforma IFG Virtual">
+                🎓 Acessar o Curso
+              </a>
+            </div>
+          </article>
+
+        </div><!-- /cursos-grid -->
+      </div>
+    </section>
+
+    <!-- ── CARACTERÍSTICAS MOOC ───────────────────────────────────── -->
+    <div class="mooc-strip" role="complementary" aria-labelledby="mooc-title">
+      <div class="container">
+        <p class="mooc-strip__eyebrow">Por que MOOC?</p>
+        <h2 class="mooc-strip__title" id="mooc-title">Características dos Cursos</h2>
+        <div class="mooc-pilares">
+          <div class="mooc-pilar">
+            <div class="mooc-pilar__icon" aria-hidden="true">🌐</div>
+            <h3 class="mooc-pilar__title">Acessibilidade</h3>
+            <p class="mooc-pilar__desc">
+              Cursos 100% gratuitos, sem restrição geográfica — abertos a qualquer
+              pessoa com acesso à internet, sem exigência de escolaridade prévia.
+            </p>
+          </div>
+          <div class="mooc-pilar">
+            <div class="mooc-pilar__icon" aria-hidden="true">🕐</div>
+            <h3 class="mooc-pilar__title">Flexibilidade</h3>
+            <p class="mooc-pilar__desc">
+              Formato assíncrono e autoinstrucional: estude no seu próprio ritmo,
+              no horário que preferir, sem datas fixas de aula.
+            </p>
+          </div>
+          <div class="mooc-pilar">
+            <div class="mooc-pilar__icon" aria-hidden="true">🤝</div>
+            <h3 class="mooc-pilar__title">Colaboração</h3>
+            <p class="mooc-pilar__desc">
+              Plataforma Moodle com fóruns, atividades e certificação ao final —
+              integrando produtores, técnicos e pesquisadores em rede.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="row g-3">
+        <div class="col-lg-5">
+          <div class="footer__title">Projeto Cerrado · Goiás</div>
+          <p>Monitoramento de cadeias produtivas do Cerrado. Dados baseados em pesquisas oficiais.</p>
+        </div>
+        <div class="col-lg-4">
+          <div class="footer__title">Cadeias Monitoradas</div>
+          <p>
+            <a href="leite.html" style="color:rgba(255,255,255,.6)">Pecuária de Leite</a><br>
+            <a href="corte.html" style="color:rgba(255,255,255,.6)">Pecuária de Corte</a><br>
+            <a href="eucalipto.html" style="color:rgba(255,255,255,.6)">Floresta Plantada do Eucalipto</a><br>
+            <a href="seringueira.html" style="color:rgba(255,255,255,.6)">Floresta Plantada da Seringueira</a>
+          </p>
+        </div>
+        <div class="col-lg-3">
+          <div class="footer__title">Acessibilidade</div>
+          <p>Site desenvolvido seguindo as diretrizes WCAG 2.1 AA. Navegação por teclado disponível.</p>
+        </div>
+      </div>
+      <div class="footer__bottom d-flex flex-wrap justify-content-between gap-2">
+        <span>© 2026 Projeto Cerrado · Goiás. Parceria: IFG · MAPA.</span>
+        <span>Bootstrap 5 · IFG Virtual</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="shared.js"></script>
+</body>
+
+</html>
