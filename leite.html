@@ -12,6 +12,168 @@
     href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,600;1,8..60,300&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
+  <style>
+    .filter-bar--analitica {
+      align-items: flex-start;
+      gap: .75rem 1rem;
+      padding: .85rem 1rem;
+    }
+
+    .filter-cluster {
+      display: flex;
+      flex-direction: column;
+      gap: .35rem;
+      min-width: 145px;
+    }
+
+    .filter-cluster--wide {
+      min-width: 210px;
+      flex: 1 1 220px;
+    }
+
+    .filter-select {
+      min-height: 2rem;
+      border: 1.5px solid var(--cinza-claro);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--cinza-escuro);
+      font-family: var(--font-d);
+      font-size: .78rem;
+      padding: .35rem .55rem;
+    }
+
+    .filter-search {
+      border: 1.5px solid var(--cinza-claro);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--cinza-escuro);
+      font-family: var(--font-d);
+      font-size: .78rem;
+      padding: .35rem .55rem;
+    }
+
+    .filter-dropdown-btn {
+      width: 100%;
+      min-height: 2rem;
+      border: 1.5px solid var(--cinza-claro);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--cinza-escuro);
+      font-family: var(--font-d);
+      font-size: .78rem;
+      font-weight: 600;
+      padding: .35rem .65rem;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+    }
+
+    .filter-dropdown-btn::after {
+      content: "▾";
+      color: var(--cinza-med);
+      font-size: .7rem;
+    }
+
+    .filter-dropdown-menu {
+      width: min(320px, 92vw);
+      max-height: 320px;
+      overflow: auto;
+      padding: .55rem;
+      border: 1px solid var(--cinza-claro);
+      border-radius: 8px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .filter-option {
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .28rem .2rem;
+      color: var(--cinza-escuro);
+      font-family: var(--font-d);
+      font-size: .78rem;
+      cursor: pointer;
+    }
+
+    .filter-option input {
+      accent-color: var(--verde);
+    }
+
+    .filter-action-btn {
+      font-family: var(--font-d);
+      font-size: .72rem;
+      font-weight: 600;
+      padding: .35rem .7rem;
+      border-radius: 20px;
+      cursor: pointer;
+      border: 1.5px solid var(--cinza-claro);
+      background: #fff;
+      color: var(--cinza-med);
+      transition: all .18s;
+    }
+
+    .filter-action-btn:hover,
+    .filter-action-btn.active {
+      background: var(--verde);
+      border-color: var(--verde);
+      color: #fff;
+    }
+
+    .filter-actions {
+      display: flex;
+      flex-direction: row;
+      gap: .45rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .filter-summary {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+      align-items: center;
+      min-height: 1.8rem;
+    }
+
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid var(--cinza-claro);
+      color: var(--cinza-med);
+      font: 600 .7rem var(--font-d);
+      padding: .2rem .55rem;
+    }
+
+    .filter-empty {
+      display: none;
+      margin: .5rem 0 1rem;
+      padding: .8rem 1rem;
+      border: 1px dashed var(--cinza-claro);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--cinza-med);
+      font-family: var(--font-d);
+      font-size: .86rem;
+    }
+
+    .is-filter-hidden,
+    .is-chart-empty {
+      display: none !important;
+    }
+
+    @media (max-width: 768px) {
+      .filter-cluster,
+      .filter-actions {
+        min-width: 100%;
+      }
+    }
+  </style>
 
 </head>
 
@@ -60,23 +222,91 @@
     </div>
   </header>
 
-  <!-- FILTER BAR -->
-  <div class="filter-bar" role="search" aria-label="Filtros">
-    <span class="filter-label">Escala</span>
-    <div class="filter-group" role="group" aria-label="Filtrar por escala geográfica" data-filter-group="escala">
-      <button class="filter-btn active" data-filter="all">Todas</button>
-      <button class="filter-btn" data-filter="brasil">Brasil</button>
-      <button class="filter-btn" data-filter="goias">Goiás</button>
-      <button class="filter-btn" data-filter="municipio">Municípios</button>
+  <div class="filter-bar filter-bar--analitica" role="search" aria-label="Filtros analíticos">
+    <div class="filter-cluster">
+      <span class="filter-label">Escala</span>
+      <div class="filter-group" role="group" aria-label="Filtrar por escala geográfica" data-filter-group="escala">
+        <button class="filter-btn active" type="button" data-filter="all">Todas</button>
+        <button class="filter-btn" type="button" data-filter="brasil">Brasil</button>
+        <button class="filter-btn" type="button" data-filter="goias">Goiás</button>
+        <button class="filter-btn" type="button" data-filter="municipio">Municípios</button>
+      </div>
     </div>
-    <div class="filter-sep" aria-hidden="true"></div>
-    <span class="filter-label">Indicador</span>
-    <div class="filter-group" role="group" aria-label="Filtrar por indicador" data-filter-group="ind">
-      <button class="filter-btn active" data-filter="all">Todos</button>
-      <button class="filter-btn" data-filter="producao">Produção</button>
-      <button class="filter-btn" data-filter="produtividade">Produtividade</button>
-      <button class="filter-btn" data-filter="vacas">Vacas Ordenhadas</button>
+    <div class="filter-cluster filter-cluster--wide">
+      <span class="filter-label">Indicador</span>
+      <div class="filter-group" role="group" aria-label="Filtrar por indicador" data-filter-group="indicador">
+        <button class="filter-btn active" type="button" data-filter="all">Todos</button>
+        <button class="filter-btn" type="button" data-filter="producao">Produção</button>
+        <button class="filter-btn" type="button" data-filter="produtividade">Produtividade</button>
+        <button class="filter-btn" type="button" data-filter="vacas">Vacas</button>
+        <button class="filter-btn" type="button" data-filter="mercado">Mercado</button>
+        <button class="filter-btn" type="button" data-filter="perfil">Perfil</button>
+      </div>
     </div>
+    <div class="filter-cluster">
+      <span class="filter-label">Período</span>
+      <div class="d-flex gap-2">
+        <select id="filtroAnoInicio" class="filter-select" aria-label="Ano inicial"></select>
+        <select id="filtroAnoFim" class="filter-select" aria-label="Ano final"></select>
+      </div>
+    </div>
+    <div class="filter-cluster filter-cluster--wide">
+      <span class="filter-label">Região</span>
+      <div class="dropdown" data-bs-auto-close="outside">
+        <button id="filtroRegiaoBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
+          data-bs-auto-close="outside"
+          aria-expanded="false">Todas</button>
+        <div class="dropdown-menu filter-dropdown-menu">
+          <input id="buscaRegiao" class="filter-search w-100 mb-2" type="search" placeholder="Buscar região"
+            aria-label="Buscar região" />
+          <div id="filtroRegiaoMenu"></div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-cluster filter-cluster--wide">
+      <span class="filter-label">UF/Estado</span>
+      <div class="dropdown" data-bs-auto-close="outside">
+        <button id="filtroUfBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
+          data-bs-auto-close="outside"
+          aria-expanded="false">Todas</button>
+        <div class="dropdown-menu filter-dropdown-menu">
+          <input id="buscaUf" class="filter-search w-100 mb-2" type="search" placeholder="Buscar UF/estado"
+            aria-label="Buscar UF ou estado" />
+          <div id="filtroUfMenu"></div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-cluster filter-cluster--wide">
+      <span class="filter-label">Município</span>
+      <div class="dropdown" data-bs-auto-close="outside">
+        <button id="filtroMunicipioBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
+          data-bs-auto-close="outside"
+          aria-expanded="false">Todos</button>
+        <div class="dropdown-menu filter-dropdown-menu">
+          <input id="buscaMunicipio" class="filter-search w-100 mb-2" type="search" placeholder="Buscar município"
+            aria-label="Buscar município" />
+          <div id="filtroMunicipioMenu"></div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-cluster filter-cluster--wide">
+      <span class="filter-label">Produto / perfil</span>
+      <div class="dropdown" data-bs-auto-close="outside">
+        <button id="filtroProdutoBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
+          data-bs-auto-close="outside"
+          aria-expanded="false">Todos</button>
+        <div class="dropdown-menu filter-dropdown-menu">
+          <input id="buscaProduto" class="filter-search w-100 mb-2" type="search" placeholder="Buscar produto ou perfil"
+            aria-label="Buscar produto ou perfil" />
+          <div id="filtroProdutoMenu"></div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-actions">
+      <button id="btnLimparFiltros" class="filter-action-btn" type="button">Limpar filtros</button>
+      <button id="btnAplicarFoco" class="filter-action-btn active" type="button">Ir para foco</button>
+    </div>
+    <div id="filtrosAtivosLeite" class="filter-summary" aria-live="polite"></div>
   </div>
 
   <div class="tab-nav" role="tablist" aria-label="Seções da pecuária de leite">
@@ -92,6 +322,9 @@
   <main id="main-content">
     <section class="tab-scope">
       <div class="container tab-content-obs">
+        <div id="semDadosLeite" class="filter-empty" role="status">
+          Nenhum gráfico tem dados para a combinação de filtros atual.
+        </div>
 
         <!-- ══ TAB: BRASIL ══════════════════════════════════ -->
         <div data-tab-content="lt-brasil" class="active" role="tabpanel" id="lt-brasil" aria-labelledby="btn-lt-brasil">
@@ -157,7 +390,7 @@
                 <div id="chartProdutividade" class="chart-area" aria-hidden="true"></div>
               </div>
             </div>
-            <div class="col-lg-6" data-category="producao">
+            <div class="col-lg-6" data-category="mercado">
               <div class="table-card">
                 <div class="table-card__head">
                   <div class="chart-card__title">Regiões Brasileiras — 2021</div>
@@ -206,6 +439,63 @@
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-4">
+            <div class="col-lg-6" data-category="vacas">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Vacas ordenhadas por região em 2021">
+                <div class="chart-card__title">Vacas Ordenhadas por Região (2021)</div>
+                <div class="chart-card__sub">Cabeças e participação regional</div>
+                <div id="chartVacasRegiao" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-lg-6" data-category="vacas">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Série de vacas ordenhadas por região">
+                <div class="chart-card__title">Vacas Ordenhadas por Região</div>
+                <div class="chart-card__sub">Cabeças — 2013–2021</div>
+                <div id="chartVacasRegiaoSerie" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-4">
+            <div class="col-lg-7" data-category="mercado">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Preços de produtos lácteos">
+                <div class="chart-card__title">Preços de Produtos Lácteos</div>
+                <div class="chart-card__sub">Goiás e Brasil — dezembro de 2020 e 2021</div>
+                <div id="chartPrecosLacteos" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-lg-5" data-category="mercado">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Ranking de consumo por UF">
+                <div class="chart-card__title">Ranking de Consumo por UF</div>
+                <div class="chart-card__sub">Produtos em que Goiás aparece no Top 5</div>
+                <div id="chartRankingConsumo" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-4">
+            <div class="col-12" data-category="mercado">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Consumo de lácteos no Brasil">
+                <div class="chart-card__title">Consumo de Lácteos</div>
+                <div class="chart-card__sub">Milhões de litros de leite equivalente — 2011–2020</div>
+                <div id="chartConsumoLacteos" class="chart-area chart-area--tall" aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-4">
+            <div class="col-lg-6" data-category="mercado">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Valor Bruto da Produção de Leite">
+                <div class="chart-card__title">Valor Bruto da Produção de Leite</div>
+                <div class="chart-card__sub">Centro-Oeste — 2012 vs 2021</div>
+                <div id="chartVbpLeite" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-lg-6" data-category="mercado">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Ranking do VBP pecuário">
+                <div class="chart-card__title">Ranking do VBP Pecuário</div>
+                <div class="chart-card__sub">Brasil — R$ bilhões em 2021</div>
+                <div id="chartRankingVbp" class="chart-area" aria-hidden="true"></div>
               </div>
             </div>
           </div>
@@ -275,6 +565,93 @@
                 <div class="chart-card__title">Vacas Ordenhadas por Mesorregião</div>
                 <div class="chart-card__sub">Cabeças — 2013 vs 2017</div>
                 <div id="chartVacasGoias" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-4">
+            <div class="col-lg-6" data-category="vacas">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Série de vacas ordenhadas por mesorregião">
+                <div class="chart-card__title">Vacas Ordenhadas por Mesorregião</div>
+                <div class="chart-card__sub">Cabeças — 2013–2021</div>
+                <div id="chartVacasMesoSerie" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-lg-6" data-category="mercado">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Efetivo do rebanho bovino no Centro-Oeste">
+                <div class="chart-card__title">Efetivo de Rebanho Bovino do Centro-Oeste</div>
+                <div class="chart-card__sub">Cabeças — 2013–2021</div>
+                <div id="chartRebanhoCO" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-4">
+            <div class="col-lg-6" data-category="producao">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Produção no Centro-Oeste por UF">
+                <div class="chart-card__title">Produção no Centro-Oeste por UF</div>
+                <div class="chart-card__sub">Produção de leite em 2021</div>
+                <div id="chartProducaoCentroOesteUf" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-lg-6" data-category="producao">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Exportações de lácteos por ano">
+                <div class="chart-card__title">Exportações de Lácteos por Ano</div>
+                <div class="chart-card__sub">Goiás — valor exportado e peso</div>
+                <div id="chartExportacoesAno" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-4">
+            <div class="col-lg-6" data-category="producao">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Destino das exportações de Goiás">
+                <div class="chart-card__title">Destino das Exportações de Goiás</div>
+                <div class="chart-card__sub">Participação por país — 2011–2020</div>
+                <div id="chartDestinoExportacoes" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-lg-6" data-category="producao">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Produtos lácteos exportados por Goiás">
+                <div class="chart-card__title">Produtos Lácteos Exportados por Goiás</div>
+                <div class="chart-card__sub">Valor exportado em US$ — 2011–2020</div>
+                <div id="chartProdutosExportados" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-4">
+            <div class="col-lg-4" data-category="mercado">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Importações por ano por Goiás">
+                <div class="chart-card__title">Importações por Ano por Goiás</div>
+                <div class="chart-card__sub">Valor importado em US$</div>
+                <div id="chartImportacoesAno" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-lg-4" data-category="mercado">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Importações por país de lácteos de Goiás">
+                <div class="chart-card__title">Importações por País</div>
+                <div class="chart-card__sub">Participação por origem — 2011–2020</div>
+                <div id="chartOrigemImportacoes" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-lg-4" data-category="mercado">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Produtos lácteos importados por Goiás">
+                <div class="chart-card__title">Produtos Lácteos Importados</div>
+                <div class="chart-card__sub">Valor importado em US$ — 2011–2020</div>
+                <div id="chartProdutosImportados" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-4">
+            <div class="col-lg-6" data-category="perfil">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Produção de leite por tamanho do rebanho">
+                <div class="chart-card__title">Produção por Tamanho do Rebanho</div>
+                <div class="chart-card__sub">Goiás — Censo Agropecuário 2017</div>
+                <div id="chartProducaoPorRebanho" class="chart-area chart-area--tall" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-lg-6" data-category="perfil">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Produção de leite por condição do produtor">
+                <div class="chart-card__title">Produção por Condição do Produtor</div>
+                <div class="chart-card__sub">Goiás — Censo Agropecuário 2017</div>
+                <div id="chartProducaoPorCondicao" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
           </div>
@@ -382,6 +759,15 @@
             </div>
           </div>
           <div class="row g-4">
+            <div class="col-12" data-category="produtividade">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Produtividade dos principais municípios">
+                <div class="chart-card__title">Produtividade dos Principais Municípios</div>
+                <div class="chart-card__sub">Litros / vaca / ano — 2019 vs 2020</div>
+                <div id="chartProdutividadeMunicipios" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-4">
             <div class="col-12" data-category="producao">
               <div class="chart-card" role="figure" aria-label="Gráfico: Comparativo 2013 vs 2021 — Top 5 municípios">
                 <div class="chart-card__title">Produção 2013 vs 2021 — Top 5 Municípios</div>
@@ -440,7 +826,7 @@
             </div>
           </div>
           <div class="row g-4">
-            <div class="col-lg-7">
+            <div class="col-lg-7" data-category="producao">
               <div class="chart-card" role="figure"
                 aria-label="Gráfico: Produção de leite por estado do Centro-Oeste — 2013 vs 2022">
                 <div class="chart-card__title">Produção de Leite — Centro-Oeste (2013 vs 2022)</div>
@@ -448,7 +834,7 @@
                 <div id="chartLeiteProducaoCO" class="chart-area" aria-hidden="true"></div>
               </div>
             </div>
-            <div class="col-lg-5">
+            <div class="col-lg-5" data-category="producao">
               <div class="chart-card" role="figure" aria-label="Gráfico: Projeções Monte Carlo 2022–2033">
                 <div class="chart-card__title">Projeções — Monte Carlo (2022–2033)</div>
                 <div class="chart-card__sub">Bilhões de litros — 3 cenários · 1.000 simulações · 95% de probabilidade

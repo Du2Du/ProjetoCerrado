@@ -5,17 +5,277 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
-    content="Florestas Plantadas — Heveicultura e borracha natural no Centro-Oeste e posição do Brasil no mundo." />
+    content="Floresta plantada do eucalipto no Centro-Oeste: quantidade produzida, valor da produção e participação por produto." />
   <title>Florestas Plantadas · Projeto Cerrado</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link
     href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,600;1,8..60,300&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
+  <style>
+    .filter-bar--eucalipto {
+      align-items: flex-start;
+      gap: .75rem 1rem;
+      padding: .85rem 1rem;
+    }
+
+    .filter-cluster {
+      display: flex;
+      flex-direction: column;
+      gap: .35rem;
+      min-width: 145px;
+    }
+
+    .filter-cluster--wide {
+      min-width: 210px;
+      flex: 1 1 220px;
+    }
+
+    .filter-select,
+    .filter-search {
+      min-height: 2rem;
+      border: 1.5px solid var(--cinza-claro);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--cinza-escuro);
+      font-family: var(--font-d);
+      font-size: .78rem;
+      padding: .35rem .55rem;
+    }
+
+    .filter-dropdown-btn {
+      width: 100%;
+      min-height: 2rem;
+      border: 1.5px solid var(--cinza-claro);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--cinza-escuro);
+      font-family: var(--font-d);
+      font-size: .78rem;
+      font-weight: 600;
+      padding: .35rem .65rem;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+    }
+
+    .filter-dropdown-btn::after {
+      content: "▾";
+      color: var(--cinza-med);
+      font-size: .7rem;
+    }
+
+    .filter-dropdown-menu {
+      width: min(340px, 92vw);
+      max-height: 330px;
+      overflow: auto;
+      padding: .55rem;
+      border: 1px solid var(--cinza-claro);
+      border-radius: 8px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .filter-option {
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .28rem .2rem;
+      color: var(--cinza-escuro);
+      font-family: var(--font-d);
+      font-size: .78rem;
+      cursor: pointer;
+    }
+
+    .filter-option input {
+      accent-color: var(--verde);
+    }
+
+    .filter-actions {
+      display: flex;
+      flex-direction: row;
+      gap: .45rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .filter-action-btn {
+      font-family: var(--font-d);
+      font-size: .72rem;
+      font-weight: 600;
+      padding: .35rem .7rem;
+      border-radius: 20px;
+      cursor: pointer;
+      border: 1.5px solid var(--cinza-claro);
+      background: #fff;
+      color: var(--cinza-med);
+      transition: all .18s;
+    }
+
+    .filter-action-btn:hover {
+      background: var(--verde);
+      border-color: var(--verde);
+      color: #fff;
+    }
+
+    .filter-summary {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+      align-items: center;
+      min-height: 1.8rem;
+    }
+
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid var(--cinza-claro);
+      color: var(--cinza-med);
+      font: 600 .7rem var(--font-d);
+      padding: .2rem .55rem;
+    }
+
+    .chart-card__head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: .9rem;
+    }
+
+    .chart-card__controls {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .chart-card__controls .filter-select {
+      min-width: 108px;
+    }
+
+    .filter-empty {
+      display: none;
+      margin: .5rem 0 1rem;
+      padding: .8rem 1rem;
+      border: 1px dashed var(--cinza-claro);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--cinza-med);
+      font-family: var(--font-d);
+      font-size: .86rem;
+    }
+
+    .chart-empty {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      min-height: 180px;
+      border: 1px dashed var(--cinza-claro);
+      border-radius: 8px;
+      color: var(--cinza-med);
+      font-family: var(--font-d);
+      font-size: .84rem;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    body.tab-scope .fade-up {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+
+    .is-filter-hidden,
+    .is-chart-empty {
+      display: none !important;
+    }
+
+    .page-hero h1,
+    .section-title,
+    .chart-card__title,
+    .kpi-label,
+    .kpi-badge {
+      overflow-wrap: anywhere;
+    }
+
+    body,
+    html,
+    main,
+    .container,
+    .row,
+    [class*="col-"],
+    .chart-card,
+    .chart-area {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    html,
+    body {
+      overflow-x: hidden;
+    }
+
+    @media (max-width: 768px) {
+      .filter-cluster,
+      .filter-actions {
+        min-width: 100%;
+      }
+
+      .chart-card__head {
+        flex-direction: column;
+      }
+
+      .chart-card__controls {
+        justify-content: flex-start;
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .filter-bar--eucalipto {
+        padding: .8rem 1rem;
+      }
+
+      .page-hero h1 {
+        font-size: 1.42rem;
+        line-height: 1.15;
+      }
+
+      .page-hero p,
+      .section-title {
+        max-width: calc(100vw - 2rem);
+      }
+
+      .section-title {
+        font-size: 1.05rem;
+        line-height: 1.25;
+      }
+
+      .filter-bar--eucalipto .filter-group,
+      .filter-bar--eucalipto .d-flex {
+        width: 100%;
+      }
+
+      .filter-bar--eucalipto .filter-select {
+        flex: 1 1 0;
+        min-width: 0;
+      }
+
+      .chart-card {
+        padding: 1rem .9rem .8rem;
+      }
+    }
+  </style>
 
 </head>
 
-<body>
+<body class="tab-scope">
   <a class="skip-link" href="#main-content">Ir para o conteúdo principal</a>
 
   <nav class="navbar-obs" role="navigation" aria-label="Navegação principal">
@@ -55,34 +315,73 @@
     <div class="container position-relative">
       <span class="page-hero__label">Eucalipto</span>
       <h1>Floresta Plantada do Eucalipto</h1>
-      <p>Área plantada, produção madeireira, consumo industrial e produtividade do eucalipto no Centro-Oeste.</p>
-      <p class="page-hero__meta">Fonte: IBGE (Tabelas 5930 e 291) · IBÁ / FGV IBRE · 2012–2021</p>
+      <p>Quantidade produzida, valor de produção e participação dos produtos da silvicultura do eucalipto no Centro-Oeste.</p>
+      <p class="page-hero__meta">Fonte: IBGE — Tabela 291 · 2012–2021</p>
     </div>
   </header>
 
-  <!-- FILTER BAR -->
-  <div class="filter-bar" role="search" aria-label="Filtros">
-    <span class="filter-label">Escala</span>
-    <div class="filter-group" role="group" aria-label="Filtrar por escala" data-filter-group="escala">
-      <button class="filter-btn active" data-filter="all">Todas</button>
-      <button class="filter-btn" data-filter="co">Centro-Oeste</button>
-      <button class="filter-btn" data-filter="mundial">Mundial</button>
+  <div class="filter-bar filter-bar--eucalipto" role="search" aria-label="Filtros analíticos do eucalipto">
+    <div class="filter-cluster filter-cluster--wide">
+      <span class="filter-label">Indicador</span>
+      <div class="filter-group" role="group" aria-label="Filtrar por indicador" data-filter-group="indicador">
+        <button class="filter-btn active" type="button" data-filter="all">Todos</button>
+        <button class="filter-btn" type="button" data-filter="producao">Produção</button>
+        <button class="filter-btn" type="button" data-filter="valor">Valor</button>
+        <button class="filter-btn" type="button" data-filter="ranking">Ranking</button>
+      </div>
     </div>
-    <div class="filter-sep" aria-hidden="true"></div>
-    <span class="filter-label">Indicador</span>
-    <div class="filter-group" role="group" aria-label="Filtrar por indicador" data-filter-group="ind">
-      <button class="filter-btn active" data-filter="all">Todos</button>
-      <button class="filter-btn" data-filter="producao">Produção</button>
-      <button class="filter-btn" data-filter="area">Área</button>
-      <button class="filter-btn" data-filter="custo">Custo</button>
+    <div class="filter-cluster">
+      <span class="filter-label">Período</span>
+      <div class="d-flex gap-2">
+        <select id="filtroAnoInicioEucalipto" class="filter-select" aria-label="Ano inicial"></select>
+        <select id="filtroAnoFimEucalipto" class="filter-select" aria-label="Ano final"></select>
+      </div>
     </div>
+    <div class="filter-cluster filter-cluster--wide">
+      <span class="filter-label">Produto</span>
+      <div class="dropdown" data-bs-auto-close="outside">
+        <button id="filtroProdutoEucaliptoBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
+          data-bs-auto-close="outside" aria-expanded="false">Todos</button>
+        <div class="dropdown-menu filter-dropdown-menu">
+          <input id="buscaProdutoEucalipto" class="filter-search w-100 mb-2" type="search" placeholder="Buscar produto"
+            aria-label="Buscar produto" />
+          <div id="filtroProdutoEucaliptoMenu"></div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-cluster">
+      <span class="filter-label">UF</span>
+      <div class="dropdown" data-bs-auto-close="outside">
+        <button id="filtroUfEucaliptoBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
+          data-bs-auto-close="outside" aria-expanded="false">Todas</button>
+        <div class="dropdown-menu filter-dropdown-menu">
+          <input id="buscaUfEucalipto" class="filter-search w-100 mb-2" type="search" placeholder="Buscar UF"
+            aria-label="Buscar UF" />
+          <div id="filtroUfEucaliptoMenu"></div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-cluster filter-cluster--wide">
+      <span class="filter-label">Município</span>
+      <div class="dropdown" data-bs-auto-close="outside">
+        <button id="filtroMunicipioEucaliptoBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
+          data-bs-auto-close="outside" aria-expanded="false">Todos</button>
+        <div class="dropdown-menu filter-dropdown-menu">
+          <input id="buscaMunicipioEucalipto" class="filter-search w-100 mb-2" type="search"
+            placeholder="Buscar município" aria-label="Buscar município" />
+          <div id="filtroMunicipioEucaliptoMenu"></div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-actions">
+      <button id="btnLimparFiltrosEucalipto" class="filter-action-btn" type="button">Limpar filtros</button>
+    </div>
+    <div id="filtrosAtivosEucalipto" class="filter-summary" aria-live="polite"></div>
   </div>
 
   <div class="tab-nav" role="tablist" aria-label="Seções do eucalipto">
     <button class="tab-nav__btn active" role="tab" aria-selected="true" data-tab="fl-co"
       id="btn-fl-co">Centro-Oeste</button>
-    <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="fl-mundo" id="btn-fl-mundo">Cenário
-      Mundial</button>
     <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="fl-plano" aria-controls="fl-plano"
       id="btn-fl-plano">Plano de Intervenção</button>
   </div>
@@ -90,6 +389,9 @@
   <main id="main-content">
     <section class="tab-scope">
       <div class="container tab-content-obs">
+        <div id="semDadosEucalipto" class="filter-empty" role="status">
+          Nenhum gráfico tem dados para a combinação de filtros atual.
+        </div>
 
         <!-- ══ TAB: CENTRO-OESTE ══════════════════════════════ -->
         <div data-tab-content="fl-co" class="active" role="tabpanel" id="fl-co" aria-labelledby="btn-fl-co">
@@ -101,240 +403,99 @@
             </div>
           </div>
           <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3 fade-up">
+            <div class="col-12 col-sm-6 col-md-3 fade-up">
               <div class="kpi-card">
-                <div class="kpi-label">Área plantada CO (2021)</div>
-                <div class="kpi-value">1.385<span class="kpi-unit">mil ha</span></div><span
-                  class="kpi-badge kpi-badge--up">▲ +40,1% desde 2013</span>
+                <div class="kpi-label">Produto líder em quantidade</div>
+                <div class="kpi-value" id="kpiQuantidadeLider">13,1<span class="kpi-unit">mi m³</span></div><span
+                  class="kpi-badge kpi-badge--up" id="kpiQuantidadeLiderBadge">madeira papel/celulose · 2021</span>
               </div>
             </div>
-            <div class="col-6 col-md-3 fade-up">
+            <div class="col-12 col-sm-6 col-md-3 fade-up">
               <div class="kpi-card kpi-card--gold">
-                <div class="kpi-label">MS: maior produtor CO</div>
-                <div class="kpi-value">75,5<span class="kpi-unit">%</span></div><span
-                  class="kpi-badge kpi-badge--neutral">da área plantada CO</span>
+                <div class="kpi-label">Maior localidade produtora</div>
+                <div class="kpi-value" id="kpiRankingLider">4,73<span class="kpi-unit">mi m³</span></div><span
+                  class="kpi-badge kpi-badge--neutral" id="kpiRankingLiderBadge">Três Lagoas (MS)</span>
               </div>
             </div>
-            <div class="col-6 col-md-3 fade-up">
+            <div class="col-12 col-sm-6 col-md-3 fade-up">
               <div class="kpi-card kpi-card--terra">
-                <div class="kpi-label">Madeira papel/celulose</div>
-                <div class="kpi-value">13,1<span class="kpi-unit">mi m³</span></div><span
-                  class="kpi-badge kpi-badge--up">▲ 2021 — Tabela 291</span>
+                <div class="kpi-label">Valor da produção CO</div>
+                <div class="kpi-value" id="kpiValorTotal">1,75<span class="kpi-unit">bi R$</span></div><span
+                  class="kpi-badge kpi-badge--up" id="kpiValorTotalBadge">Tabela 2 · 2021</span>
               </div>
             </div>
-            <div class="col-6 col-md-3 fade-up">
+            <div class="col-12 col-sm-6 col-md-3 fade-up">
               <div class="kpi-card kpi-card--light">
-                <div class="kpi-label">Produtividade Brasil (2021)</div>
-                <div class="kpi-value">38,9<span class="kpi-unit">m³/ha/ano</span></div><span
-                  class="kpi-badge kpi-badge--neutral">IBÁ / FGV IBRE</span>
-              </div>
-            </div>
-          </div>
-          <div class="row g-4">
-            <div class="col-lg-8" data-category="area">
-              <div class="chart-card" role="figure"
-                aria-label="Gráfico: Área plantada de eucalipto no Centro-Oeste por estado — 2013–2021">
-                <div class="chart-card__title">Área Plantada CO por Estado — IBGE Tabela 5930</div>
-                <div class="chart-card__sub">Hectares (2013–2021)</div>
-                <div id="chartEucaliptoArea" class="chart-area chart-area--tall" aria-hidden="true"></div>
-              </div>
-            </div>
-            <div class="col-lg-4" data-category="producao">
-              <div class="chart-card" role="figure"
-                aria-label="Gráfico: Produtividade do eucalipto no Brasil — 2014–2021">
-                <div class="chart-card__title">Produtividade do Eucalipto — Brasil</div>
-                <div class="chart-card__sub">m³/ha/ano (2014–2021) — IBÁ / FGV IBRE</div>
-                <div id="chartEucaliptoProdut" class="chart-area chart-area--tall" aria-hidden="true"></div>
-              </div>
-            </div>
-          </div>
-          <div class="row g-4">
-            <div class="col-lg-6" data-category="producao">
-              <div class="chart-card" role="figure"
-                aria-label="Gráfico: Consumo industrial de eucalipto no Brasil — 2013–2021">
-                <div class="chart-card__title">Consumo Industrial Brasil</div>
-                <div class="chart-card__sub">Milhões de m³ (2013–2021) — IBÁ</div>
-                <div id="chartEucaliptoConsumo" class="chart-area" aria-hidden="true"></div>
-              </div>
-            </div>
-            <div class="col-lg-6">
-              <div class="table-card">
-                <div class="table-card__head">
-                  <div class="chart-card__title">Produção CO por Produto — Tabela 291</div>
-                  <div class="chart-card__sub">IBGE — Silvicultura (2012–2021)</div>
-                </div>
-                <div class="table-responsive">
-                  <table class="table table-obs" aria-label="Produção de eucalipto no Centro-Oeste por produto — 2012–2021">
-                    <thead>
-                      <tr>
-                        <th scope="col">Ano</th>
-                        <th scope="col" class="text-end">Mad. celulose (m³)</th>
-                        <th scope="col" class="text-end">Lenha (m³)</th>
-                        <th scope="col" class="text-end">Carvão (t)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr><td>2012</td><td class="text-end num">4.968.944</td><td class="text-end num">4.065.556</td><td class="text-end num">93.462</td></tr>
-                      <tr><td>2013</td><td class="text-end num">8.033.052</td><td class="text-end num">6.230.147</td><td class="text-end num">145.073</td></tr>
-                      <tr><td>2014</td><td class="text-end num">8.293.047</td><td class="text-end num">6.472.880</td><td class="text-end num">139.192</td></tr>
-                      <tr><td>2015</td><td class="text-end num">9.419.761</td><td class="text-end num">5.358.997</td><td class="text-end num">70.908</td></tr>
-                      <tr><td>2016</td><td class="text-end num">9.958.927</td><td class="text-end num">4.994.371</td><td class="text-end num">52.945</td></tr>
-                      <tr><td>2017</td><td class="text-end num">12.860.798</td><td class="text-end num">4.910.293</td><td class="text-end num">65.997</td></tr>
-                      <tr><td>2018</td><td class="text-end num">17.511.680</td><td class="text-end num">4.795.454</td><td class="text-end num">134.453</td></tr>
-                      <tr><td>2019</td><td class="text-end num">14.602.994</td><td class="text-end num">5.369.619</td><td class="text-end num">169.969</td></tr>
-                      <tr><td>2020</td><td class="text-end num">14.661.653</td><td class="text-end num">5.883.302</td><td class="text-end num">187.119</td></tr>
-                      <tr><td><strong>2021</strong></td><td class="text-end num"><strong>13.144.044</strong></td><td class="text-end num"><strong>5.998.155</strong></td><td class="text-end num"><strong>179.191</strong></td></tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- Produção CO por produto -->
-          <div class="row g-4">
-            <div class="col-12" data-category="producao">
-              <div class="chart-card" role="figure"
-                aria-label="Gráfico: Produção de eucalipto no Centro-Oeste por produto — Tabela 291 IBGE">
-                <div class="chart-card__title">Produção CO por Produto — Tabela 291 (IBGE)</div>
-                <div class="chart-card__sub">Madeira para papel/celulose e lenha, metros cúbicos (2012–2021)</div>
-                <div id="chartEucaliptoProducao" class="chart-area" aria-hidden="true"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ══ TAB: MUNDIAL ══════════════════════════════════ -->
-        <div data-tab-content="fl-mundo" role="tabpanel" id="fl-mundo" aria-labelledby="btn-fl-mundo">
-          <div class="row mb-2">
-            <div class="col-12">
-              <p class="section-label">Contexto Internacional</p>
-              <h2 class="section-title">Brasil no Cenário Mundial da Borracha Natural</h2>
-              <div class="section-divider"></div>
-            </div>
-          </div>
-          <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card">
-                <div class="kpi-label">Líder mundial</div>
-                <div class="kpi-value">Indonésia</div><span class="kpi-badge kpi-badge--up">12,5 mi de ha</span>
-              </div>
-            </div>
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--terra">
-                <div class="kpi-label">Posição do Brasil</div>
-                <div class="kpi-value">7º<span class="kpi-unit">mundial</span></div><span
-                  class="kpi-badge kpi-badge--neutral">1,7 mi de ha</span>
-              </div>
-            </div>
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--gold">
-                <div class="kpi-label">Ásia domina</div>
-                <div class="kpi-value">~88<span class="kpi-unit">%</span></div><span
-                  class="kpi-badge kpi-badge--neutral">da produção global</span>
-              </div>
-            </div>
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--light">
-                <div class="kpi-label">Potencial CO</div>
-                <div class="kpi-value">+40<span class="kpi-unit">%</span></div><span
-                  class="kpi-badge kpi-badge--up">expansão possível</span>
+                <div class="kpi-label">Participação principal produto</div>
+                <div class="kpi-value" id="kpiParticipacaoLider">55,39<span class="kpi-unit">%</span></div><span
+                  class="kpi-badge kpi-badge--neutral" id="kpiParticipacaoLiderBadge">Tabela 3 · 2021</span>
               </div>
             </div>
           </div>
           <div class="row g-4">
             <div class="col-lg-7" data-category="producao">
               <div class="chart-card" role="figure"
-                aria-label="Gráfico: Maiores países produtores de borracha por área">
-                <div class="chart-card__title">Maiores Países Produtores — Área Plantada</div>
-                <div class="chart-card__sub">Milhões de hectares de Hevea brasiliensis</div>
-                <div id="chartMundo" class="chart-area chart-area--tall" aria-hidden="true"></div>
+                aria-label="Gráfico: Evolução da quantidade produzida de eucalipto no Centro-Oeste — 2012–2021">
+                <div class="chart-card__head">
+                  <div>
+                    <div class="chart-card__title">Evolução da Quantidade Produzida</div>
+                    <div class="chart-card__sub">Tabela 1 — Centro-Oeste, por produto da silvicultura</div>
+                  </div>
+                </div>
+                <div id="chartQuantidadeProduzidaEucalipto" class="chart-area chart-area--tall" aria-hidden="true"></div>
+                <div id="emptyQuantidadeProduzidaEucalipto" class="chart-empty">Nenhum produto com quantidade no período selecionado.</div>
               </div>
             </div>
-            <div class="col-lg-5">
-              <div class="table-card">
-                <div class="table-card__head">
-                  <div class="chart-card__title">Ranking Mundial</div>
-                  <div class="chart-card__sub">Área plantada de seringueira</div>
+            <div class="col-lg-5" data-category="ranking">
+              <div class="chart-card" role="figure"
+                aria-label="Gráfico: Ranking de produção por localidade de eucalipto — 2021">
+                <div class="chart-card__head">
+                  <div>
+                    <div class="chart-card__title">Ranking de Produção por Localidade</div>
+                    <div class="chart-card__sub">Tabela 1 — madeira para papel e celulose, municípios em 2021</div>
+                  </div>
+                  <div class="chart-card__controls">
+                    <select id="filtroTopRankingEucalipto" class="filter-select" aria-label="Top do ranking">
+                      <option value="5">Top 5</option>
+                      <option value="10" selected>Top 10</option>
+                    </select>
+                    <select id="filtroFaixaRankingEucalipto" class="filter-select" aria-label="Faixa de produção">
+                      <option value="0">Todas as faixas</option>
+                      <option value="500000">Acima de 500 mil m³</option>
+                      <option value="1000000">Acima de 1 mi m³</option>
+                    </select>
+                  </div>
                 </div>
-                <div class="table-responsive">
-                  <table class="table table-obs" aria-label="Ranking mundial de produtores de borracha natural">
-                    <thead>
-                      <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">País</th>
-                        <th scope="col" class="text-end">Área (mi ha)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td><span class="badge-rank">1</span></td>
-                        <td>Indonésia</td>
-                        <td class="text-end num">12,5</td>
-                      </tr>
-                      <tr>
-                        <td><span class="badge-rank badge-rank--2">2</span></td>
-                        <td>Tailândia</td>
-                        <td class="text-end num">5,2</td>
-                      </tr>
-                      <tr>
-                        <td><span class="badge-rank badge-rank--3">3</span></td>
-                        <td>Vietnã</td>
-                        <td class="text-end num">4,2</td>
-                      </tr>
-                      <tr>
-                        <td>4</td>
-                        <td>Malásia</td>
-                        <td class="text-end num">2,2</td>
-                      </tr>
-                      <tr>
-                        <td>5</td>
-                        <td>China</td>
-                        <td class="text-end num">2,1</td>
-                      </tr>
-                      <tr>
-                        <td>6</td>
-                        <td>Índia</td>
-                        <td class="text-end num">1,9</td>
-                      </tr>
-                      <tr>
-                        <td>7</td>
-                        <td><strong>Brasil 🇧🇷</strong></td>
-                        <td class="text-end num"><strong>1,7</strong></td>
-                      </tr>
-                      <tr>
-                        <td>8</td>
-                        <td>Colômbia</td>
-                        <td class="text-end num">1,6</td>
-                      </tr>
-                      <tr>
-                        <td>9</td>
-                        <td>Nigéria</td>
-                        <td class="text-end num">1,5</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                <div id="chartRankingProducaoEucalipto" class="chart-area chart-area--tall" aria-hidden="true"></div>
+                <div id="emptyRankingProducaoEucalipto" class="chart-empty">Nenhum município atende aos filtros do ranking.</div>
               </div>
             </div>
           </div>
           <div class="row g-4">
-            <div class="col-lg-6" data-category="producao">
+            <div class="col-lg-7" data-category="valor">
               <div class="chart-card" role="figure"
-                aria-label="Gráfico: Participação percentual dos maiores produtores mundiais">
-                <div class="chart-card__title">Participação no Mercado Mundial</div>
-                <div class="chart-card__sub">% da área total plantada de seringueira</div>
-                <div id="chartMundoPie" class="chart-area" aria-hidden="true"></div>
+                aria-label="Gráfico: Evolução do valor da produção por produto de eucalipto — 2012–2021">
+                <div class="chart-card__head">
+                  <div>
+                    <div class="chart-card__title">Evolução do Valor da Produção por Produto</div>
+                    <div class="chart-card__sub">Tabela 2 — Centro-Oeste, em mil reais</div>
+                  </div>
+                </div>
+                <div id="chartValorProducaoEucalipto" class="chart-area" aria-hidden="true"></div>
+                <div id="emptyValorProducaoEucalipto" class="chart-empty">Nenhum produto com valor no período selecionado.</div>
               </div>
             </div>
-            <div class="col-lg-6" data-category="custo">
-              <div class="info-bar" role="note"><span aria-hidden="true">🌎</span>O Brasil, berço de origem da <em>Hevea
-                  brasiliensis</em>, possui grande potencial de expansão, especialmente nas regiões de Cerrado, que
-                oferecem condições climáticas favoráveis para a heveicultura.</div>
+            <div class="col-lg-5" data-category="valor">
               <div class="chart-card" role="figure"
-                aria-label="Gráfico: Área plantada de eucalipto — Centro-Oeste vs Brasil — 2012–2021">
-                <div class="chart-card__title">Área Plantada CO vs Brasil — IBÁ</div>
-                <div class="chart-card__sub">Hectares (2012–2021) — IBÁ / FGV IBRE e CANOPY</div>
-                <div id="chartCustoComp" class="chart-area" aria-hidden="true"></div>
+                aria-label="Gráfico: Participação dos produtos no valor da produção de eucalipto — 2021">
+                <div class="chart-card__head">
+                  <div>
+                    <div class="chart-card__title">Participação dos Produtos no Valor da Produção</div>
+                    <div class="chart-card__sub">Tabela 3 — Centro-Oeste, percentual do valor no ano final</div>
+                  </div>
+                </div>
+                <div id="chartParticipacaoValorEucalipto" class="chart-area" aria-hidden="true"></div>
+                <div id="emptyParticipacaoValorEucalipto" class="chart-empty">Nenhum produto com participação no ano selecionado.</div>
               </div>
             </div>
           </div>
@@ -657,7 +818,7 @@
         </div>
         <div class="col-lg-4">
           <div class="footer__title">Fonte</div>
-          <p>IBGE — LSPA (Levantamento Sistemático da Produção Agrícola) · MAPA · 2012–2021</p>
+          <p>IBGE — Tabela 291, quantidade produzida e valor da produção na silvicultura · 2012–2021</p>
         </div>
       </div>
       <div class="footer__bottom d-flex flex-wrap justify-content-between gap-2"><span>© 2026 Projeto Cerrado
@@ -667,7 +828,6 @@
 
   <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
   <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
-  <script src="https://cdn.amcharts.com/lib/5/percent.js"></script>
   <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="shared.js"></script>

@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll("[data-tab]").forEach(btn => {
         btn.addEventListener("click", () => {
             const tabId = btn.dataset.tab;
-            const parent = btn.closest("section, .tab-scope");
+            const parent = btn.closest("section, .tab-scope") || document;
             parent.querySelectorAll("[data-tab]").forEach(b => {
                 b.classList.remove("active");
                 b.setAttribute("aria-selected", "false");
@@ -40,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
             parent.querySelectorAll("[data-tab-content]").forEach(c => c.classList.remove("active"));
             const content = parent.querySelector(`[data-tab-content="${tabId}"]`);
             if (content) content.classList.add("active");
+            if (typeof window.onTabChange === "function") window.onTabChange(tabId);
             // Reset indicator filter and show all categorised items
             document.querySelectorAll('[data-filter-group="ind"] .filter-btn')
                 .forEach(b => b.classList.toggle("active", b.dataset.filter === "all"));

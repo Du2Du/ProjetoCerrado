@@ -12,6 +12,57 @@
     href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,600;1,8..60,300&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
+  <style>
+    .filter-bar--analitica { align-items: flex-start; gap: .75rem 1rem; padding: .85rem 1rem; flex-wrap: wrap; }
+    .filter-cluster { display: flex; flex-direction: column; gap: .35rem; min-width: 140px; }
+    .filter-cluster--wide { min-width: 200px; flex: 1 1 200px; }
+    .filter-select {
+      min-height: 2rem; border: 1.5px solid var(--cinza-claro); border-radius: 8px;
+      background: #fff; color: var(--cinza-esc); font-family: var(--font-d);
+      font-size: .78rem; padding: .35rem .55rem;
+    }
+    .filter-search {
+      border: 1.5px solid var(--cinza-claro); border-radius: 8px;
+      background: #fff; color: var(--cinza-esc); font-family: var(--font-d);
+      font-size: .78rem; padding: .35rem .55rem;
+    }
+    .filter-dropdown-btn {
+      width: 100%; min-height: 2rem; border: 1.5px solid var(--cinza-claro); border-radius: 8px;
+      background: #fff; color: var(--cinza-esc); font-family: var(--font-d); font-size: .78rem;
+      font-weight: 600; padding: .35rem .65rem; text-align: left;
+      display: flex; align-items: center; justify-content: space-between; gap: .5rem; cursor: pointer;
+    }
+    .filter-dropdown-btn::after { content: "▾"; color: var(--cinza-med); font-size: .7rem; }
+    .filter-dropdown-menu {
+      width: min(300px, 92vw); max-height: 300px; overflow: auto; padding: .55rem;
+      border: 1px solid var(--cinza-claro); border-radius: 8px; box-shadow: var(--shadow-md);
+    }
+    .filter-option {
+      display: flex; align-items: center; gap: .45rem; padding: .28rem .2rem;
+      color: var(--cinza-esc); font-family: var(--font-d); font-size: .78rem; cursor: pointer;
+    }
+    .filter-option input { accent-color: var(--verde); }
+    .filter-actions { display: flex; flex-direction: row; gap: .45rem; align-items: flex-end; flex-wrap: wrap; }
+    .filter-action-btn {
+      font-family: var(--font-d); font-size: .72rem; font-weight: 600; padding: .35rem .7rem;
+      border-radius: 20px; cursor: pointer; border: 1.5px solid var(--cinza-claro);
+      background: #fff; color: var(--cinza-med); transition: all .18s;
+    }
+    .filter-action-btn:hover { background: var(--verde); border-color: var(--verde); color: #fff; }
+    .filter-summary { width: 100%; display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; min-height: 1.8rem; }
+    .filter-chip {
+      display: inline-flex; align-items: center; gap: .35rem; border-radius: 999px;
+      background: #fff; border: 1px solid var(--cinza-claro); color: var(--cinza-med);
+      font: 600 .7rem var(--font-d); padding: .2rem .55rem;
+    }
+    .filter-chip__x {
+      background: none; border: none; cursor: pointer; color: var(--cinza-med);
+      font-size: .8rem; line-height: 1; padding: 0; margin-left: .1rem;
+    }
+    .filter-chip__x:hover { color: var(--terra); }
+    .filter-chip-vazio { color: var(--cinza-med); font-size: .75rem; font-family: var(--font-d); }
+    @media (max-width: 768px) { .filter-cluster, .filter-actions { min-width: 100%; } }
+  </style>
 
 </head>
 
@@ -62,21 +113,64 @@
   </header>
 
   <!-- FILTER BAR -->
-  <div class="filter-bar" role="search" aria-label="Filtros">
-    <span class="filter-label">Escala</span>
-    <div class="filter-group" role="group" aria-label="Filtrar por escala" data-filter-group="escala">
-      <button class="filter-btn active" data-filter="all">Todas</button>
-      <button class="filter-btn" data-filter="co">Centro-Oeste</button>
-      <button class="filter-btn" data-filter="mundial">Mundial</button>
+  <div class="filter-bar filter-bar--analitica" role="search" aria-label="Filtros analíticos">
+
+    <div class="filter-cluster">
+      <span class="filter-label">Escala</span>
+      <div class="filter-group" role="group" aria-label="Filtrar por escala" data-filter-group="escala">
+        <button class="filter-btn active" type="button" data-filter="all">Todas</button>
+        <button class="filter-btn" type="button" data-filter="co">Centro-Oeste</button>
+        <button class="filter-btn" type="button" data-filter="mundial">Mundial</button>
+      </div>
     </div>
-    <div class="filter-sep" aria-hidden="true"></div>
-    <span class="filter-label">Indicador</span>
-    <div class="filter-group" role="group" aria-label="Filtrar por indicador" data-filter-group="ind">
-      <button class="filter-btn active" data-filter="all">Todos</button>
-      <button class="filter-btn" data-filter="producao">Produção</button>
-      <button class="filter-btn" data-filter="area">Área</button>
-      <button class="filter-btn" data-filter="custo">Custo</button>
+
+    <div class="filter-cluster filter-cluster--wide">
+      <span class="filter-label">Indicador</span>
+      <div class="filter-group" role="group" aria-label="Filtrar por indicador" data-filter-group="ind">
+        <button class="filter-btn active" type="button" data-filter="all">Todos</button>
+        <button class="filter-btn" type="button" data-filter="producao">Produção</button>
+        <button class="filter-btn" type="button" data-filter="area">Área</button>
+        <button class="filter-btn" type="button" data-filter="custo">Custo</button>
+      </div>
     </div>
+
+    <div class="filter-cluster">
+      <span class="filter-label">Período</span>
+      <div class="d-flex gap-2">
+        <select id="seriAnoInicio" class="filter-select" aria-label="Ano inicial"></select>
+        <select id="seriAnoFim"    class="filter-select" aria-label="Ano final"></select>
+      </div>
+    </div>
+
+    <div class="filter-cluster filter-cluster--wide">
+      <span class="filter-label">UF / Estado</span>
+      <div class="dropdown" data-bs-auto-close="outside">
+        <button id="seriUfBtn" class="filter-dropdown-btn" type="button"
+          data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Todas</button>
+        <div class="dropdown-menu filter-dropdown-menu">
+          <input id="buscaUfSeri" class="filter-search w-100 mb-2" type="search"
+            placeholder="Buscar UF" aria-label="Buscar UF" />
+          <div id="seriUfMenu"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-cluster filter-cluster--wide">
+      <span class="filter-label">Produto</span>
+      <div class="dropdown" data-bs-auto-close="outside">
+        <button id="seriProdutoBtn" class="filter-dropdown-btn" type="button"
+          data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Todos</button>
+        <div class="dropdown-menu filter-dropdown-menu">
+          <div id="seriProdutoMenu"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-actions">
+      <button id="seriLimparFiltros" class="filter-action-btn" type="button">Limpar filtros</button>
+    </div>
+
+    <div id="seriChips" class="filter-summary" aria-live="polite"></div>
   </div>
 
   <div class="tab-nav" role="tablist" aria-label="Seções de florestas plantadas">
@@ -132,132 +226,69 @@
             </div>
           </div>
           <div class="row g-4">
-            <div class="col-lg-8" data-category="producao">
-              <div class="chart-card" role="figure"
-                aria-label="Gráfico: Produção e produtividade da borracha no Centro-Oeste — 2012–2021">
-                <div class="chart-card__title">Produção &amp; Produtividade — Centro-Oeste</div>
-                <div class="chart-card__sub">Toneladas e kg/hectare (2012–2021)</div>
-                <div id="chartBorrachaProd" class="chart-area chart-area--tall" aria-hidden="true"></div>
+            <div class="col-lg-6" data-category="producao">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Evolução da produção de borracha">
+                <div class="chart-card__title">Evolução da Produção</div>
+                <div class="chart-card__sub">Borracha (látex coagulado), toneladas (2012–2021)</div>
+                <div id="chartProducaoSeringueira" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
-            <div class="col-lg-4" data-category="area">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Área plantada vs colhida — 2012–2021">
-                <div class="chart-card__title">Área Plantada vs Colhida</div>
+            <div class="col-lg-6" data-category="area">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Evolução da área colhida">
+                <div class="chart-card__title">Evolução da Área Colhida</div>
                 <div class="chart-card__sub">Hectares (2012–2021)</div>
-                <div id="chartBorrachaArea" class="chart-area chart-area--tall" aria-hidden="true"></div>
+                <div id="chartAreaColhidaSeringueira" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
-          </div>
-          <div class="row g-4">
-            <div class="col-lg-6" data-category="custo">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Custo de produção por hectare — 2012–2021">
-                <div class="chart-card__title">Custo de Produção por Hectare</div>
-                <div class="chart-card__sub">R$ / hectare (2012–2021)</div>
-                <div id="chartBorrachaCusto" class="chart-area" aria-hidden="true"></div>
+            <div class="col-lg-6" data-category="area">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Área destinada à colheita">
+                <div class="chart-card__title">Área Destinada à Colheita</div>
+                <div class="chart-card__sub">Hectares (2012–2021)</div>
+                <div id="chartAreaDestinadaSeringueira" class="chart-area" aria-hidden="true"></div>
               </div>
             </div>
-            <div class="col-lg-6">
-              <div class="table-card">
-                <div class="table-card__head">
-                  <div class="chart-card__title">Série Histórica — Centro-Oeste</div>
-                  <div class="chart-card__sub">Principais indicadores da heveicultura</div>
-                </div>
-                <div class="table-responsive">
-                  <table class="table table-obs" aria-label="Indicadores da borracha natural no Centro-Oeste">
-                    <thead>
-                      <tr>
-                        <th scope="col">Ano</th>
-                        <th scope="col" class="text-end">Produção (t)</th>
-                        <th scope="col" class="text-end">kg/ha</th>
-                        <th scope="col" class="text-end">R$/kg</th>
-                        <th scope="col" class="text-end">Receita (mi R$)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>2012</td>
-                        <td class="text-end num">42.384</td>
-                        <td class="text-end num">1.484</td>
-                        <td class="text-end num">2,52</td>
-                        <td class="text-end num">126,3</td>
-                      </tr>
-                      <tr>
-                        <td>2013</td>
-                        <td class="text-end num">45.038</td>
-                        <td class="text-end num">1.668</td>
-                        <td class="text-end num">2,24</td>
-                        <td class="text-end num">113,3</td>
-                      </tr>
-                      <tr>
-                        <td>2014</td>
-                        <td class="text-end num">45.186</td>
-                        <td class="text-end num">1.617</td>
-                        <td class="text-end num">2,93</td>
-                        <td class="text-end num">120,9</td>
-                      </tr>
-                      <tr>
-                        <td>2015</td>
-                        <td class="text-end num">43.497</td>
-                        <td class="text-end num">1.692</td>
-                        <td class="text-end num">3,10</td>
-                        <td class="text-end num">88,9</td>
-                      </tr>
-                      <tr>
-                        <td>2016</td>
-                        <td class="text-end num">46.725</td>
-                        <td class="text-end num">1.689</td>
-                        <td class="text-end num">3,30</td>
-                        <td class="text-end num">107,2</td>
-                      </tr>
-                      <tr>
-                        <td>2017</td>
-                        <td class="text-end num">53.215</td>
-                        <td class="text-end num">1.712</td>
-                        <td class="text-end num">3,20</td>
-                        <td class="text-end num">136,1</td>
-                      </tr>
-                      <tr>
-                        <td>2018</td>
-                        <td class="text-end num">44.023</td>
-                        <td class="text-end num">1.581</td>
-                        <td class="text-end num">3,15</td>
-                        <td class="text-end num">93,2</td>
-                      </tr>
-                      <tr>
-                        <td>2019</td>
-                        <td class="text-end num">52.379</td>
-                        <td class="text-end num">1.778</td>
-                        <td class="text-end num">3,40</td>
-                        <td class="text-end num">117,6</td>
-                      </tr>
-                      <tr>
-                        <td>2020</td>
-                        <td class="text-end num">55.012</td>
-                        <td class="text-end num">1.849</td>
-                        <td class="text-end num">3,54</td>
-                        <td class="text-end num">130,5</td>
-                      </tr>
-                      <tr>
-                        <td><strong>2021</strong></td>
-                        <td class="text-end num"><strong>59.404</strong></td>
-                        <td class="text-end num"><strong>1.771</strong></td>
-                        <td class="text-end num"><strong>3,89</strong></td>
-                        <td class="text-end num"><strong>196,2</strong></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+            <div class="col-lg-6" data-category="area">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Área de perda">
+                <div class="chart-card__title">Área de Perda</div>
+                <div class="chart-card__sub">Percentual da área destinada à colheita (2012–2021)</div>
+                <div id="chartAreaPerdaSeringueira" class="chart-area" aria-hidden="true"></div>
               </div>
             </div>
-          </div>
-          <!-- Custo receita comparativo -->
-          <div class="row g-4">
-            <div class="col-12" data-category="producao">
+            <div class="col-lg-6" data-category="producao">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Produtividade da seringueira">
+                <div class="chart-card__title">Produtividade</div>
+                <div class="chart-card__sub">Quilogramas por hectare (2012–2021)</div>
+                <div id="chartProdutividadeSeringueira" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-lg-6" data-category="producao">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Valor da produção">
+                <div class="chart-card__title">Valor da Produção</div>
+                <div class="chart-card__sub">Mil reais (2012–2021)</div>
+                <div id="chartValorProducaoSeringueira" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-lg-6" data-category="producao">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Estabelecimentos produtores por perfil">
+                <div class="chart-card__title">Estabelecimentos Produtores por Perfil</div>
+                <div class="chart-card__sub">Número de estabelecimentos, Censo Agro 2017</div>
+                <div id="chartEstabelecimentosSeringueira" class="chart-area chart-area--tall" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-lg-6" data-category="producao">
               <div class="chart-card" role="figure"
-                aria-label="Gráfico: Receita total da heveicultura no Centro-Oeste — 2012–2021">
-                <div class="chart-card__title">Receita Total da Heveicultura — Centro-Oeste</div>
-                <div class="chart-card__sub">Milhões de R$ (2012–2021)</div>
-                <div id="chartReceita" class="chart-area" aria-hidden="true"></div>
+                aria-label="Gráfico: Indicadores produtivos da borracha no Centro-Oeste">
+                <div class="chart-card__title">Indicadores Produtivos da Borracha</div>
+                <div class="chart-card__sub">Produção, área e produtividade no Centro-Oeste</div>
+                <div id="chartIndicadoresBorracha" class="chart-area chart-area--tall" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-12" data-category="custo">
+              <div class="chart-card" role="figure"
+                aria-label="Gráfico: Custo de produção da borracha no Centro-Oeste">
+                <div class="chart-card__title">Custo de Produção da Borracha</div>
+                <div class="chart-card__sub">R$ por hectare e R$ por kg (2012–2021)</div>
+                <div id="chartCustoBorracha" class="chart-area" aria-hidden="true"></div>
               </div>
             </div>
           </div>

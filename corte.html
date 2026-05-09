@@ -12,6 +12,196 @@
     href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,600;1,8..60,300&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
+  <style>
+    .filter-bar--analitica {
+      align-items: flex-start;
+      gap: .75rem 1rem;
+      padding: .85rem 1rem;
+      position: sticky;
+      top: 58px;
+      z-index: 900;
+      box-shadow: 0 2px 10px rgba(43, 43, 43, .06);
+    }
+
+    .filter-cluster {
+      display: flex;
+      flex-direction: column;
+      gap: .35rem;
+      min-width: 145px;
+    }
+
+    .filter-cluster--wide {
+      min-width: 210px;
+      flex: 1 1 220px;
+    }
+
+    .filter-select,
+    .filter-search {
+      min-height: 2rem;
+      border: 1.5px solid var(--cinza-claro);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--cinza-esc);
+      font-family: var(--font-d);
+      font-size: .78rem;
+      padding: .35rem .55rem;
+    }
+
+    .filter-dropdown-btn {
+      width: 100%;
+      min-height: 2rem;
+      border: 1.5px solid var(--cinza-claro);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--cinza-esc);
+      font-family: var(--font-d);
+      font-size: .78rem;
+      font-weight: 600;
+      padding: .35rem .65rem;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+    }
+
+    .filter-dropdown-btn::after {
+      content: "▾";
+      color: var(--cinza-med);
+      font-size: .7rem;
+    }
+
+    .filter-dropdown-menu {
+      width: min(340px, 92vw);
+      max-height: 340px;
+      overflow: auto;
+      padding: .55rem;
+      border: 1px solid var(--cinza-claro);
+      border-radius: 8px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .filter-option {
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .28rem .2rem;
+      color: var(--cinza-esc);
+      font-family: var(--font-d);
+      font-size: .78rem;
+      cursor: pointer;
+    }
+
+    .filter-option input {
+      accent-color: var(--terra);
+    }
+
+    .filter-actions {
+      display: flex;
+      flex-direction: row;
+      gap: .45rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .filter-action-btn {
+      font-family: var(--font-d);
+      font-size: .72rem;
+      font-weight: 600;
+      padding: .35rem .7rem;
+      border-radius: 20px;
+      cursor: pointer;
+      border: 1.5px solid var(--cinza-claro);
+      background: #fff;
+      color: var(--cinza-med);
+      transition: all .18s;
+    }
+
+    .filter-action-btn:hover,
+    .filter-action-btn.active {
+      background: var(--terra);
+      border-color: var(--terra);
+      color: #fff;
+    }
+
+    .filter-summary {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+      align-items: center;
+      min-height: 1.8rem;
+    }
+
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid var(--cinza-claro);
+      color: var(--cinza-med);
+      font: 600 .7rem var(--font-d);
+      padding: .2rem .55rem;
+    }
+
+    .filter-empty {
+      display: none;
+      margin: .5rem 0 1rem;
+      padding: .8rem 1rem;
+      border: 1px dashed var(--cinza-claro);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--cinza-med);
+      font-family: var(--font-d);
+      font-size: .86rem;
+    }
+
+    .chart-card__head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: .75rem;
+    }
+
+    .chart-card__head .chart-card__sub {
+      margin-bottom: 0;
+    }
+
+    .chart-card__tools {
+      display: flex;
+      gap: .45rem;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .is-filter-hidden,
+    .is-chart-empty {
+      display: none !important;
+    }
+
+    @media (max-width: 768px) {
+      .filter-bar--analitica {
+        position: static;
+      }
+
+      .filter-cluster,
+      .filter-actions {
+        min-width: 100%;
+      }
+
+      .chart-card__head {
+        flex-direction: column;
+      }
+
+      .chart-card__tools {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+  </style>
 
 </head>
 
@@ -63,24 +253,86 @@
   </header>
 
   <!-- FILTER BAR -->
-  <div class="filter-bar" role="search" aria-label="Filtros de visualização">
-    <span class="filter-label">Região</span>
-    <div class="filter-group" role="group" aria-label="Filtrar por região" data-filter-group="regiao">
-      <button class="filter-btn active" data-filter="all">Todos</button>
-      <button class="filter-btn" data-filter="brasil">Brasil</button>
-      <button class="filter-btn" data-filter="go">Goiás</button>
-      <button class="filter-btn" data-filter="co">Centro-Oeste</button>
-      <button class="filter-btn" data-filter="mundial">Mundial</button>
+  <div class="filter-bar filter-bar--analitica" role="search" aria-label="Filtros analíticos do dashboard de corte">
+    <div class="filter-cluster filter-cluster--wide">
+      <span class="filter-label">Indicador</span>
+      <div class="filter-group" role="group" aria-label="Filtrar por indicador" data-filter-group="indicador">
+        <button class="filter-btn active" type="button" data-filter="all">Todos</button>
+        <button class="filter-btn" type="button" data-filter="rebanho">Rebanho</button>
+        <button class="filter-btn" type="button" data-filter="abate">Abate</button>
+        <button class="filter-btn" type="button" data-filter="precos">Preços</button>
+        <button class="filter-btn" type="button" data-filter="consumo">Consumo</button>
+        <button class="filter-btn" type="button" data-filter="projecoes">Projeções</button>
+        <button class="filter-btn" type="button" data-filter="pastagens">Pastagens</button>
+      </div>
     </div>
-    <div class="filter-sep" aria-hidden="true"></div>
-    <span class="filter-label">Indicador</span>
-    <div class="filter-group" role="group" aria-label="Filtrar por indicador" data-filter-group="ind">
-      <button class="filter-btn active" data-filter="all">Todos</button>
-      <button class="filter-btn" data-filter="rebanho">Rebanho</button>
-      <button class="filter-btn" data-filter="abate">Abate</button>
-      <button class="filter-btn" data-filter="preco">Preços</button>
-      <button class="filter-btn" data-filter="producao">Produção</button>
+    <div class="filter-cluster">
+      <span class="filter-label">Período</span>
+      <div class="d-flex gap-2">
+        <select id="filtroAnoInicioCorte" class="filter-select" aria-label="Ano inicial"></select>
+        <select id="filtroAnoFimCorte" class="filter-select" aria-label="Ano final"></select>
+      </div>
     </div>
+    <div class="filter-cluster filter-cluster--wide">
+      <span class="filter-label">UF/Estado</span>
+      <div class="dropdown" data-bs-auto-close="outside">
+        <button id="filtroUfCorteBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
+          data-bs-auto-close="outside" aria-expanded="false">Todas</button>
+        <div class="dropdown-menu filter-dropdown-menu">
+          <input id="buscaUfCorte" class="filter-search w-100 mb-2" type="search" placeholder="Buscar UF/estado"
+            aria-label="Buscar UF ou estado" />
+          <div id="filtroUfCorteMenu"></div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-cluster filter-cluster--wide">
+      <span class="filter-label">Município</span>
+      <div class="dropdown" data-bs-auto-close="outside">
+        <button id="filtroMunicipioCorteBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
+          data-bs-auto-close="outside" aria-expanded="false">Todos</button>
+        <div class="dropdown-menu filter-dropdown-menu">
+          <input id="buscaMunicipioCorte" class="filter-search w-100 mb-2" type="search" placeholder="Buscar município"
+            aria-label="Buscar município" />
+          <div id="filtroMunicipioCorteMenu"></div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-cluster filter-cluster--wide">
+      <span class="filter-label">País</span>
+      <div class="dropdown" data-bs-auto-close="outside">
+        <button id="filtroPaisCorteBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
+          data-bs-auto-close="outside" aria-expanded="false">Todos</button>
+        <div class="dropdown-menu filter-dropdown-menu">
+          <input id="buscaPaisCorte" class="filter-search w-100 mb-2" type="search" placeholder="Buscar país"
+            aria-label="Buscar país" />
+          <div id="filtroPaisCorteMenu"></div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-cluster">
+      <span class="filter-label">Trimestre</span>
+      <select id="filtroTrimestreCorte" class="filter-select" aria-label="Trimestre do abate">
+        <option value="all">Todos</option>
+        <option value="1º">1º trimestre</option>
+        <option value="2º">2º trimestre</option>
+        <option value="3º">3º trimestre</option>
+        <option value="4º">4º trimestre</option>
+      </select>
+    </div>
+    <div class="filter-cluster">
+      <span class="filter-label">Área mínima</span>
+      <select id="filtroAreaMinCorte" class="filter-select" aria-label="Área mínima de pastagem">
+        <option value="0">Todas</option>
+        <option value="500000">≥ 500 mil ha</option>
+        <option value="1000000">≥ 1 milhão ha</option>
+        <option value="5000000">≥ 5 milhões ha</option>
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button id="btnLimparFiltrosCorte" class="filter-action-btn" type="button">Limpar filtros</button>
+      <button id="btnAplicarFocoCorte" class="filter-action-btn active" type="button">Ir para foco</button>
+    </div>
+    <div id="filtrosAtivosCorte" class="filter-summary" aria-live="polite"></div>
   </div>
 
   <!-- TAB NAV -->
@@ -90,7 +342,7 @@
     <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="ct-precos" aria-controls="ct-precos"
       id="btn-ct-precos">Preços</button>
     <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="ct-mundial" aria-controls="ct-mundial"
-      id="btn-ct-mundial">Produção Mundial</button>
+      id="btn-ct-mundial">Consumo</button>
     <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="ct-projecoes" aria-controls="ct-projecoes"
       id="btn-ct-projecoes">Projeções</button>
     <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="ct-pastagens" aria-controls="ct-pastagens"
@@ -102,6 +354,9 @@
   <main id="main-content">
     <section class="tab-scope">
       <div class="container tab-content-obs">
+        <div id="semDadosCorte" class="filter-empty" role="status">
+          Nenhum gráfico tem dados para a combinação de filtros atual.
+        </div>
 
         <!-- ══ TAB: REBANHO & ABATE ══════════════════════════ -->
         <div data-tab-content="ct-rebanho" class="active" role="tabpanel" id="ct-rebanho"
@@ -151,15 +406,15 @@
               <div class="chart-card" role="figure"
                 aria-label="Gráfico: Efetivo bovino dos principais estados — 2012 a 2021">
                 <div class="chart-card__title">Efetivo Bovino — Principais Estados</div>
-                <div class="chart-card__sub">Milhões de cabeças (2012–2021)</div>
-                <div id="chartRebanho" class="chart-area chart-area--tall" aria-hidden="true"></div>
+                <div id="subRebanhoCorte" class="chart-card__sub">Milhões de cabeças (2012–2021)</div>
+                <div id="chartRebanhoCorte" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
             <div class="col-lg-4" data-category="rebanho">
               <div class="chart-card" role="figure"
                 aria-label="Gráfico: Participação no rebanho bovino nacional em 2021">
-                <div class="chart-card__title">Participação no Rebanho Nacional (2021)</div>
-                <div class="chart-card__sub">% do total Brasil</div>
+                <div id="tituloRebanhoPartic" class="chart-card__title">Participação no Rebanho Nacional (2021)</div>
+                <div class="chart-card__sub">Cabeças no ano final filtrado</div>
                 <div id="chartRebanhoPartic" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
@@ -168,9 +423,19 @@
           <div class="row g-4">
             <div class="col-lg-12" data-category="abate">
               <div class="chart-card" role="figure" aria-label="Gráfico: Animais abatidos por estado — 2013 a 2022">
-                <div class="chart-card__title">Animais Abatidos (Bovinos) — Goiás, MT e MS</div>
-                <div class="chart-card__sub">Cabeças por ano (2013–2022)</div>
-                <div id="chartAbate" class="chart-area" aria-hidden="true"></div>
+                <div class="chart-card__head">
+                  <div>
+                    <div class="chart-card__title">Animais Abatidos (Bovinos) — Goiás, MT e MS</div>
+                    <div id="subAbateBovinos" class="chart-card__sub">Série anual filtrada</div>
+                  </div>
+                  <div class="chart-card__tools">
+                    <select id="filtroMetricaAbate" class="filter-select" aria-label="Métrica do gráfico de abate">
+                      <option value="quantidade">Cabeças abatidas</option>
+                      <option value="peso">Peso das carcaças</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="chartAbateBovinos" class="chart-area" aria-hidden="true"></div>
               </div>
             </div>
           </div>
@@ -356,7 +621,7 @@
               <div class="chart-card" role="figure"
                 aria-label="Gráfico: Série histórica do preço do boi gordo e carne bovina">
                 <div class="chart-card__title">Preços: Boi Gordo (R$/@) &amp; Carne (R$/kg)</div>
-                <div class="chart-card__sub">Série anual 2001–2023</div>
+                <div id="subPrecosCorte" class="chart-card__sub">Série anual filtrada</div>
                 <div id="chartPrecos" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
@@ -434,7 +699,7 @@
           <div class="row mb-2">
             <div class="col-12">
               <p class="section-label">Contexto Internacional</p>
-              <h2 class="section-title">Produção Mundial de Carne Bovina</h2>
+              <h2 class="section-title">Consumo de Carne Bovina</h2>
               <div class="section-divider"></div>
             </div>
           </div>
@@ -471,19 +736,12 @@
           </div>
 
           <div class="row g-4">
-            <div class="col-lg-8">
+            <div class="col-12">
               <div class="chart-card" role="figure"
                 aria-label="Gráfico: Produção mundial de carne bovina por país — 2012 a 2021">
-                <div class="chart-card__title">Produção Mundial de Carne Bovina</div>
-                <div class="chart-card__sub">Milhões de toneladas equivalente carcaça — OECD-FAO (2012–2021)</div>
-                <div id="chartMundialCorte" class="chart-area chart-area--tall" aria-hidden="true"></div>
-              </div>
-            </div>
-            <div class="col-lg-4">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Participação dos maiores produtores em 2021">
-                <div class="chart-card__title">Participação dos Maiores Produtores (2021)</div>
-                <div class="chart-card__sub">% do total mundial</div>
-                <div id="chartMundialPie" class="chart-area chart-area--tall" aria-hidden="true"></div>
+                <div class="chart-card__title">Consumo de Carne Bovina</div>
+                <div id="subConsumoCarne" class="chart-card__sub">Mil toneladas — OECD</div>
+                <div id="chartConsumoCarne" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
           </div>
@@ -541,15 +799,26 @@
               <div class="chart-card" role="figure"
                 aria-label="Gráfico: Projeções de produção de carne bovina no Brasil até 2031/32">
                 <div class="chart-card__title">Projeção de Produção — Carne Bovina Brasil</div>
-                <div class="chart-card__sub">Mil toneladas — cenário central, inferior e superior (MAPA)</div>
-                <div id="chartProjecoes" class="chart-area chart-area--tall" aria-hidden="true"></div>
+                <div id="subProjecaoProducao" class="chart-card__sub">Mil toneladas — cenário central, inferior e superior (MAPA)</div>
+                <div id="chartProjecaoProducaoCarne" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
             <div class="col-lg-4">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Projeções por estado selecionado">
-                <div class="chart-card__title">Projeção por Estado (2031/32)</div>
-                <div class="chart-card__sub">Projeção cana de açúcar como referência por estado</div>
-                <div id="chartProjecoesEstados" class="chart-area chart-area--tall" aria-hidden="true"></div>
+              <div class="chart-card" role="figure"
+                aria-label="Gráfico: Projeções de consumo de carne bovina no Brasil até 2031/32">
+                <div class="chart-card__title">Projeção de Consumo — Carne Bovina Brasil</div>
+                <div id="subProjecaoConsumo" class="chart-card__sub">Mil toneladas — cenário central, inferior e superior (MAPA)</div>
+                <div id="chartProjecaoConsumoCarne" class="chart-area chart-area--tall" aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-4">
+            <div class="col-12">
+              <div class="chart-card" role="figure"
+                aria-label="Gráfico: Projeções de exportação de carne bovina no Brasil até 2031/32">
+                <div class="chart-card__title">Projeção de Exportação — Carne Bovina Brasil</div>
+                <div id="subProjecaoExportacao" class="chart-card__sub">Mil toneladas — cenário central, inferior e superior (MAPA)</div>
+                <div id="chartProjecaoExportacaoCarne" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
           </div>
@@ -597,18 +866,69 @@
           </div>
 
           <div class="row g-4">
-            <div class="col-lg-6">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Área de pastagem por bioma no Centro-Oeste">
-                <div class="chart-card__title">Área de Pastagem por Bioma — Centro-Oeste</div>
-                <div class="chart-card__sub">Hectares (2021)</div>
-                <div id="chartBiomas" class="chart-area" aria-hidden="true"></div>
+            <div class="col-lg-4">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Área de pastagem por UF no Brasil">
+                <div class="chart-card__head">
+                  <div>
+                    <div class="chart-card__title">Área de Pastagem por UF — Brasil</div>
+                    <div class="chart-card__sub">Ranking em hectares</div>
+                  </div>
+                  <div class="chart-card__tools">
+                    <select id="filtroTopPastagens" class="filter-select" aria-label="Quantidade de itens no ranking">
+                      <option value="5">Top 5</option>
+                      <option value="10" selected>Top 10</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="chartPastagemUfBr" class="chart-area" aria-hidden="true"></div>
               </div>
             </div>
-            <div class="col-lg-6">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Área de pastagem por estado do Centro-Oeste">
-                <div class="chart-card__title">Área de Pastagem por Estado — Centro-Oeste</div>
-                <div class="chart-card__sub">Hectares (2021)</div>
-                <div id="chartEstadosPast" class="chart-area" aria-hidden="true"></div>
+            <div class="col-lg-4">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Área de pastagem por município no Brasil">
+                <div class="chart-card__title">Área de Pastagem por Município — Brasil</div>
+                <div class="chart-card__sub">Top 10 em hectares</div>
+                <div id="chartPastagemMunicipioBr" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-lg-4">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Área de pastagem por bioma no Brasil">
+                <div class="chart-card__title">Área de Pastagem por Bioma — Brasil</div>
+                <div class="chart-card__sub">Hectares</div>
+                <div id="chartPastagemBiomaBr" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-4">
+            <div class="col-lg-4">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Área de pastagem por UF no Centro-Oeste">
+                <div class="chart-card__title">Área de Pastagem por UF — Centro-Oeste</div>
+                <div class="chart-card__sub">Ranking em hectares</div>
+                <div id="chartPastagemUfCo" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-lg-4">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Área de pastagem por município no Centro-Oeste">
+                <div class="chart-card__title">Área de Pastagem por Município — Centro-Oeste</div>
+                <div class="chart-card__sub">Top 10 em hectares</div>
+                <div id="chartPastagemMunicipioCo" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+            <div class="col-lg-4">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Área de pastagem por bioma no Centro-Oeste">
+                <div class="chart-card__title">Área de Pastagem por Bioma — Centro-Oeste</div>
+                <div class="chart-card__sub">Hectares</div>
+                <div id="chartPastagemBiomaCo" class="chart-area" aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-4">
+            <div class="col-12">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Qualidade das pastagens por classe">
+                <div class="chart-card__title">Qualidade das Pastagens</div>
+                <div class="chart-card__sub">Área de pastagem por classe — Centro-Oeste (2021)</div>
+                <div id="chartQualidadePastagens" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
           </div>
