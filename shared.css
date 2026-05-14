@@ -531,6 +531,14 @@
     }
 
     /* ── CHART CARDS ───────────────────────────────────────── */
+    .tab-content-obs [data-tab-content] > .filter-content-row--visible {
+        margin-top: 1.5rem;
+    }
+
+    .tab-content-obs [data-tab-content] > .row.mb-4 + .filter-content-row--visible {
+        margin-top: 1.75rem;
+    }
+
     .chart-card {
         background: #fff;
         border-radius: var(--radius-lg);

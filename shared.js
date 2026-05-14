@@ -27,6 +27,31 @@ function makeLegend(chart, root) {
 
 // Tab system
 document.addEventListener("DOMContentLoaded", () => {
+    let pendingFilterRowUpdate = false;
+    const updateFilterContentRows = () => {
+        pendingFilterRowUpdate = false;
+        document.querySelectorAll(".filter-content-row").forEach(row => {
+            const hasVisibleItem = Array.from(row.querySelectorAll("[data-category]")).some(el => {
+                return !el.classList.contains("is-filter-hidden") && getComputedStyle(el).display !== "none";
+            });
+            row.classList.toggle("filter-content-row--visible", hasVisibleItem);
+        });
+    };
+    const scheduleFilterRowUpdate = () => {
+        if (pendingFilterRowUpdate) return;
+        pendingFilterRowUpdate = true;
+        requestAnimationFrame(updateFilterContentRows);
+    };
+
+    document.querySelectorAll("[data-category]").forEach(el => {
+        el.closest(".row")?.classList.add("filter-content-row");
+    });
+    const filterRowObserver = new MutationObserver(scheduleFilterRowUpdate);
+    document.querySelectorAll("[data-category]").forEach(el => {
+        filterRowObserver.observe(el, { attributes: true, attributeFilter: ["class", "style"] });
+    });
+    updateFilterContentRows();
+
     document.querySelectorAll("[data-tab]").forEach(btn => {
         btn.addEventListener("click", () => {
             const tabId = btn.dataset.tab;
@@ -45,6 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.querySelectorAll('[data-filter-group="ind"] .filter-btn')
                 .forEach(b => b.classList.toggle("active", b.dataset.filter === "all"));
             document.querySelectorAll("[data-category]").forEach(el => { el.style.display = ""; });
+            scheduleFilterRowUpdate();
         });
     });
 
