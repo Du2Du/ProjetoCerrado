@@ -61,7 +61,7 @@
     }
     .filter-chip__x:hover { color: var(--terra); }
     .filter-chip-vazio { color: var(--cinza-med); font-size: .75rem; font-family: var(--font-d); }
-    @media (max-width: 768px) { .filter-cluster, .filter-actions { min-width: 100%; } }
+    @media (max-width: 768px) { .filter-cluster, .filter-actions { width: 100%; min-width: 0; } }
   </style>
 
 </head>
@@ -115,7 +115,7 @@
   <!-- FILTER BAR -->
   <div class="filter-bar filter-bar--analitica" role="search" aria-label="Filtros analíticos">
 
-    <div class="filter-cluster">
+    <div class="filter-cluster filter-cluster--toggles">
       <span class="filter-label">Escala</span>
       <div class="filter-group" role="group" aria-label="Filtrar por escala" data-filter-group="escala">
         <button class="filter-btn active" type="button" data-filter="all">Todas</button>
@@ -124,7 +124,7 @@
       </div>
     </div>
 
-    <div class="filter-cluster filter-cluster--wide">
+    <div class="filter-cluster filter-cluster--toggles">
       <span class="filter-label">Indicador</span>
       <div class="filter-group" role="group" aria-label="Filtrar por indicador" data-filter-group="ind">
         <button class="filter-btn active" type="button" data-filter="all">Todos</button>

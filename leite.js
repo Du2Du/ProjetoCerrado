@@ -451,7 +451,6 @@ function inicializarFiltros() {
     document.getElementById(id)?.addEventListener("change", lerFiltrosDeFormulario);
   });
   document.getElementById("btnLimparFiltros")?.addEventListener("click", limparFiltros);
-  document.getElementById("btnAplicarFoco")?.addEventListener("click", navegarParaFoco);
 }
 function inicializarDashboardLeite() {
   inicializarFiltros();

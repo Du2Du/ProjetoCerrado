@@ -260,6 +260,18 @@
         align-items: center;
     }
 
+    .filter-bar--analitica,
+    .filter-bar--eucalipto {
+        align-items: flex-start;
+        gap: .75rem 1rem;
+        padding: .85rem 1rem;
+        position: sticky;
+        top: 58px;
+        z-index: 900;
+        background: var(--creme);
+        box-shadow: 0 2px 10px rgba(43, 43, 43, .06);
+    }
+
     .filter-label {
         font-family: var(--font-d);
         font-size: .7rem;
@@ -273,6 +285,89 @@
         display: flex;
         flex-wrap: wrap;
         gap: .35rem;
+    }
+
+    .filter-cluster {
+        display: flex;
+        flex: 0 1 155px;
+        flex-direction: column;
+        gap: .35rem;
+        min-width: 145px;
+    }
+
+    .filter-cluster--wide {
+        flex: 1 1 220px;
+        min-width: 210px;
+    }
+
+    .filter-cluster--toggles {
+        flex: 1 1 320px;
+        max-width: 560px;
+    }
+
+    .filter-select,
+    .filter-search {
+        min-height: 2rem;
+        border: 1.5px solid var(--cinza-claro);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--cinza-esc);
+        font-family: var(--font-d);
+        font-size: .78rem;
+        padding: .35rem .55rem;
+    }
+
+    .filter-dropdown-btn {
+        width: 100%;
+        min-height: 2rem;
+        border: 1.5px solid var(--cinza-claro);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--cinza-esc);
+        font-family: var(--font-d);
+        font-size: .78rem;
+        font-weight: 600;
+        padding: .35rem .65rem;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .filter-dropdown-btn::after {
+        content: "▾";
+        flex: 0 0 auto;
+        color: var(--cinza-med);
+        font-size: .7rem;
+    }
+
+    .filter-dropdown-menu {
+        width: min(340px, 92vw);
+        max-height: 330px;
+        overflow: auto;
+        padding: .55rem;
+        border: 1px solid var(--cinza-claro);
+        border-radius: 8px;
+        box-shadow: var(--shadow-md);
+    }
+
+    .filter-option {
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+        padding: .28rem .2rem;
+        color: var(--cinza-esc);
+        font-family: var(--font-d);
+        font-size: .78rem;
+        cursor: pointer;
+    }
+
+    .filter-option input {
+        accent-color: var(--verde);
     }
 
     .filter-btn {
@@ -303,6 +398,58 @@
         width: 1px;
         height: 20px;
         background: var(--cinza-claro);
+    }
+
+    .filter-actions {
+        display: flex;
+        flex: 0 0 auto;
+        flex-direction: row;
+        gap: .45rem;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding-top: 1.5rem;
+    }
+
+    .filter-action-btn {
+        min-height: 2rem;
+        font-family: var(--font-d);
+        font-size: .72rem;
+        font-weight: 600;
+        padding: .35rem .7rem;
+        border-radius: 20px;
+        cursor: pointer;
+        border: 1.5px solid var(--cinza-claro);
+        background: #fff;
+        color: var(--cinza-med);
+        transition: all .18s;
+    }
+
+    .filter-action-btn:hover,
+    .filter-action-btn.active {
+        background: var(--verde);
+        border-color: var(--verde);
+        color: #fff;
+    }
+
+    .filter-summary {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: .35rem;
+        align-items: center;
+        min-height: 1.8rem;
+    }
+
+    .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid var(--cinza-claro);
+        color: var(--cinza-med);
+        font: 600 .7rem var(--font-d);
+        padding: .2rem .55rem;
     }
 
     /* ── KPI CARDS ─────────────────────────────────────────── */
@@ -640,6 +787,23 @@
 
         .filter-bar {
             gap: .5rem;
+        }
+
+        .filter-actions {
+            padding-top: 0;
+        }
+
+        .filter-bar--analitica .d-flex,
+        .filter-bar--eucalipto .d-flex,
+        .filter-bar--analitica .filter-group,
+        .filter-bar--eucalipto .filter-group {
+            width: 100%;
+        }
+
+        .filter-bar--analitica .filter-select,
+        .filter-bar--eucalipto .filter-select {
+            flex: 1 1 0;
+            min-width: 0;
         }
     }
 

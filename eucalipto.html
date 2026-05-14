@@ -17,6 +17,11 @@
       align-items: flex-start;
       gap: .75rem 1rem;
       padding: .85rem 1rem;
+      position: sticky;
+      top: 58px;
+      z-index: 900;
+      background: var(--creme);
+      box-shadow: 0 2px 10px rgba(43, 43, 43, .06);
     }
 
     .filter-cluster {
@@ -207,7 +212,6 @@
     body,
     html,
     main,
-    .container,
     .row,
     [class*="col-"],
     .chart-card,
@@ -218,13 +222,14 @@
 
     html,
     body {
-      overflow-x: hidden;
+      overflow-x: clip;
     }
 
     @media (max-width: 768px) {
       .filter-cluster,
       .filter-actions {
-        min-width: 100%;
+        width: 100%;
+        min-width: 0;
       }
 
       .chart-card__head {
@@ -321,7 +326,7 @@
   </header>
 
   <div class="filter-bar filter-bar--eucalipto" role="search" aria-label="Filtros analíticos do eucalipto">
-    <div class="filter-cluster filter-cluster--wide">
+    <div class="filter-cluster filter-cluster--toggles">
       <span class="filter-label">Indicador</span>
       <div class="filter-group" role="group" aria-label="Filtrar por indicador" data-filter-group="indicador">
         <button class="filter-btn active" type="button" data-filter="all">Todos</button>

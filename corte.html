@@ -183,13 +183,10 @@
     }
 
     @media (max-width: 768px) {
-      .filter-bar--analitica {
-        position: static;
-      }
-
       .filter-cluster,
       .filter-actions {
-        min-width: 100%;
+        width: 100%;
+        min-width: 0;
       }
 
       .chart-card__head {
@@ -254,7 +251,7 @@
 
   <!-- FILTER BAR -->
   <div class="filter-bar filter-bar--analitica" role="search" aria-label="Filtros analíticos do dashboard de corte">
-    <div class="filter-cluster filter-cluster--wide">
+    <div class="filter-cluster filter-cluster--toggles">
       <span class="filter-label">Indicador</span>
       <div class="filter-group" role="group" aria-label="Filtrar por indicador" data-filter-group="indicador">
         <button class="filter-btn active" type="button" data-filter="all">Todos</button>
@@ -330,7 +327,6 @@
     </div>
     <div class="filter-actions">
       <button id="btnLimparFiltrosCorte" class="filter-action-btn" type="button">Limpar filtros</button>
-      <button id="btnAplicarFocoCorte" class="filter-action-btn active" type="button">Ir para foco</button>
     </div>
     <div id="filtrosAtivosCorte" class="filter-summary" aria-live="polite"></div>
   </div>

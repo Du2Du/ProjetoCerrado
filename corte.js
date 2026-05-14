@@ -2930,10 +2930,6 @@ function configurarEventosFiltrosCorte() {
   porId("filtroMetricaAbate")?.addEventListener("change", event => { filtrosCorte.metricaAbate = event.target.value; atualizarDashboardCorte(); });
   porId("filtroTopPastagens")?.addEventListener("change", event => { filtrosCorte.topPastagens = Number(event.target.value); atualizarDashboardCorte(); });
   porId("btnLimparFiltrosCorte")?.addEventListener("click", limparFiltrosCorte);
-  porId("btnAplicarFocoCorte")?.addEventListener("click", () => {
-    if (filtrosCorte.indicador !== "all") switchTabCorte(indicadorParaAbaCorte[filtrosCorte.indicador]);
-    document.querySelector("[data-tab-content].active")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
   ["buscaUfCorte", "buscaMunicipioCorte", "buscaPaisCorte"].forEach(id => porId(id)?.addEventListener("input", renderizarFiltrosMultiselect));
 }
 

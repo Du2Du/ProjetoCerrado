@@ -170,7 +170,8 @@
     @media (max-width: 768px) {
       .filter-cluster,
       .filter-actions {
-        min-width: 100%;
+        width: 100%;
+        min-width: 0;
       }
     }
   </style>
@@ -223,7 +224,7 @@
   </header>
 
   <div class="filter-bar filter-bar--analitica" role="search" aria-label="Filtros analíticos">
-    <div class="filter-cluster">
+    <div class="filter-cluster filter-cluster--toggles">
       <span class="filter-label">Escala</span>
       <div class="filter-group" role="group" aria-label="Filtrar por escala geográfica" data-filter-group="escala">
         <button class="filter-btn active" type="button" data-filter="all">Todas</button>
@@ -232,7 +233,7 @@
         <button class="filter-btn" type="button" data-filter="municipio">Municípios</button>
       </div>
     </div>
-    <div class="filter-cluster filter-cluster--wide">
+    <div class="filter-cluster filter-cluster--toggles">
       <span class="filter-label">Indicador</span>
       <div class="filter-group" role="group" aria-label="Filtrar por indicador" data-filter-group="indicador">
         <button class="filter-btn active" type="button" data-filter="all">Todos</button>
@@ -304,7 +305,6 @@
     </div>
     <div class="filter-actions">
       <button id="btnLimparFiltros" class="filter-action-btn" type="button">Limpar filtros</button>
-      <button id="btnAplicarFoco" class="filter-action-btn active" type="button">Ir para foco</button>
     </div>
     <div id="filtrosAtivosLeite" class="filter-summary" aria-live="polite"></div>
   </div>
