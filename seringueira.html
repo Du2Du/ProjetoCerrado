@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 
 <head>
+  <link rel="icon" href="public/favicon.ico">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
@@ -13,55 +14,173 @@
     rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
   <style>
-    .filter-bar--analitica { align-items: flex-start; gap: .75rem 1rem; padding: .85rem 1rem; flex-wrap: wrap; }
-    .filter-cluster { display: flex; flex-direction: column; gap: .35rem; min-width: 140px; }
-    .filter-cluster--wide { min-width: 200px; flex: 1 1 200px; }
+    .filter-bar--analitica {
+      align-items: flex-start;
+      gap: .75rem 1rem;
+      padding: .85rem 1rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-cluster {
+      display: flex;
+      flex-direction: column;
+      gap: .35rem;
+      min-width: 140px;
+    }
+
+    .filter-cluster--wide {
+      min-width: 200px;
+      flex: 1 1 200px;
+    }
+
     .filter-select {
-      min-height: 2rem; border: 1.5px solid var(--cinza-claro); border-radius: 8px;
-      background: #fff; color: var(--cinza-esc); font-family: var(--font-d);
-      font-size: .78rem; padding: .35rem .55rem;
+      min-height: 2rem;
+      border: 1.5px solid var(--cinza-claro);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--cinza-esc);
+      font-family: var(--font-d);
+      font-size: .78rem;
+      padding: .35rem .55rem;
     }
+
     .filter-search {
-      border: 1.5px solid var(--cinza-claro); border-radius: 8px;
-      background: #fff; color: var(--cinza-esc); font-family: var(--font-d);
-      font-size: .78rem; padding: .35rem .55rem;
+      border: 1.5px solid var(--cinza-claro);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--cinza-esc);
+      font-family: var(--font-d);
+      font-size: .78rem;
+      padding: .35rem .55rem;
     }
+
     .filter-dropdown-btn {
-      width: 100%; min-height: 2rem; border: 1.5px solid var(--cinza-claro); border-radius: 8px;
-      background: #fff; color: var(--cinza-esc); font-family: var(--font-d); font-size: .78rem;
-      font-weight: 600; padding: .35rem .65rem; text-align: left;
-      display: flex; align-items: center; justify-content: space-between; gap: .5rem; cursor: pointer;
+      width: 100%;
+      min-height: 2rem;
+      border: 1.5px solid var(--cinza-claro);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--cinza-esc);
+      font-family: var(--font-d);
+      font-size: .78rem;
+      font-weight: 600;
+      padding: .35rem .65rem;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .5rem;
+      cursor: pointer;
     }
-    .filter-dropdown-btn::after { content: "▾"; color: var(--cinza-med); font-size: .7rem; }
+
+    .filter-dropdown-btn::after {
+      content: "▾";
+      color: var(--cinza-med);
+      font-size: .7rem;
+    }
+
     .filter-dropdown-menu {
-      width: min(300px, 92vw); max-height: 300px; overflow: auto; padding: .55rem;
-      border: 1px solid var(--cinza-claro); border-radius: 8px; box-shadow: var(--shadow-md);
+      width: min(300px, 92vw);
+      max-height: 300px;
+      overflow: auto;
+      padding: .55rem;
+      border: 1px solid var(--cinza-claro);
+      border-radius: 8px;
+      box-shadow: var(--shadow-md);
     }
+
     .filter-option {
-      display: flex; align-items: center; gap: .45rem; padding: .28rem .2rem;
-      color: var(--cinza-esc); font-family: var(--font-d); font-size: .78rem; cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .28rem .2rem;
+      color: var(--cinza-esc);
+      font-family: var(--font-d);
+      font-size: .78rem;
+      cursor: pointer;
     }
-    .filter-option input { accent-color: var(--verde); }
-    .filter-actions { display: flex; flex-direction: row; gap: .45rem; align-items: flex-end; flex-wrap: wrap; }
+
+    .filter-option input {
+      accent-color: var(--verde);
+    }
+
+    .filter-actions {
+      display: flex;
+      flex-direction: row;
+      gap: .45rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+
     .filter-action-btn {
-      font-family: var(--font-d); font-size: .72rem; font-weight: 600; padding: .35rem .7rem;
-      border-radius: 20px; cursor: pointer; border: 1.5px solid var(--cinza-claro);
-      background: #fff; color: var(--cinza-med); transition: all .18s;
+      font-family: var(--font-d);
+      font-size: .72rem;
+      font-weight: 600;
+      padding: .35rem .7rem;
+      border-radius: 20px;
+      cursor: pointer;
+      border: 1.5px solid var(--cinza-claro);
+      background: #fff;
+      color: var(--cinza-med);
+      transition: all .18s;
     }
-    .filter-action-btn:hover { background: var(--verde); border-color: var(--verde); color: #fff; }
-    .filter-summary { width: 100%; display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; min-height: 1.8rem; }
+
+    .filter-action-btn:hover {
+      background: var(--verde);
+      border-color: var(--verde);
+      color: #fff;
+    }
+
+    .filter-summary {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+      align-items: center;
+      min-height: 1.8rem;
+    }
+
     .filter-chip {
-      display: inline-flex; align-items: center; gap: .35rem; border-radius: 999px;
-      background: #fff; border: 1px solid var(--cinza-claro); color: var(--cinza-med);
-      font: 600 .7rem var(--font-d); padding: .2rem .55rem;
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid var(--cinza-claro);
+      color: var(--cinza-med);
+      font: 600 .7rem var(--font-d);
+      padding: .2rem .55rem;
     }
+
     .filter-chip__x {
-      background: none; border: none; cursor: pointer; color: var(--cinza-med);
-      font-size: .8rem; line-height: 1; padding: 0; margin-left: .1rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--cinza-med);
+      font-size: .8rem;
+      line-height: 1;
+      padding: 0;
+      margin-left: .1rem;
     }
-    .filter-chip__x:hover { color: var(--terra); }
-    .filter-chip-vazio { color: var(--cinza-med); font-size: .75rem; font-family: var(--font-d); }
-    @media (max-width: 768px) { .filter-cluster, .filter-actions { width: 100%; min-width: 0; } }
+
+    .filter-chip__x:hover {
+      color: var(--terra);
+    }
+
+    .filter-chip-vazio {
+      color: var(--cinza-med);
+      font-size: .75rem;
+      font-family: var(--font-d);
+    }
+
+    @media (max-width: 768px) {
+
+      .filter-cluster,
+      .filter-actions {
+        width: 100%;
+        min-width: 0;
+      }
+    }
   </style>
 
 </head>
@@ -73,8 +192,7 @@
     <div class="container">
       <div class="d-flex align-items-center justify-content-between w-100">
         <a class="navbar-brand" href="index.html" aria-label="Projeto Cerrado — página inicial">
-          <span class="brand-icon" aria-hidden="true">🌿</span>
-          <span>Projeto Cerrado · Goiás</span>
+          <img class="brand-logo" src="public/img/logo.avif" alt="Projeto Cerrado · Goiás" />
         </a>
         <ul class="desktop-nav nav d-none d-md-flex" role="list">
           <li><a class="nav-link" href="index.html">Início</a></li>
@@ -86,7 +204,7 @@
         </ul>
         <button class="navbar-toggler d-md-none border-0 bg-transparent" type="button" data-bs-toggle="collapse"
           data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false" aria-label="Abrir menu">
-          <span style="color:#fff;font-size:1.4rem;">&#9776;</span>
+          <span style="color:var(--verde);font-size:1.4rem;">&#9776;</span>
         </button>
       </div>
       <div class="collapse d-md-none" id="mobileNav">
@@ -138,18 +256,18 @@
       <span class="filter-label">Período</span>
       <div class="d-flex gap-2">
         <select id="seriAnoInicio" class="filter-select" aria-label="Ano inicial"></select>
-        <select id="seriAnoFim"    class="filter-select" aria-label="Ano final"></select>
+        <select id="seriAnoFim" class="filter-select" aria-label="Ano final"></select>
       </div>
     </div>
 
     <div class="filter-cluster filter-cluster--wide">
       <span class="filter-label">UF / Estado</span>
       <div class="dropdown" data-bs-auto-close="outside">
-        <button id="seriUfBtn" class="filter-dropdown-btn" type="button"
-          data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Todas</button>
+        <button id="seriUfBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
+          data-bs-auto-close="outside" aria-expanded="false">Todas</button>
         <div class="dropdown-menu filter-dropdown-menu">
-          <input id="buscaUfSeri" class="filter-search w-100 mb-2" type="search"
-            placeholder="Buscar UF" aria-label="Buscar UF" />
+          <input id="buscaUfSeri" class="filter-search w-100 mb-2" type="search" placeholder="Buscar UF"
+            aria-label="Buscar UF" />
           <div id="seriUfMenu"></div>
         </div>
       </div>
@@ -158,8 +276,8 @@
     <div class="filter-cluster filter-cluster--wide">
       <span class="filter-label">Produto</span>
       <div class="dropdown" data-bs-auto-close="outside">
-        <button id="seriProdutoBtn" class="filter-dropdown-btn" type="button"
-          data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Todos</button>
+        <button id="seriProdutoBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
+          data-bs-auto-close="outside" aria-expanded="false">Todos</button>
         <div class="dropdown-menu filter-dropdown-menu">
           <div id="seriProdutoMenu"></div>
         </div>
@@ -284,8 +402,7 @@
               </div>
             </div>
             <div class="col-12" data-category="custo">
-              <div class="chart-card" role="figure"
-                aria-label="Gráfico: Custo de produção da borracha no Centro-Oeste">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Custo de produção da borracha no Centro-Oeste">
                 <div class="chart-card__title">Custo de Produção da Borracha</div>
                 <div class="chart-card__sub">R$ por hectare e R$ por kg (2012–2021)</div>
                 <div id="chartCustoBorracha" class="chart-area" aria-hidden="true"></div>
@@ -725,12 +842,19 @@
           <p><a href="leite.html" style="color:rgba(255,255,255,.6)">→ Pecuária de Leite</a><br>
             <a href="corte.html" style="color:rgba(255,255,255,.6)">→ Pecuária de Corte</a><br>
             <a href="eucalipto.html" style="color:rgba(255,255,255,.6)">→ Eucalipto</a><br>
-            <a href="index.html" style="color:rgba(255,255,255,.6)">→ Página Inicial</a></p>
+            <a href="index.html" style="color:rgba(255,255,255,.6)">→ Página Inicial</a>
+          </p>
         </div>
         <div class="col-lg-4">
           <div class="footer__title">Fonte</div>
           <p>IBGE — LSPA (Levantamento Sistemático da Produção Agrícola) · MAPA · 2012–2021</p>
         </div>
+      </div>
+      <div class="footer-logos" aria-label="Instituições parceiras">
+        <img src="public/img/LogoFuntec.png" alt="FUNTEC" />
+        <img src="public/img/logo.png" alt="Projeto Cerrado" />
+        <img src="public/img/logo_mapa.png" alt="Ministério da Agricultura e Pecuária" />
+        <img src="public/img/logo_ifg.jpg" alt="Instituto Federal de Goiás" />
       </div>
       <div class="footer__bottom d-flex flex-wrap justify-content-between gap-2"><span>© 2026 Projeto Cerrado
           · Goiás</span><span>Bootstrap 5 · amCharts 5</span></div>

@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 
 <head>
+  <link rel="icon" href="public/favicon.ico">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
@@ -168,6 +169,7 @@
     }
 
     @media (max-width: 768px) {
+
       .filter-cluster,
       .filter-actions {
         width: 100%;
@@ -185,8 +187,7 @@
     <div class="container">
       <div class="d-flex align-items-center justify-content-between w-100">
         <a class="navbar-brand" href="index.html" aria-label="Projeto Cerrado — página inicial">
-          <span class="brand-icon" aria-hidden="true">🌿</span>
-          <span>Projeto Cerrado · Goiás</span>
+          <img class="brand-logo" src="public/img/logo.avif" alt="Projeto Cerrado · Goiás" />
         </a>
         <ul class="desktop-nav nav d-none d-md-flex" role="list">
           <li><a class="nav-link" href="index.html">Início</a></li>
@@ -198,7 +199,7 @@
         </ul>
         <button class="navbar-toggler d-md-none border-0 bg-transparent" type="button" data-bs-toggle="collapse"
           data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false" aria-label="Abrir menu">
-          <span style="color:#fff;font-size:1.4rem;">&#9776;</span>
+          <span style="color:var(--verde);font-size:1.4rem;">&#9776;</span>
         </button>
       </div>
       <div class="collapse d-md-none" id="mobileNav">
@@ -255,8 +256,7 @@
       <span class="filter-label">Região</span>
       <div class="dropdown" data-bs-auto-close="outside">
         <button id="filtroRegiaoBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
-          data-bs-auto-close="outside"
-          aria-expanded="false">Todas</button>
+          data-bs-auto-close="outside" aria-expanded="false">Todas</button>
         <div class="dropdown-menu filter-dropdown-menu">
           <input id="buscaRegiao" class="filter-search w-100 mb-2" type="search" placeholder="Buscar região"
             aria-label="Buscar região" />
@@ -268,8 +268,7 @@
       <span class="filter-label">UF/Estado</span>
       <div class="dropdown" data-bs-auto-close="outside">
         <button id="filtroUfBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
-          data-bs-auto-close="outside"
-          aria-expanded="false">Todas</button>
+          data-bs-auto-close="outside" aria-expanded="false">Todas</button>
         <div class="dropdown-menu filter-dropdown-menu">
           <input id="buscaUf" class="filter-search w-100 mb-2" type="search" placeholder="Buscar UF/estado"
             aria-label="Buscar UF ou estado" />
@@ -281,8 +280,7 @@
       <span class="filter-label">Município</span>
       <div class="dropdown" data-bs-auto-close="outside">
         <button id="filtroMunicipioBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
-          data-bs-auto-close="outside"
-          aria-expanded="false">Todos</button>
+          data-bs-auto-close="outside" aria-expanded="false">Todos</button>
         <div class="dropdown-menu filter-dropdown-menu">
           <input id="buscaMunicipio" class="filter-search w-100 mb-2" type="search" placeholder="Buscar município"
             aria-label="Buscar município" />
@@ -294,8 +292,7 @@
       <span class="filter-label">Produto / perfil</span>
       <div class="dropdown" data-bs-auto-close="outside">
         <button id="filtroProdutoBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
-          data-bs-auto-close="outside"
-          aria-expanded="false">Todos</button>
+          data-bs-auto-close="outside" aria-expanded="false">Todos</button>
         <div class="dropdown-menu filter-dropdown-menu">
           <input id="buscaProduto" class="filter-search w-100 mb-2" type="search" placeholder="Buscar produto ou perfil"
             aria-label="Buscar produto ou perfil" />
@@ -977,6 +974,12 @@
           <div class="footer__title">Fonte</div>
           <p>IBGE — Pesquisa Pecuária Municipal (PPM) · 2013–2021</p>
         </div>
+      </div>
+      <div class="footer-logos" aria-label="Instituições parceiras">
+        <img src="public/img/LogoFuntec.png" alt="FUNTEC" />
+        <img src="public/img/logo.png" alt="Projeto Cerrado" />
+        <img src="public/img/logo_mapa.png" alt="Ministério da Agricultura e Pecuária" />
+        <img src="public/img/logo_ifg.jpg" alt="Instituto Federal de Goiás" />
       </div>
       <div class="footer__bottom d-flex flex-wrap justify-content-between gap-2"><span>© 2026 Projeto Cerrado
           · Goiás</span><span>Bootstrap 5 · amCharts 5</span></div>

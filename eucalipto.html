@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 
 <head>
+  <link rel="icon" href="public/favicon.ico">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
@@ -226,6 +227,7 @@
     }
 
     @media (max-width: 768px) {
+
       .filter-cluster,
       .filter-actions {
         width: 100%;
@@ -287,8 +289,7 @@
     <div class="container">
       <div class="d-flex align-items-center justify-content-between w-100">
         <a class="navbar-brand" href="index.html" aria-label="Projeto Cerrado — página inicial">
-          <span class="brand-icon" aria-hidden="true">🌿</span>
-          <span>Projeto Cerrado · Goiás</span>
+          <img class="brand-logo" src="public/img/logo.avif" alt="Projeto Cerrado · Goiás" />
         </a>
         <ul class="desktop-nav nav d-none d-md-flex" role="list">
           <li><a class="nav-link" href="index.html">Início</a></li>
@@ -300,7 +301,7 @@
         </ul>
         <button class="navbar-toggler d-md-none border-0 bg-transparent" type="button" data-bs-toggle="collapse"
           data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false" aria-label="Abrir menu">
-          <span style="color:#fff;font-size:1.4rem;">&#9776;</span>
+          <span style="color:var(--verde);font-size:1.4rem;">&#9776;</span>
         </button>
       </div>
       <div class="collapse d-md-none" id="mobileNav">
@@ -320,7 +321,8 @@
     <div class="container position-relative">
       <span class="page-hero__label">Eucalipto</span>
       <h1>Floresta Plantada do Eucalipto</h1>
-      <p>Quantidade produzida, valor de produção e participação dos produtos da silvicultura do eucalipto no Centro-Oeste.</p>
+      <p>Quantidade produzida, valor de produção e participação dos produtos da silvicultura do eucalipto no
+        Centro-Oeste.</p>
       <p class="page-hero__meta">Fonte: IBGE — Tabela 291 · 2012–2021</p>
     </div>
   </header>
@@ -447,8 +449,10 @@
                     <div class="chart-card__sub">Tabela 1 — Centro-Oeste, por produto da silvicultura</div>
                   </div>
                 </div>
-                <div id="chartQuantidadeProduzidaEucalipto" class="chart-area chart-area--tall" aria-hidden="true"></div>
-                <div id="emptyQuantidadeProduzidaEucalipto" class="chart-empty">Nenhum produto com quantidade no período selecionado.</div>
+                <div id="chartQuantidadeProduzidaEucalipto" class="chart-area chart-area--tall" aria-hidden="true">
+                </div>
+                <div id="emptyQuantidadeProduzidaEucalipto" class="chart-empty">Nenhum produto com quantidade no período
+                  selecionado.</div>
               </div>
             </div>
             <div class="col-lg-5" data-category="ranking">
@@ -472,7 +476,8 @@
                   </div>
                 </div>
                 <div id="chartRankingProducaoEucalipto" class="chart-area chart-area--tall" aria-hidden="true"></div>
-                <div id="emptyRankingProducaoEucalipto" class="chart-empty">Nenhum município atende aos filtros do ranking.</div>
+                <div id="emptyRankingProducaoEucalipto" class="chart-empty">Nenhum município atende aos filtros do
+                  ranking.</div>
               </div>
             </div>
           </div>
@@ -487,7 +492,8 @@
                   </div>
                 </div>
                 <div id="chartValorProducaoEucalipto" class="chart-area" aria-hidden="true"></div>
-                <div id="emptyValorProducaoEucalipto" class="chart-empty">Nenhum produto com valor no período selecionado.</div>
+                <div id="emptyValorProducaoEucalipto" class="chart-empty">Nenhum produto com valor no período
+                  selecionado.</div>
               </div>
             </div>
             <div class="col-lg-5" data-category="valor">
@@ -500,7 +506,8 @@
                   </div>
                 </div>
                 <div id="chartParticipacaoValorEucalipto" class="chart-area" aria-hidden="true"></div>
-                <div id="emptyParticipacaoValorEucalipto" class="chart-empty">Nenhum produto com participação no ano selecionado.</div>
+                <div id="emptyParticipacaoValorEucalipto" class="chart-empty">Nenhum produto com participação no ano
+                  selecionado.</div>
               </div>
             </div>
           </div>
@@ -681,9 +688,11 @@
                     <span class="timeline-tipo">Dia de Campo</span>
                     <h4 class="timeline-titulo">Dia de Campo — Eucalipto com Foco em iLPF</h4>
                     <p class="timeline-detalhe"><strong>Local:</strong> PAD/DF — zona rural do Paranoá, Brasília/DF</p>
-                    <p class="timeline-detalhe"><strong>Participantes:</strong> Produtores rurais, técnicos extensionistas,
+                    <p class="timeline-detalhe"><strong>Participantes:</strong> Produtores rurais, técnicos
+                      extensionistas,
                       consultores, representantes de entidades de classe, agentes públicos do DF e região</p>
-                    <p class="timeline-detalhe"><strong>Resultado:</strong> Validação do Plano de Intervenção com foco no
+                    <p class="timeline-detalhe"><strong>Resultado:</strong> Validação do Plano de Intervenção com foco
+                      no
                       sistema iLPF</p>
                   </div>
                 </div>
@@ -693,7 +702,8 @@
                     <span class="timeline-tipo">Plano de Intervenção</span>
                     <h4 class="timeline-titulo">Entrega do Plano de Intervenção ao MAPA</h4>
                     <p class="timeline-detalhe"><strong>Local:</strong> Região Centro-Oeste</p>
-                    <p class="timeline-detalhe"><strong>Resultado:</strong> 15 ações estratégicas em 4 segmentos entregues
+                    <p class="timeline-detalhe"><strong>Resultado:</strong> 15 ações estratégicas em 4 segmentos
+                      entregues
                       ao Ministério da Agricultura</p>
                   </div>
                 </div>
@@ -736,14 +746,16 @@
                       <tr>
                         <td>Produção</td>
                         <td>Mão de obra</td>
-                        <td>Desenvolver programa de formação e qualificação de mão de obra para silvicultura do eucalipto</td>
+                        <td>Desenvolver programa de formação e qualificação de mão de obra para silvicultura do
+                          eucalipto</td>
                         <td>Produtores rurais, associações, agências de extensão rural, governo</td>
                         <td>Região CO</td>
                       </tr>
                       <tr>
                         <td>Produção</td>
                         <td>Crédito</td>
-                        <td>Criar linha de crédito específica para o plantio de eucalipto, considerando as fases do processo
+                        <td>Criar linha de crédito específica para o plantio de eucalipto, considerando as fases do
+                          processo
                           produtivo</td>
                         <td>Produtores rurais, associações, agências de extensão rural, governo</td>
                         <td>Região CO</td>
@@ -751,7 +763,8 @@
                       <tr>
                         <td>Produção</td>
                         <td>Logística e infraestrutura</td>
-                        <td>Melhorar estradas vicinais e acesso às propriedades; facilitar acesso a máquinas e equipamentos;
+                        <td>Melhorar estradas vicinais e acesso às propriedades; facilitar acesso a máquinas e
+                          equipamentos;
                           apoiar mecanização da colheita em médias e pequenas propriedades</td>
                         <td>Produtores rurais, associações, empresas de transporte, agroindústrias, governo</td>
                         <td>Região CO</td>
@@ -759,7 +772,8 @@
                       <tr>
                         <td>Indústria de processamento</td>
                         <td>Diversificação dos produtos</td>
-                        <td>Desenvolver novos produtos de maior valor agregado; incentivar novas indústrias de pellets em
+                        <td>Desenvolver novos produtos de maior valor agregado; incentivar novas indústrias de pellets
+                          em
                           substituição à madeira convencional como fonte de energia</td>
                         <td>Produtores, associações, empresas processadoras, agroindústrias, governo</td>
                         <td>CO — foco em GO e MT</td>
@@ -790,7 +804,8 @@
                       <tr>
                         <td>Sustentabilidade</td>
                         <td>Práticas produtivas sustentáveis</td>
-                        <td>Fomentar a adoção de modelos de produção baseado na integração com outras culturas e florestas
+                        <td>Fomentar a adoção de modelos de produção baseado na integração com outras culturas e
+                          florestas
                         </td>
                         <td>Produtores rurais, associações, agências de extensão rural, governo</td>
                         <td>Região CO</td>
@@ -819,12 +834,19 @@
           <p><a href="leite.html" style="color:rgba(255,255,255,.6)">→ Pecuária de Leite</a><br>
             <a href="corte.html" style="color:rgba(255,255,255,.6)">→ Pecuária de Corte</a><br>
             <a href="seringueira.html" style="color:rgba(255,255,255,.6)">→ Seringueira</a><br>
-            <a href="index.html" style="color:rgba(255,255,255,.6)">→ Página Inicial</a></p>
+            <a href="index.html" style="color:rgba(255,255,255,.6)">→ Página Inicial</a>
+          </p>
         </div>
         <div class="col-lg-4">
           <div class="footer__title">Fonte</div>
           <p>IBGE — Tabela 291, quantidade produzida e valor da produção na silvicultura · 2012–2021</p>
         </div>
+      </div>
+      <div class="footer-logos" aria-label="Instituições parceiras">
+        <img src="public/img/LogoFuntec.png" alt="FUNTEC" />
+        <img src="public/img/logo.png" alt="Projeto Cerrado" />
+        <img src="public/img/logo_mapa.png" alt="Ministério da Agricultura e Pecuária" />
+        <img src="public/img/logo_ifg.jpg" alt="Instituto Federal de Goiás" />
       </div>
       <div class="footer__bottom d-flex flex-wrap justify-content-between gap-2"><span>© 2026 Projeto Cerrado
           · Goiás</span><span>Bootstrap 5 · amCharts 5</span></div>

@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 
 <head>
+  <link rel="icon" href="public/favicon.ico">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
@@ -183,6 +184,7 @@
     }
 
     @media (max-width: 768px) {
+
       .filter-cluster,
       .filter-actions {
         width: 100%;
@@ -211,8 +213,7 @@
     <div class="container">
       <div class="d-flex align-items-center justify-content-between w-100">
         <a class="navbar-brand" href="index.html" aria-label="Projeto Cerrado — página inicial">
-          <span class="brand-icon" aria-hidden="true">🌿</span>
-          <span>Projeto Cerrado · Goiás</span>
+          <img class="brand-logo" src="public/img/logo.avif" alt="Projeto Cerrado · Goiás" />
         </a>
         <ul class="desktop-nav nav d-none d-md-flex" role="list">
           <li><a class="nav-link" href="index.html">Início</a></li>
@@ -224,7 +225,7 @@
         </ul>
         <button class="navbar-toggler d-md-none border-0 bg-transparent" type="button" data-bs-toggle="collapse"
           data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false" aria-label="Abrir menu">
-          <span style="color:#fff;font-size:1.4rem;">&#9776;</span>
+          <span style="color:var(--verde);font-size:1.4rem;">&#9776;</span>
         </button>
       </div>
       <div class="collapse d-md-none" id="mobileNav">
@@ -795,7 +796,8 @@
               <div class="chart-card" role="figure"
                 aria-label="Gráfico: Projeções de produção de carne bovina no Brasil até 2031/32">
                 <div class="chart-card__title">Projeção de Produção — Carne Bovina Brasil</div>
-                <div id="subProjecaoProducao" class="chart-card__sub">Mil toneladas — cenário central, inferior e superior (MAPA)</div>
+                <div id="subProjecaoProducao" class="chart-card__sub">Mil toneladas — cenário central, inferior e
+                  superior (MAPA)</div>
                 <div id="chartProjecaoProducaoCarne" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
@@ -803,7 +805,8 @@
               <div class="chart-card" role="figure"
                 aria-label="Gráfico: Projeções de consumo de carne bovina no Brasil até 2031/32">
                 <div class="chart-card__title">Projeção de Consumo — Carne Bovina Brasil</div>
-                <div id="subProjecaoConsumo" class="chart-card__sub">Mil toneladas — cenário central, inferior e superior (MAPA)</div>
+                <div id="subProjecaoConsumo" class="chart-card__sub">Mil toneladas — cenário central, inferior e
+                  superior (MAPA)</div>
                 <div id="chartProjecaoConsumoCarne" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
@@ -813,7 +816,8 @@
               <div class="chart-card" role="figure"
                 aria-label="Gráfico: Projeções de exportação de carne bovina no Brasil até 2031/32">
                 <div class="chart-card__title">Projeção de Exportação — Carne Bovina Brasil</div>
-                <div id="subProjecaoExportacao" class="chart-card__sub">Mil toneladas — cenário central, inferior e superior (MAPA)</div>
+                <div id="subProjecaoExportacao" class="chart-card__sub">Mil toneladas — cenário central, inferior e
+                  superior (MAPA)</div>
                 <div id="chartProjecaoExportacaoCarne" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
@@ -904,7 +908,8 @@
               </div>
             </div>
             <div class="col-lg-4">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Área de pastagem por município no Centro-Oeste">
+              <div class="chart-card" role="figure"
+                aria-label="Gráfico: Área de pastagem por município no Centro-Oeste">
                 <div class="chart-card__title">Área de Pastagem por Município — Centro-Oeste</div>
                 <div class="chart-card__sub">Top 10 em hectares</div>
                 <div id="chartPastagemMunicipioCo" class="chart-area" aria-hidden="true"></div>
@@ -1298,6 +1303,12 @@
           <div class="footer__title">Fontes</div>
           <p>IBGE (PPM, PTA) · MAPA · OECD-FAO Agricultural Outlook 2022–2031 · USDA</p>
         </div>
+      </div>
+      <div class="footer-logos" aria-label="Instituições parceiras">
+        <img src="public/img/LogoFuntec.png" alt="FUNTEC" />
+        <img src="public/img/logo.png" alt="Projeto Cerrado" />
+        <img src="public/img/logo_mapa.png" alt="Ministério da Agricultura e Pecuária" />
+        <img src="public/img/logo_ifg.jpg" alt="Instituto Federal de Goiás" />
       </div>
       <div class="footer__bottom d-flex flex-wrap justify-content-between gap-2">
         <span>© 2026 Projeto Cerrado · Goiás</span>

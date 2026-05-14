@@ -78,18 +78,20 @@
 
     /* ── NAVBAR ───────────────────────────────────────────── */
     .navbar-obs {
-        background: var(--verde);
+        background: rgba(249, 246, 240, .96);
+        border-bottom: 1px solid rgba(74, 124, 63, .16);
         padding: .75rem 0;
         position: sticky;
         top: 0;
         z-index: 1000;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, .18);
+        box-shadow: 0 2px 14px rgba(43, 43, 43, .08);
+        backdrop-filter: blur(10px);
     }
 
     .navbar-obs .navbar-brand {
         font-family: var(--font-d);
         font-weight: 700;
-        color: #fff !important;
+        color: var(--verde) !important;
         font-size: 1rem;
         display: flex;
         align-items: center;
@@ -107,38 +109,46 @@
         font-size: 1rem;
     }
 
+    .navbar-obs .brand-logo {
+        display: block;
+        width: auto;
+        height: 40px;
+        max-width: min(220px, 48vw);
+        object-fit: contain;
+    }
+
     .navbar-obs .nav-link {
-        color: rgba(255, 255, 255, .85) !important;
+        color: var(--verde) !important;
         font-family: var(--font-d);
         font-size: .82rem;
-        font-weight: 400;
+        font-weight: 600;
         padding: .4rem .85rem !important;
         border-radius: 6px;
-        transition: background .2s;
+        transition: background .2s, color .2s;
     }
 
     .navbar-obs .nav-link:hover,
     .navbar-obs .nav-link.active-page {
-        background: rgba(255, 255, 255, .18);
-        color: #fff !important;
+        background: rgba(74, 124, 63, .12);
+        color: #2d5c24 !important;
     }
 
     .navbar-obs .back-link {
-        color: rgba(255, 255, 255, .7) !important;
+        color: var(--verde) !important;
         font-family: var(--font-d);
         font-size: .78rem;
         display: flex;
         align-items: center;
         gap: .3rem;
         padding: .35rem .75rem !important;
-        border: 1px solid rgba(255, 255, 255, .3);
+        border: 1px solid rgba(74, 124, 63, .25);
         border-radius: 6px;
         transition: all .2s;
     }
 
     .navbar-obs .back-link:hover {
-        background: rgba(255, 255, 255, .12);
-        color: #fff !important;
+        background: rgba(74, 124, 63, .1);
+        color: #2d5c24 !important;
     }
 
     ul.desktop-nav {
@@ -531,11 +541,11 @@
     }
 
     /* ── CHART CARDS ───────────────────────────────────────── */
-    .tab-content-obs [data-tab-content] > .filter-content-row--visible {
+    .tab-content-obs [data-tab-content]>.filter-content-row--visible {
         margin-top: 1.5rem;
     }
 
-    .tab-content-obs [data-tab-content] > .row.mb-4 + .filter-content-row--visible {
+    .tab-content-obs [data-tab-content]>.row.mb-4+.filter-content-row--visible {
         margin-top: 1.75rem;
     }
 
@@ -722,9 +732,29 @@
         line-height: 1.6;
     }
 
-    .footer__bottom {
+    .footer-logos {
         border-top: 1px solid rgba(255, 255, 255, .1);
         margin-top: 1.2rem;
+        padding-top: 1.1rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .8rem 1rem;
+    }
+
+    .footer-logos img {
+        display: block;
+        max-width: 150px;
+        height: 46px;
+        object-fit: contain;
+        border-radius: 6px;
+        background: #fff;
+        padding: .35rem .55rem;
+    }
+
+    .footer__bottom {
+        border-top: 1px solid rgba(255, 255, 255, .1);
+        margin-top: 1rem;
         padding-top: 1rem;
         font-size: .72rem;
         color: rgba(255, 255, 255, .3);
