@@ -827,6 +827,11 @@
             gap: .5rem;
         }
 
+        .tab-content-obs {
+            padding-right: calc(var(--bs-gutter-x, 1.5rem) * .5);
+            padding-left: calc(var(--bs-gutter-x, 1.5rem) * .5);
+        }
+
         .filter-actions {
             padding-top: 0;
         }
@@ -842,6 +847,14 @@
         .filter-bar--eucalipto .filter-select {
             flex: 1 1 0;
             min-width: 0;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .filter-bar--analitica,
+        .filter-bar--eucalipto {
+            position: static !important;
+            top: auto;
         }
     }
 
