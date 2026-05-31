@@ -11,8 +11,8 @@
         --cinza-med: #5a5a5a;
         --cinza-claro: #e0dbd2;
 
-        --font-d: 'Sora', sans-serif;
-        --font-b: 'Source Serif 4', serif;
+        --font-d: Arial, sans-serif;
+        --font-b: Arial, sans-serif;
         --radius: 10px;
         --radius-lg: 18px;
         --shadow-sm: 0 1px 4px rgba(0, 0, 0, .08);
@@ -31,7 +31,7 @@
     }
 
     body {
-        font-family: var(--font-b);
+        font-family: var(--font-d);
         background: var(--fundo);
         color: var(--cinza-esc);
         font-size: 1rem;

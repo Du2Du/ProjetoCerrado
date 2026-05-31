@@ -65,7 +65,7 @@ const graficos = {};
 
 function existe(id) { return !!document.getElementById(id); }
 function eixo(axis) {
-  axis.get("renderer").labels.template.setAll({ fontSize: 11, fontFamily: "'Sora',sans-serif", fill: am5.color("#5a5a5a") });
+  axis.get("renderer").labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif", fill: am5.color("#5a5a5a") });
 }
 function criarRoot(id) {
   const root = am5.Root.new(id);
@@ -74,7 +74,7 @@ function criarRoot(id) {
 }
 function criarLegenda(chart, root) {
   const l = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 8 }));
-  l.labels.template.setAll({ fontSize: 11, fontFamily: "'Sora',sans-serif" });
+  l.labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif" });
   return l;
 }
 function cardDoGrafico(id) {
@@ -261,10 +261,10 @@ function graficoPizza(id, categoria, valor) {
   const root = criarRoot(id);
   const chart = root.container.children.push(am5percent.PieChart.new(root, { layout: root.verticalLayout, innerRadius: am5.percent(55) }));
   const s = chart.series.push(am5percent.PieSeries.new(root, { valueField: valor, categoryField: categoria }));
-  s.labels.template.setAll({ fontSize: 10, fontFamily: "'Sora',sans-serif" });
+  s.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
   s.get("colors").set("colors", P.map(c => am5.color(c)));
   const l = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 10 }));
-  l.labels.template.setAll({ fontSize: 10, fontFamily: "'Sora',sans-serif" });
+  l.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
   graficos[id] = {
     update(data) {
       s.data.setAll(data);

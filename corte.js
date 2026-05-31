@@ -2498,12 +2498,12 @@ function mostrarSemDadosChart(id, mensagem = "Sem dados para os filtros selecion
 }
 
 function configurarEixo(axis) {
-  axis.get("renderer").labels.template.setAll({ fontSize: 11, fontFamily: "'Sora',sans-serif", fill: am5.color("#5a5a5a") });
+  axis.get("renderer").labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif", fill: am5.color("#5a5a5a") });
 }
 
 function criarLegenda(chart, root) {
   const legend = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 8 }));
-  legend.labels.template.setAll({ fontSize: 11, fontFamily: "'Sora',sans-serif" });
+  legend.labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif" });
   return legend;
 }
 
@@ -2571,11 +2571,11 @@ function criarPizza(id, dados, categoria, valor) {
   const root = criarRoot(id);
   const chart = root.container.children.push(am5percent.PieChart.new(root, { layout: root.verticalLayout, innerRadius: am5.percent(55) }));
   const serie = chart.series.push(am5percent.PieSeries.new(root, { valueField: valor, categoryField: categoria }));
-  serie.labels.template.setAll({ fontSize: 10, fontFamily: "'Sora',sans-serif" });
+  serie.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
   serie.get("colors").set("colors", PALETA_CORTE.map(cor => am5.color(cor)));
   serie.data.setAll(filtrados);
   const legend = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 10 }));
-  legend.labels.template.setAll({ fontSize: 10, fontFamily: "'Sora',sans-serif" });
+  legend.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
   legend.data.setAll(serie.dataItems);
   chart.appear(600, 60);
 }

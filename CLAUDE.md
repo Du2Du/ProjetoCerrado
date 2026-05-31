@@ -29,16 +29,12 @@ florestas.html    → Painel: Florestas Plantadas (Heveicultura / Borracha Natur
 - **HTML5 + CSS3 + JavaScript puro** (sem frameworks JS)
 - **Bootstrap 5** (via CDN) — usado exclusivamente para responsividade e grid
 - **amCharts 5** (via CDN) — usado para todos os gráficos
-- **Google Fonts** (via CDN) — Sora (display) + Source Serif 4 (corpo)
 
 ### CDNs utilizadas
 ```html
 <!-- Bootstrap -->
 https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css
 https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js
-
-<!-- Google Fonts -->
-https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=Source+Serif+4:...
 
 <!-- amCharts 5 -->
 https://cdn.amcharts.com/lib/5/index.js
@@ -72,8 +68,8 @@ https://cdn.amcharts.com/lib/5/themes/Animated.js
 ```
 
 ### Tipografia
-- **Display / Títulos / UI:** `Sora` (pesos 300, 400, 600, 700)
-- **Corpo / Parágrafos:** `Source Serif 4` (pesos 300, 600)
+- **Display / Títulos / UI:** `Arial`
+- **Corpo / Parágrafos:** `Arial`
 
 ### Princípios visuais
 - Layout **clean e minimalista**
@@ -288,14 +284,14 @@ root.setThemes([am5themes_Animated.new(root)]);
 
 // Estilo de eixo (aplicar em todos os eixos)
 axis.get("renderer").labels.template.setAll({
-  fontSize: 11, fontFamily: "'Sora', sans-serif", fill: am5.color("#5a5a5a")
+  fontSize: 11, fontFamily: "Arial, sans-serif", fill: am5.color("#5a5a5a")
 });
 
 // Legenda padrão
 const legend = chart.children.push(am5.Legend.new(root, {
   centerX: am5.p50, x: am5.p50, marginTop: 8
 }));
-legend.labels.template.setAll({ fontSize: 11, fontFamily: "'Sora', sans-serif" });
+legend.labels.template.setAll({ fontSize: 11, fontFamily: "Arial, sans-serif" });
 
 // Sempre finalizar com
 chart.appear(1000, 100);

@@ -13,7 +13,7 @@ function makeRoot(divId) {
 
 function styleAxis(axis) {
     axis.get("renderer").labels.template.setAll({
-        fontSize: 11, fontFamily: "'Sora', sans-serif", fill: am5.color("#5a5a5a")
+        fontSize: 11, fontFamily: "Arial, sans-serif", fill: am5.color("#5a5a5a")
     });
 }
 
@@ -21,7 +21,7 @@ function makeLegend(chart, root) {
     const l = chart.children.push(am5.Legend.new(root, {
         centerX: am5.p50, x: am5.p50, marginTop: 8
     }));
-    l.labels.template.setAll({ fontSize: 11, fontFamily: "'Sora', sans-serif" });
+    l.labels.template.setAll({ fontSize: 11, fontFamily: "Arial, sans-serif" });
     return l;
 }
 

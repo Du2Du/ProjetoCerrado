@@ -509,7 +509,7 @@
     /* ── BANNER CAPACITAÇÕES ───────────────────────────────────────── */
     .banner-cursos-section {
         padding: 2rem 0;
-        font-family: 'Source Sans 3', sans-serif;
+        font-family: Arial, sans-serif;
     }
 
     .banner-horizontal {
@@ -662,7 +662,7 @@
     }
 
     .stat-num {
-        font-family: 'Playfair Display', Georgia, serif;
+        font-family: Arial, sans-serif;
         font-size: 48px;
         font-weight: 700;
         color: #A8CC3C;

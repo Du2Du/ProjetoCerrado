@@ -97,7 +97,7 @@ function formatarCompacto(valor, unidade) {
 }
 
 function configurarEixo(eixo) {
-  eixo.get("renderer").labels.template.setAll({ fontSize: 11, fontFamily: "'Sora',sans-serif", fill: am5.color("#5a5a5a") });
+  eixo.get("renderer").labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif", fill: am5.color("#5a5a5a") });
 }
 
 function criarRoot(containerId) {
@@ -109,7 +109,7 @@ function criarRoot(containerId) {
 
 function criarLegenda(chart, root) {
   const legenda = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 8 }));
-  legenda.labels.template.setAll({ fontSize: 11, fontFamily: "'Sora',sans-serif" });
+  legenda.labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif" });
   return legenda;
 }
 

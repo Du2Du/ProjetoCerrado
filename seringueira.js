@@ -125,11 +125,11 @@ function buildDadosUF(dados, campoValor) {
 
 // ── AMCHARTS HELPERS ─────────────────────────────────────────────────
 function configurarEixo(eixo) {
-  eixo.get("renderer").labels.template.setAll({ fontSize: 11, fontFamily: "'Sora',sans-serif", fill: am5.color("#5a5a5a") });
+  eixo.get("renderer").labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif", fill: am5.color("#5a5a5a") });
 }
 function criarLegenda(chart, root) {
   const l = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 8 }));
-  l.labels.template.setAll({ fontSize: 11, fontFamily: "'Sora',sans-serif" });
+  l.labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif" });
   return l;
 }
 function inicializarXY(containerId, opcoes = {}) {
@@ -323,11 +323,11 @@ function criarGraficoParticipacaoMundial() {
   rootsSeringueira.push(root);
   const chart = root.container.children.push(am5percent.PieChart.new(root, { layout: root.verticalLayout, innerRadius: am5.percent(55) }));
   const serie = chart.series.push(am5percent.PieSeries.new(root, { valueField: "area", categoryField: "pais" }));
-  serie.labels.template.setAll({ fontSize: 10, fontFamily: "'Sora',sans-serif" });
+  serie.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
   serie.data.setAll([...dadosRankingMundial].reverse());
   serie.get("colors").set("colors", P.map(c => am5.color(c)));
   const legenda = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 10 }));
-  legenda.labels.template.setAll({ fontSize: 10, fontFamily: "'Sora',sans-serif" });
+  legenda.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
   legenda.data.setAll(serie.dataItems);
   chart.appear(1000, 100);
 }
