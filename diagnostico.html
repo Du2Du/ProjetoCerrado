@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <link rel="icon" href="public/favicon.ico">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Diagnóstico de cadeias produtivas do Cerrado — recomendações personalizadas." />
+    <title>Diagnóstico · Projeto Cerrado</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="shared.css" />
+    <style>
+        .diagnosis-container {
+            padding: 3rem 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 400px;
+            border-radius: var(--radius);
+            border: 1px solid var(--cinza-claro);
+            margin-bottom: 1.5rem;
+            z-index: 1;
+        }
+
+        .form-card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--cinza-esc);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-control,
+        .form-select {
+            border: 1.5px solid var(--cinza-claro);
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--verde);
+            box-shadow: 0 0 0 0.25rem rgba(74, 124, 63, 0.25);
+        }
+
+        .btn-primary {
+            background-color: var(--verde);
+            border-color: var(--verde);
+            padding: 0.6rem 1.5rem;
+            font-weight: 600;
+            border-radius: 20px;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--verde-claro);
+            border-color: var(--verde-claro);
+        }
+
+        .btn-secondary {
+            background-color: var(--cinza-med);
+            border-color: var(--cinza-med);
+            padding: 0.6rem 1.5rem;
+            font-weight: 600;
+            border-radius: 20px;
+        }
+
+        .error-message {
+            color: #d9534f;
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+
+        .report-section {
+            margin-top: 2rem;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        .report-card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 2rem;
+        }
+
+        .report-header {
+            border-bottom: 2px solid var(--verde);
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+        }
+
+        .report-header h2 {
+            color: var(--verde);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .report-date {
+            font-size: 0.85rem;
+            color: var(--cinza-med);
+        }
+
+        .report-summary h3,
+        .report-details h3,
+        .report-charts h4 {
+            font-size: 1.2rem;
+            color: var(--terra);
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            margin-top: 2rem;
+        }
+
+        .recommendation-card {
+            border-left: 4px solid var(--verde);
+            background: var(--creme);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 0 var(--radius) var(--radius) 0;
+        }
+
+        .recommendation-card h5 {
+            color: var(--verde);
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .chart-container {
+            background: #fff;
+            border: 1px solid var(--cinza-claro);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-container h5 {
+            font-size: 0.9rem;
+            color: var(--cinza-med);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        @media print {
+
+            .navbar-obs,
+            .footer,
+            .report-actions,
+            .form-card,
+            .page-hero {
+                display: none !important;
+            }
+
+            body {
+                background: #fff;
+            }
+
+            .report-card {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <a class="skip-link" href="#main-content">Ir para o conteúdo principal</a>
+
+    <!-- ── NAVBAR ───────────────────────────────────────────── -->
+    <nav class="navbar-obs" role="navigation" aria-label="Navegação principal">
+        <div class="container">
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <a class="navbar-brand" href="index.html" aria-label="Projeto Cerrado — página inicial">
+                    <img class="brand-logo" src="public/img/logo.avif" alt="Projeto Cerrado · Goiás" />
+                </a>
+                <ul class="desktop-nav nav d-none d-md-flex" role="list">
+                    <li><a class="nav-link" href="index.html">Início</a></li>
+                    <li><a class="nav-link" href="leite.html">Pecuária de Leite</a></li>
+                    <li><a class="nav-link" href="corte.html">Pecuária de Corte</a></li>
+                    <li><a class="nav-link" href="eucalipto.html">Floresta Plantada do Eucalipto</a></li>
+                    <li><a class="nav-link" href="seringueira.html">Floresta Plantada da Seringueira</a></li>
+                    <li><a class="nav-link" href="cursos.html">Capacitações</a></li>
+                    <li><a class="nav-link active-page" href="diagnostico.html">Diagnóstico</a></li>
+                </ul>
+                <button class="navbar-toggler d-md-none border-0 bg-transparent" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false" aria-label="Abrir menu">
+                    <span style="color:var(--verde);font-size:1.4rem;">&#9776;</span>
+                </button>
+            </div>
+            <div class="collapse d-md-none" id="mobileNav">
+                <ul class="nav flex-column py-2" role="list">
+                    <li><a class="nav-link" href="index.html">Início</a></li>
+                    <li><a class="nav-link" href="leite.html">Pecuária de Leite</a></li>
+                    <li><a class="nav-link" href="corte.html">Pecuária de Corte</a></li>
+                    <li><a class="nav-link" href="eucalipto.html">Floresta Plantada do Eucalipto</a></li>
+                    <li><a class="nav-link" href="seringueira.html">Floresta Plantada da Seringueira</a></li>
+                    <li><a class="nav-link" href="cursos.html">Capacitações</a></li>
+                    <li><a class="nav-link active-page" href="diagnostico.html">Diagnóstico</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="page-hero page-hero--leite">
+        <div class="container">
+            <span class="page-hero__label">Ferramenta de Apoio</span>
+            <h1>Diagnóstico Inteligente</h1>
+            <p>Receba recomendações personalizadas para sua produção com base em dados de localização.</p>
+        </div>
+    </header>
+
+    <main id="main-content" class="diagnosis-container">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div id="diagnosis-form-section">
+                        <div class="form-card">
+                            <h3 class="mb-4">Dados para o Diagnóstico</h3>
+
+                            <div class="row mb-4">
+                                <div class="col-md-9 mb-2">
+                                    <label class="form-label">Localização da Propriedade</label>
+                                    <input type="text" id="address-input" class="form-control"
+                                        placeholder="Digite um endereço ou cidade">
+                                </div>
+                                <div class="col-md-3 mb-2 d-flex align-items-end">
+                                    <button type="button" id="search-address-btn"
+                                        class="btn btn-primary w-100">Buscar</button>
+                                </div>
+                            </div>
+
+                            <div id="map"></div>
+                            <div id="map-error" class="error-message mb-3"></div>
+
+                            <form id="diagnosis-form">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Cultura</label>
+                                        <select id="culture" class="form-select" required>
+                                            <option value="" disabled selected>Selecione a cultura</option>
+                                            <option value="bovinocultura_corte">Bovinocultura de Corte</option>
+                                            <option value="pecuaria_leite">Pecuária de Leite</option>
+                                            <option value="sericicultura">Sericicultura</option>
+                                            <option value="eucalipto">Eucalipto</option>
+                                        </select>
+                                        <div id="culture-error" class="error-message"></div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Estágio da Produção</label>
+                                        <input type="text" id="production_stage" class="form-control"
+                                            placeholder="Ex: Cria, Recria, Engorda" required>
+                                        <div id="production-stage-error" class="error-message"></div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label">Problema enfrentado ou descrição da recomendação
+                                        buscada</label>
+                                    <textarea id="problem_description" class="form-control" rows="4" maxlength="999"
+                                        required></textarea>
+                                    <div id="problem-description-error" class="error-message"></div>
+                                </div>
+
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="submit" id="submit-btn" class="btn btn-primary">Gerar
+                                        Diagnóstico</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div id="report-section" class="report-section" style="display: none;">
+                        <div class="report-card" id="printable-report">
+                            <div class="report-header">
+                                <h2>Relatório de Recomendações</h2>
+                                <p class="report-date">Gerado em: <span id="report-current-date"></span></p>
+                            </div>
+
+                            <section class="report-summary">
+                                <h3>Resumo dos Parâmetros</h3>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><b>Cultura:</b> <span id="res-culture"></span></p>
+                                        <p><b>Estágio:</b> <span id="res-stage"></span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><b>Problema:</b> <span id="res-problem"></span></p>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section id="recommendations-container" class="report-summary">
+                                <h3>Recomendações</h3>
+                                <div id="recommendations-list"></div>
+                            </section>
+
+                            <section id="climate-section" class="report-summary">
+                                <h3>Dados Meteorológicos</h3>
+                                <div class="row g-3" id="climate-data"></div>
+                            </section>
+
+                            <section id="charts-section" class="report-charts">
+                                <h4>Previsões para os Próximos Dias</h4>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="chart-container">
+                                            <h5>Precipitação (mm)</h5>
+                                            <canvas id="chart-precipitation"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="chart-container">
+                                            <h5>Temperatura (°C)</h5>
+                                            <canvas id="chart-temperature"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="chart-container">
+                                            <h5>Umidade (%)</h5>
+                                            <canvas id="chart-humidity"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="chart-container">
+                                            <h5>Solo (°C)</h5>
+                                            <canvas id="chart-soil"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section id="soil-section" class="report-details">
+                                <h3>Dados do Solo</h3>
+                                <div id="soil-data"></div>
+                            </section>
+
+                            <section id="vegetation-section" class="report-details">
+                                <h3>Dados da Vegetação</h3>
+                                <div id="vegetation-data"></div>
+                            </section>
+                        </div>
+
+                        <div class="report-actions d-flex gap-3 justify-content-center">
+                            <button id="download-pdf-btn" class="btn btn-primary">Download PDF</button>
+                            <button id="print-report-btn" class="btn btn-secondary">Imprimir</button>
+                            <button id="new-diagnosis-btn" class="btn btn-outline-primary">Novo Diagnóstico</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="spinner-overlay" id="loader">
+        <div class="text-center">
+            <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="mt-2 fw-bold" style="color: var(--verde);">Analisando dados...</p>
+        </div>
+    </div>
+
+    <footer class="footer" role="contentinfo">
+        <div class="container">
+            <div class="row g-3">
+                <div class="col-lg-5">
+                    <div class="footer__title">Projeto Cerrado · Goiás</div>
+                    <p>Monitoramento de cadeias produtivas do Cerrado. Dados baseados em pesquisas oficiais.</p>
+                </div>
+                <div class="col-lg-4">
+                    <div class="footer__title">Cadeias Monitoradas</div>
+                    <p>
+                        <a href="leite.html" style="color:rgba(255,255,255,.6)">Pecuária de Leite</a><br>
+                        <a href="corte.html" style="color:rgba(255,255,255,.6)">Pecuária de Corte</a><br>
+                        <a href="eucalipto.html" style="color:rgba(255,255,255,.6)">Floresta Plantada do
+                            Eucalipto</a><br>
+                        <a href="seringueira.html" style="color:rgba(255,255,255,.6)">Floresta Plantada da
+                            Seringueira</a>
+                    </p>
+                </div>
+                <div class="col-lg-3">
+                    <div class="footer__title">Acessibilidade</div>
+                    <p>Site desenvolvido seguindo as diretrizes WCAG 2.1 AA. Navegação por teclado disponível.</p>
+                </div>
+            </div>
+            <div class="footer-logos" aria-label="Instituições parceiras">
+                <img src="public/img/LogoFuntec.png" alt="FUNTEC" />
+                <img src="public/img/logo.png" alt="Projeto Cerrado" />
+                <img src="public/img/logo_mapa.png" alt="Ministério da Agricultura e Pecuária" />
+                <img src="public/img/logo_ifg.jpg" alt="Instituto Federal de Goiás" />
+            </div>
+            <div class="footer__bottom d-flex flex-wrap justify-content-between gap-2">
+                <span>© 2026 Projeto Cerrado · Goiás. Dados: IBGE / MAPA / OECD.</span>
+                <span>Bootstrap 5 · amCharts 5</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="diagnostico.js"></script>
+</body>
+
+</html>
