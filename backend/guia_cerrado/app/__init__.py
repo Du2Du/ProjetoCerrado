@@ -15,7 +15,7 @@ db.init_app(app)
 swagger = Swagger(app)
 
 CORS(app, 
-     origins=["http://localhost:5173"],  # List all allowed origins
+     origins=["http://localhost:5173", "https://guia.projetocerradoifg.org", "https://projetocerradoifg.org"],
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # List all allowed methods
      allow_headers=["Content-Type", "Authorization", "X-Requested-With"],  # Common headers
      supports_credentials=True,  # Allow cookies in cross-origin requests if needed
