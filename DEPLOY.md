@@ -45,13 +45,8 @@ docker logs guia-cerrado-backend -f
 docker compose -f /opt/guia-cerrado/docker-compose.yml restart backend
 docker compose -f /opt/guia-cerrado/docker-compose.yml restart frontend
 
-# Acessar shell do container Django
+# Acessar shell do container Python
 docker exec -it guia-cerrado-backend bash
-
-# Rodar comandos Django
-docker exec guia-cerrado-backend python manage.py createsuperuser
-docker exec guia-cerrado-backend python manage.py shell
-docker exec guia-cerrado-backend python manage.py migrate
 
 # Derrubar tudo (raramente necessário)
 docker compose -f /opt/guia-cerrado/docker-compose.yml down
