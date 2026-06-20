@@ -18,6 +18,5 @@ jobs:
           script: |
             cd /opt/guia-cerrado
             git pull origin main
-            docker compose up -d --build
-            docker exec guia-cerrado-backend python manage.py migrate --noinput
+            docker compose up -d --build --remove-orphans
             echo "✅ guia-cerrado deployado com sucesso!"
