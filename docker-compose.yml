@@ -1,0 +1,15 @@
+services:
+  frontend:
+    build: ./frontend
+    container_name: guia-cerrado-frontend
+    restart: always
+    ports:
+      - "8080:80"
+
+  backend:
+    build: ./backend
+    container_name: guia-cerrado-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file: ./backend/.env

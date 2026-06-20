@@ -5,7 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     // ── CONSTANTES E CONFIGURAÇÕES ──────────────────────────
-    const API_BASE_URL = 'https://guia-cerrado.onrender.com';
+    const API_BASE_URL = 'https://projetocerradoifg.org';
     const api = axios.create({
         baseURL: API_BASE_URL,
         withCredentials: true,
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         searchBtn: document.getElementById('search-address-btn'),
         submitBtn: document.getElementById('submit-btn'),
         loader: document.getElementById('loader'),
-        
+
         // Resultados
         resCulture: document.getElementById('res-culture'),
         resStage: document.getElementById('res-stage'),
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         soilData: document.getElementById('soil-data'),
         vegetationData: document.getElementById('vegetation-data'),
         reportDate: document.getElementById('report-current-date'),
-        
+
         // Ações
         downloadPdfBtn: document.getElementById('download-pdf-btn'),
         printBtn: document.getElementById('print-report-btn'),
@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isCultureValid = validateField('culture');
         const isStageValid = validateField('production_stage');
         const isProblemValid = validateField('problem_description');
-        
+
         let isMapValid = true;
         const mapErrorEl = document.getElementById('map-error');
         if (!state.lat || !state.lng) {
@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Clima
         displayClimateData(data.cerrado_data.climate);
-        
+
         // Gráficos
         initCharts(data.cerrado_data.climate);
 
@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const df = climate.hourly_dataframe;
         const labels = df.time.map(t => new Date(t).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
-        
+
         // Destruir gráficos anteriores se existirem
         Object.values(state.charts).forEach(chart => chart.destroy());
 
@@ -395,22 +395,22 @@ document.addEventListener('DOMContentLoaded', () => {
     async function downloadPDF() {
         const { jsPDF } = window.jspdf;
         const report = document.getElementById('printable-report');
-        
+
         showLoader(true);
-        
+
         try {
             const canvas = await html2canvas(report, {
                 scale: 2,
                 useCORS: true,
                 logging: false
             });
-            
+
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF('p', 'mm', 'a4');
             const imgProps = pdf.getImageProperties(imgData);
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-            
+
             pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
             pdf.save(`diagnostico-cerrado-${new Date().toISOString().slice(0, 10)}.pdf`);
         } catch (error) {
