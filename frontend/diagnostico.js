@@ -5,7 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     // ── CONSTANTES E CONFIGURAÇÕES ──────────────────────────
-    const API_BASE_URL = 'https://projetocerradoifg.org';
+    const API_BASE_URL = 'https://projetocerradoifg.org/api';
     const api = axios.create({
         baseURL: API_BASE_URL,
         withCredentials: true,
