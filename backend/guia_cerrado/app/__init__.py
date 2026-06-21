@@ -62,9 +62,9 @@ logger.setLevel(logging.DEBUG)
 
 # Register blueprints here
 from app.recommendation import bp as recommendation_bp
-app.register_blueprint(recommendation_bp)
+app.register_blueprint(recommendation_bp, url_prefix='/api')
 from app.pricing import bp as pricing_bp
-app.register_blueprint(pricing_bp)
+app.register_blueprint(pricing_bp, url_prefix='/api')
 
 from app.pricing import start_scheduler
 start_scheduler(app, db, logger)
