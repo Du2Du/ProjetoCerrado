@@ -5,7 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     // ── CONSTANTES E CONFIGURAÇÕES ──────────────────────────
-    const API_BASE_URL = 'https://projetocerradoifg.org/api';
+    const API_BASE_URL = '/api';
     const api = axios.create({
         baseURL: API_BASE_URL,
         withCredentials: true,
@@ -95,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.reportSection.style.display = 'none';
             elements.formSection.style.display = 'block';
             elements.form.reset();
+            elements.addressInput.value = '';
             if (state.marker) {
                 state.map.removeLayer(state.marker);
                 state.marker = null;
@@ -314,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!climate.hourly_dataframe) return;
 
         const df = climate.hourly_dataframe;
-        const labels = df.time.map(t => new Date(t).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
+        const labels = df.map(t => new Date(t.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
 
         // Destruir gráficos anteriores se existirem
         Object.values(state.charts).forEach(chart => chart.destroy());
