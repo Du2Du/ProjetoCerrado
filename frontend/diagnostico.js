@@ -337,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 labels: labels,
                 datasets: [{
                     label: 'Precipitação (mm)',
-                    data: df.precipitation,
+                    data: df.map(t => t.precipitation),
                     borderColor: '#4a7c3f',
                     backgroundColor: 'rgba(74, 124, 63, 0.1)',
                     fill: true
@@ -352,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 labels: labels,
                 datasets: [{
                     label: 'Temperatura (°C)',
-                    data: df.temperature_2m,
+                    data: df.map(t => t.temperature_2m),
                     borderColor: '#c8943a',
                     backgroundColor: 'rgba(200, 148, 58, 0.1)',
                     fill: true
@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 labels: labels,
                 datasets: [{
                     label: 'Umidade (%)',
-                    data: df.relative_humidity_2m,
+                    data: df.map(t => t.relative_humidity_2m),
                     borderColor: '#a0622b',
                     backgroundColor: 'rgba(160, 98, 43, 0.1)',
                     fill: true
@@ -382,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 labels: labels,
                 datasets: [{
                     label: 'Temp. Solo (°C)',
-                    data: df.soil_temperature_0cm,
+                    data: df.map(t => t.soil_temperature_0cm),
                     borderColor: '#6fa65e',
                     backgroundColor: 'rgba(111, 166, 94, 0.1)',
                     fill: true

@@ -149,6 +149,12 @@
             text-align: center;
         }
 
+        .chart-canvas {
+            position: relative;
+            height: 260px;
+            width: 100%;
+        }
+
         .spinner-overlay {
             position: fixed;
             top: 0;
@@ -328,25 +334,25 @@
                                     <div class="col-md-6">
                                         <div class="chart-container">
                                             <h5>Precipitação (mm)</h5>
-                                            <canvas id="chart-precipitation"></canvas>
+                                            <div class="chart-canvas"><canvas id="chart-precipitation"></canvas></div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="chart-container">
                                             <h5>Temperatura (°C)</h5>
-                                            <canvas id="chart-temperature"></canvas>
+                                            <div class="chart-canvas"><canvas id="chart-temperature"></canvas></div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="chart-container">
                                             <h5>Umidade (%)</h5>
-                                            <canvas id="chart-humidity"></canvas>
+                                            <div class="chart-canvas"><canvas id="chart-humidity"></canvas></div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="chart-container">
                                             <h5>Solo (°C)</h5>
-                                            <canvas id="chart-soil"></canvas>
+                                            <div class="chart-canvas"><canvas id="chart-soil"></canvas></div>
                                         </div>
                                     </div>
                                 </div>
