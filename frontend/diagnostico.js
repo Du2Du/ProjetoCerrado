@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         searchBtn: document.getElementById('search-address-btn'),
         submitBtn: document.getElementById('submit-btn'),
         loader: document.getElementById('loader'),
+        toastRegion: document.getElementById('toast-region'),
 
         // Resultados
         resCulture: document.getElementById('res-culture'),
@@ -53,6 +54,47 @@ document.addEventListener('DOMContentLoaded', () => {
         printBtn: document.getElementById('print-report-btn'),
         newDiagnosisBtn: document.getElementById('new-diagnosis-btn')
     };
+
+    function showToast(message, { title = 'Atenção', type = 'error', duration = 6000 } = {}) {
+        if (!elements.toastRegion) return;
+
+        const toast = document.createElement('div');
+        toast.className = `app-toast app-toast--${type}`;
+        toast.setAttribute('role', 'alert');
+
+        const icon = document.createElement('span');
+        icon.className = 'app-toast__icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = type === 'warning' ? '!' : '×';
+
+        const content = document.createElement('div');
+        const titleEl = document.createElement('p');
+        titleEl.className = 'app-toast__title';
+        titleEl.textContent = title;
+        const messageEl = document.createElement('p');
+        messageEl.className = 'app-toast__message';
+        messageEl.textContent = message;
+        content.append(titleEl, messageEl);
+
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'app-toast__close';
+        close.setAttribute('aria-label', 'Fechar notificação');
+        close.textContent = '×';
+
+        let timeout;
+        const dismiss = () => {
+            window.clearTimeout(timeout);
+            if (!toast.isConnected || toast.classList.contains('app-toast--leaving')) return;
+            toast.classList.add('app-toast--leaving');
+            window.setTimeout(() => toast.remove(), 180);
+        };
+
+        close.addEventListener('click', dismiss);
+        toast.append(icon, content, close);
+        elements.toastRegion.append(toast);
+        timeout = window.setTimeout(dismiss, duration);
+    }
 
     // ── INICIALIZAÇÃO ─────────────────────────────────────
     function init() {
@@ -141,10 +183,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.map.setView([latitude, longitude], 13);
                 setMarker(latitude, longitude);
             } else {
-                alert('Endereço não encontrado.');
+                showToast('Endereço não encontrado. Revise o texto informado e tente novamente.', {
+                    title: 'Localização não encontrada',
+                    type: 'warning'
+                });
             }
         } catch (error) {
             console.error('Erro na busca de endereço:', error);
+            showToast('Não foi possível consultar o endereço agora. Tente novamente em instantes.', {
+                title: 'Falha na busca de localização'
+            });
         }
     }
 
@@ -213,7 +261,9 @@ document.addEventListener('DOMContentLoaded', () => {
             displayReport(state.recommendations, formData);
         } catch (error) {
             console.error('Erro ao buscar recomendações:', error);
-            alert('Erro ao processar diagnóstico. Tente novamente mais tarde.');
+            showToast('Não foi possível processar o diagnóstico. Tente novamente mais tarde.', {
+                title: 'Falha ao gerar diagnóstico'
+            });
         } finally {
             showLoader(false);
         }
@@ -429,7 +479,9 @@ document.addEventListener('DOMContentLoaded', () => {
             pdf.save(`diagnostico-cerrado-${new Date().toISOString().slice(0, 10)}.pdf`);
         } catch (error) {
             console.error('Erro ao gerar PDF:', error);
-            alert('Não foi possível gerar o PDF.');
+            showToast('Não foi possível gerar o PDF. Tente novamente.', {
+                title: 'Falha ao gerar arquivo'
+            });
         } finally {
             showLoader(false);
         }

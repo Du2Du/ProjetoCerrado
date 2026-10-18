@@ -1,7 +1,7 @@
 const P = ["#2d5c24","#c8943a","#a0622b","#4a7c3f","#6fa65e","#e8a84c","#7fb069","#5c4033","#1a4a18","#d4a843"];
 
-const anosSeringueira = [2012,2013,2014,2015,2016,2017,2018,2019,2020,2021];
-const ufsSeringueira  = ["Centro-Oeste","Mato Grosso do Sul","Mato Grosso","Goiás"];
+let anosSeringueira = [];
+let ufsSeringueira  = [];
 const coresUf = {
   "Centro-Oeste":       P[0],
   "Mato Grosso do Sul": P[1],
@@ -11,83 +11,366 @@ const coresUf = {
 const rootsSeringueira = [];
 
 // ── ESTADO CENTRAL ───────────────────────────────────────────────────
-const estadoFiltros = { anoInicio: 2012, anoFim: 2021, ufs: new Set(), produto: new Set() };
+const estadoFiltros = { anoInicio: null, anoFim: null, ufs: new Set(), produto: new Set() };
 const graficosUF    = {};  // id → { eixoX, seriesMap:{uf→serie}, dados, campoValor }
 const graficosFixos = {};  // id → { eixoX, seriesList, getDados } ou { isEstab, seriesMap }
 
 // ── DADOS ────────────────────────────────────────────────────────────
-function criarSerieAnual(linhas, valoresPorUf, campoValor, extras = {}) {
-  Object.entries(valoresPorUf).forEach(([uf, valores]) => {
-    anosSeringueira.forEach((ano, i) => {
-      const v = valores[i];
-      if (v === null || v === undefined) return;
-      linhas.push({ ano, uf, produto: extras.produto || "Borracha (látex coagulado)", unidadeMedida: extras.unidadeMedida, [campoValor]: v });
-    });
-  });
-  return linhas;
+let dadosProducao = [];
+let dadosAreaColhida = [];
+let dadosAreaDestinada = [];
+let dadosAreaPerda = [];
+let dadosProdutividade = [];
+let dadosValorProducao = [];
+let dadosEstabelecimentos = [];
+let dadosIndicadores = [];
+
+const API_SERINGUEIRA = "https://api.projetocerradoifg.org/webhook/seringueira";
+const ENDPOINTS_SERINGUEIRA = ["pam", "censo"];
+const VALORES_SIDRA_AUSENTES = new Set(["...", "..", "-", "X", ""]);
+const requisicoesSeringueira = new Map();
+const PRODUTO_BORRACHA = "Borracha (látex coagulado)";
+const ORDEM_LOCALIDADES = ["Centro-Oeste", "Mato Grosso do Sul", "Mato Grosso", "Goiás"];
+const ALVOS_API = Object.freeze({
+  producao: ["chartProducaoSeringueira"],
+  areas: ["chartAreaColhidaSeringueira", "chartAreaDestinadaSeringueira", "chartAreaPerdaSeringueira"],
+  produtividade: ["chartProdutividadeSeringueira"],
+  valor: ["chartValorProducaoSeringueira"],
+  estabelecimentos: ["chartEstabelecimentosSeringueira"],
+  indicadores: ["chartIndicadoresBorracha"]
+});
+const VISUALIZACOES_SEM_ENDPOINT = [
+  "chartCustoBorracha", "chartMundo", "tabelaRankingMundial", "chartMundoPie", "chartCustoComp"
+];
+let periodoPadrao = { inicio: null, fim: null };
+
+class ErroDadosVazios extends Error {}
+
+function numeroSidra(valor) {
+  const texto = String(valor ?? "").trim();
+  if (VALORES_SIDRA_AUSENTES.has(texto)) return null;
+  const numero = Number(texto);
+  return Number.isFinite(numero) ? numero : null;
 }
 
-const dadosProducao = criarSerieAnual([], {
-  "Centro-Oeste":       [42384,45038,45186,43497,46725,53215,44023,52379,55012,59404],
-  "Mato Grosso do Sul": [1996,2178,2263,2105,4062,14562,6824,13942,14619,18724],
-  "Mato Grosso":        [26328,31173,27857,23620,23751,17914,16189,14388,14365,13541],
-  "Goiás":              [14060,11687,15066,17772,18912,20739,21010,24049,26028,27139]
-}, "quantidadeProduzidaToneladas");
+function ordenarAnos(anos) {
+  return Array.from(new Set(anos.map(Number).filter(Number.isInteger))).sort((a, b) => a - b);
+}
 
-const dadosAreaColhida = criarSerieAnual([], {
-  "Centro-Oeste":       [28565,27006,27945,25707,27670,31082,27843,29455,29747,33541],
-  "Mato Grosso do Sul": [821,855,854,852,1413,5799,3415,5505,5760,9591],
-  "Mato Grosso":        [23350,22201,21186,18615,19624,17963,16963,14907,14782,14430],
-  "Goiás":              [4394,3950,5905,6240,6633,7320,7465,9043,9205,9520]
-}, "areaColhidaHectares", { unidadeMedida: "Hectares" });
+function periodoTexto(anos) {
+  if (!anos.length) return "";
+  return anos.length === 1 ? String(anos[0]) : `${anos[0]}–${anos.at(-1)}`;
+}
 
-const dadosAreaDestinada = criarSerieAnual([], {
-  "Centro-Oeste":       [28565,27006,46151,35103,36417,35236,27946,36618,30777,33644],
-  "Mato Grosso do Sul": [821,855,854,852,1413,5799,3415,5505,5760,9591],
-  "Mato Grosso":        [23350,22201,39392,28011,28105,22117,16976,22070,15802,14533],
-  "Goiás":              [4394,3950,5905,6240,6899,7320,7555,9043,9215,9520]
-}, "areaDestinadaColheitaHectares", { unidadeMedida: "Hectares" });
+function containerVisualizacao(id) {
+  const elemento = document.getElementById(id);
+  if (!elemento) return null;
+  if (elemento.classList.contains("chart-card") || elemento.classList.contains("table-card")) return elemento;
+  return elemento.closest(".chart-card, .table-card");
+}
 
-const dadosAreaPerda = criarSerieAnual([], {
-  "Centro-Oeste":       [0,0,39.448766,26.766943,24.019002,11.789079,0.368568,19.561418,3.346655,0.306147],
-  "Mato Grosso do Sul": [0,0,0,0,0,0,0,0,0,0],
-  "Mato Grosso":        [0,0,46.217506,33.543965,30.176125,18.781932,0.076579,32.455822,6.454879,0.708732],
-  "Goiás":              [0,0,0,0,3.855631,0,1.191264,0,0.108519,0]
-}, "percentualPerdaArea", { unidadeMedida: "%" });
+function definirEstadoVisualizacao(ids, estado, mensagem = "") {
+  ids.forEach(id => {
+    const container = containerVisualizacao(id);
+    if (!container) return;
+    container.classList.remove("data-card--loading", "data-card--error", "data-card--empty");
+    container.querySelector(":scope > .data-state")?.remove();
+    container.removeAttribute("aria-busy");
+    if (estado === "ready") return;
 
-const dadosProdutividade = criarSerieAnual([], {
-  "Centro-Oeste":       [1484,1668,1617,1692,1689,1712,1581,1778,1849,1771],
-  "Mato Grosso do Sul": [2431,2547,2650,2471,2875,2511,1998,2533,2538,1952],
-  "Mato Grosso":        [1128,1404,1315,1269,1210,997,954,965,972,938],
-  "Goiás":              [3200,2959,2551,2848,2851,2833,2814,2659,2828,2851]
-}, "produtividadeKgPorHectare");
+    container.classList.add(`data-card--${estado}`);
+    if (estado === "loading") container.setAttribute("aria-busy", "true");
+    const status = document.createElement("div");
+    status.className = "data-state";
+    status.setAttribute("role", estado === "error" ? "alert" : "status");
+    const icone = document.createElement("span");
+    icone.className = estado === "loading" ? "data-state__spinner" : "data-state__icon";
+    icone.setAttribute("aria-hidden", "true");
+    if (estado !== "loading") icone.textContent = estado === "empty" ? "○" : "!";
+    const texto = document.createElement("span");
+    texto.textContent = mensagem || (estado === "loading" ? "Carregando dados…" : "Dados indisponíveis.");
+    status.append(icone, texto);
+    if (estado === "error") {
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.className = "data-state__retry";
+      retry.textContent = "Tentar novamente";
+      retry.addEventListener("click", () => window.location.reload());
+      status.append(retry);
+    }
+    container.append(status);
+  });
+}
 
-const dadosValorProducao = criarSerieAnual([], {
-  "Centro-Oeste":       [126300,113310,120868,88868,107178,136134,93166,117568,130546,196228],
-  "Mato Grosso do Sul": [5572,6389,5408,4247,9693,44229,16149,33301,38114,78356],
-  "Mato Grosso":        [77366,75483,77689,45895,56803,38454,34010,33085,33300,49058],
-  "Goiás":              [43362,31438,37771,38726,40682,53451,43007,51182,59132,68815]
-}, "valorProducaoMilReais");
+function comentarVisualizacoesSemEndpoint() {
+  VISUALIZACOES_SEM_ENDPOINT.forEach(id => {
+    const container = containerVisualizacao(id);
+    if (!container) return;
+    const bloco = container.closest("[data-category]") || container.closest("[class*='col-']") || container;
+    const titulo = container.querySelector(".chart-card__title")?.textContent.trim() || id;
+    bloco.replaceWith(document.createComment(` Visualização comentada: ${titulo} — endpoint não documentado. `));
+  });
+}
 
-const dadosEstabelecimentos = [
-  { ano:2017, condicaoProdutor:"Total",                             produto:"Borracha (látex líquido)",   numeroEstabelecimentos:20  },
-  { ano:2017, condicaoProdutor:"Total",                             produto:"Borracha (látex coagulado)", numeroEstabelecimentos:295 },
-  { ano:2017, condicaoProdutor:"Proprietário(a)",                   produto:"Borracha (látex líquido)",   numeroEstabelecimentos:20  },
-  { ano:2017, condicaoProdutor:"Proprietário(a)",                   produto:"Borracha (látex coagulado)", numeroEstabelecimentos:283 },
-  { ano:2017, condicaoProdutor:"Concessionário(a) ou assentado(a)", produto:"Borracha (látex coagulado)", numeroEstabelecimentos:1   },
-  { ano:2017, condicaoProdutor:"Arrendatário(a)",                   produto:"Borracha (látex coagulado)", numeroEstabelecimentos:6   },
-  { ano:2017, condicaoProdutor:"Comodatário(a)",                    produto:"Borracha (látex coagulado)", numeroEstabelecimentos:4   },
-  { ano:2017, condicaoProdutor:"Ocupante",                          produto:"Borracha (látex coagulado)", numeroEstabelecimentos:1   }
-];
+async function buscarEndpointSeringueira(nome) {
+  if (requisicoesSeringueira.has(nome)) return requisicoesSeringueira.get(nome);
+  const requisicao = (async () => {
+    if (window.simularErroApi) throw new Error("Falha simulada para teste da interface.");
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 15000);
+    try {
+      const resposta = await fetch(`${API_SERINGUEIRA}/${nome}`, {
+        headers: { Accept: "application/json" },
+        signal: controller.signal
+      });
+      if (!resposta.ok) throw new Error(`${nome}: HTTP ${resposta.status}`);
+      const payload = await resposta.json();
+      if (!Array.isArray(payload) || !payload.length) throw new ErroDadosVazios("O Servidor não retornou registros.");
+      return payload;
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  })();
+  requisicoesSeringueira.set(nome, requisicao);
+  return requisicao;
+}
 
-const dadosIndicadores = anosSeringueira.map((ano, i) => ({
-  ano,
-  producaoToneladas:        [42384,45038,45186,43497,46725,53215,44023,52379,55012,59404][i],
-  valorProducaoMilReais:    [126300,113310,120868,88868,107178,136134,93166,117568,130546,196228][i],
-  areaPlantadaHectares:     [28565,27006,46151,35103,36417,35236,27946,36618,30777,33644][i],
-  areaColhidaHectares:      [28565,27006,27945,25707,27670,31082,27843,29455,29747,33541][i],
-  produtividadeKgPorHectare:[1484,1668,1617,1692,1689,1712,1581,1778,1849,1771][i]
-}));
+function validarLinhasSidra(linhas, { unidade, produto, variaveis } = {}) {
+  if (!Array.isArray(linhas) || !linhas.length) throw new ErroDadosVazios("O Servidor não retornou registros.");
+  if (unidade && linhas.some(linha => linha.MN !== unidade)) throw new Error(`Unidade inesperada no SIDRA: ${unidade}.`);
+  if (produto && linhas.some(linha => linha.D4N !== produto)) throw new Error(`Produto inesperado no SIDRA: ${produto}.`);
+  if (variaveis && linhas.some(linha => !variaveis.includes(linha.D2C))) throw new Error("Variável inesperada na resposta do Servidor.");
+  const validas = linhas.filter(linha => numeroSidra(linha.V) !== null);
+  if (!validas.length) throw new ErroDadosVazios("O Servidor não retornou valores válidos.");
+  return validas;
+}
+
+function mapearSerieSidra(linhas, { campo, unidade, variavel }) {
+  const validas = validarLinhasSidra(linhas, { unidade, produto: PRODUTO_BORRACHA, variaveis: [variavel] });
+  return validas.map(linha => ({
+    ano: Number(linha.D3N),
+    uf: linha.D1N,
+    produto: linha.D4N,
+    unidadeMedida: linha.MN,
+    [campo]: numeroSidra(linha.V)
+  })).sort((a, b) => a.ano - b.ano || ORDEM_LOCALIDADES.indexOf(a.uf) - ORDEM_LOCALIDADES.indexOf(b.uf));
+}
+
+function mapearAreas(linhas) {
+  validarLinhasSidra(linhas, { unidade: "Hectares", produto: PRODUTO_BORRACHA, variaveis: ["8331", "216"] });
+  const colhida = mapearSerieSidra(linhas.filter(linha => linha.D2C === "216"), {
+    campo: "areaColhidaHectares", unidade: "Hectares", variavel: "216"
+  });
+  const destinada = mapearSerieSidra(linhas.filter(linha => linha.D2C === "8331"), {
+    campo: "areaDestinadaColheitaHectares", unidade: "Hectares", variavel: "8331"
+  });
+  const colhidaPorChave = new Map(colhida.map(item => [`${item.ano}|${item.uf}`, item.areaColhidaHectares]));
+  const perda = destinada.map(item => {
+    const areaColhida = colhidaPorChave.get(`${item.ano}|${item.uf}`);
+    if (areaColhida === undefined || !item.areaDestinadaColheitaHectares) return null;
+    return {
+      ano: item.ano,
+      uf: item.uf,
+      produto: item.produto,
+      unidadeMedida: "%",
+      percentualPerdaArea: (item.areaDestinadaColheitaHectares - areaColhida) / item.areaDestinadaColheitaHectares * 100
+    };
+  }).filter(Boolean);
+  if (!perda.length) throw new ErroDadosVazios("Não foi possível calcular a perda de área.");
+  return { colhida, destinada, perda };
+}
+
+function mapearEstabelecimentos(linhas) {
+  const validas = validarLinhasSidra(linhas, { unidade: "Unidades", variaveis: ["9504"] });
+  const dados = validas.map(linha => ({
+    ano: Number(linha.D3N),
+    condicaoProdutor: linha.D5N,
+    produto: linha.D4N,
+    numeroEstabelecimentos: numeroSidra(linha.V)
+  }));
+  if (!dados.length) throw new ErroDadosVazios("O Servidor não retornou estabelecimentos válidos.");
+  return dados;
+}
+
+function montarIndicadores() {
+  const somenteCo = dados => new Map(dados.filter(item => item.uf === "Centro-Oeste").map(item => [item.ano, item]));
+  const producao = somenteCo(dadosProducao);
+  const destinada = somenteCo(dadosAreaDestinada);
+  const colhida = somenteCo(dadosAreaColhida);
+  const produtividade = somenteCo(dadosProdutividade);
+  const anos = ordenarAnos([...producao.keys(), ...destinada.keys(), ...colhida.keys(), ...produtividade.keys()]);
+  const indicadores = anos.map(ano => {
+    const p = producao.get(ano);
+    const d = destinada.get(ano);
+    const c = colhida.get(ano);
+    const r = produtividade.get(ano);
+    if (!p || !d || !c || !r) return null;
+    return {
+      ano,
+      producaoToneladas: p.quantidadeProduzidaToneladas,
+      areaPlantadaHectares: d.areaDestinadaColheitaHectares,
+      areaColhidaHectares: c.areaColhidaHectares,
+      produtividadeKgPorHectare: r.produtividadeKgPorHectare
+    };
+  }).filter(Boolean);
+  if (!indicadores.length) throw new ErroDadosVazios("Não foi possível combinar os indicadores produtivos.");
+  return indicadores;
+}
+
+function atualizarTextoVisualizacao(id, { subtitulo, ariaLabel } = {}) {
+  const container = containerVisualizacao(id);
+  if (!container) return;
+  if (subtitulo) container.querySelector(".chart-card__sub").textContent = subtitulo;
+  if (ariaLabel) container.setAttribute("aria-label", ariaLabel);
+}
+
+function marcarFonteApi(ids) {
+  ids.forEach(id => {
+    const container = containerVisualizacao(id);
+    if (!container || container.querySelector(".data-source-note--live")) return;
+    const nota = document.createElement("div");
+    nota.className = "data-source-note data-source-note--live";
+    nota.textContent = "Fonte: SIDRA/IBGE";
+    container.querySelector(".chart-card__sub")?.insertAdjacentElement("afterend", nota);
+  });
+}
+
+function registrarFalhaApi(alvos, erro) {
+  const semDados = erro instanceof ErroDadosVazios;
+  definirEstadoVisualizacao(alvos, semDados ? "empty" : "error", semDados ? erro.message : "Não foi possível carregar os dados do Servidor.");
+  console.error("Falha ao carregar dados de Seringueira:", erro);
+}
+
+function atualizarPeriodoDinamico() {
+  anosSeringueira = ordenarAnos([
+    ...dadosProducao.map(item => item.ano),
+    ...dadosAreaColhida.map(item => item.ano),
+    ...dadosProdutividade.map(item => item.ano),
+    ...dadosValorProducao.map(item => item.ano)
+  ]);
+  ufsSeringueira = ORDEM_LOCALIDADES.filter(uf => [
+    ...dadosProducao, ...dadosAreaColhida, ...dadosProdutividade, ...dadosValorProducao
+  ].some(item => item.uf === uf));
+  if (anosSeringueira.length) {
+    periodoPadrao = { inicio: anosSeringueira[0], fim: anosSeringueira.at(-1) };
+    estadoFiltros.anoInicio = periodoPadrao.inicio;
+    estadoFiltros.anoFim = periodoPadrao.fim;
+  }
+}
+
+function formatarNumeroKpi(valor, casas = 1) {
+  return new Intl.NumberFormat("pt-BR", {
+    minimumFractionDigits: casas,
+    maximumFractionDigits: casas
+  }).format(valor);
+}
+
+function variacaoKpiSeringueira(serie, campo) {
+  const ordenada = [...serie].sort((a, b) => a.ano - b.ano);
+  const inicial = ordenada[0];
+  const atual = ordenada.at(-1);
+  if (!inicial || !atual || !Number.isFinite(inicial[campo]) || inicial[campo] === 0) {
+    return { badge: "Série disponível no SIDRA", tone: "neutral" };
+  }
+  const percentual = (atual[campo] - inicial[campo]) / inicial[campo] * 100;
+  return {
+    badge: `${percentual >= 0 ? "▲" : "▼"} ${percentual > 0 ? "+" : ""}${formatarNumeroKpi(percentual, 1)}% vs ${inicial.ano}`,
+    tone: percentual >= 0 ? "up" : "down"
+  };
+}
+
+function atualizarCardSerieSeringueira({ id, label, dados, campo, divisor = 1, casas = 1, prefixo = "", unidade }) {
+  const serie = dados.filter(item => item.uf === "Centro-Oeste" && Number.isFinite(item[campo]));
+  const atual = [...serie].sort((a, b) => a.ano - b.ano).at(-1);
+  if (!atual) {
+    window.atualizarKpiComApi(id, { label, state: "error" });
+    return;
+  }
+  window.atualizarKpiComApi(id, {
+    label: `${label} ${atual.ano}`,
+    value: `${prefixo}${formatarNumeroKpi(atual[campo] / divisor, casas)}`,
+    unit: unidade,
+    ...variacaoKpiSeringueira(serie, campo)
+  });
+}
+
+function atualizarCardsSeringueira() {
+  atualizarCardSerieSeringueira({
+    id: "kpiSeringueiraProducao", label: "Produção Centro-Oeste", dados: dadosProducao,
+    campo: "quantidadeProduzidaToneladas", divisor: 1_000, casas: 1, unidade: "mil t"
+  });
+  atualizarCardSerieSeringueira({
+    id: "kpiSeringueiraValor", label: "Valor da produção Centro-Oeste", dados: dadosValorProducao,
+    campo: "valorProducaoMilReais", divisor: 1_000, casas: 1, prefixo: "R$ ", unidade: "mi"
+  });
+  atualizarCardSerieSeringueira({
+    id: "kpiSeringueiraArea", label: "Área colhida Centro-Oeste", dados: dadosAreaColhida,
+    campo: "areaColhidaHectares", divisor: 1_000, casas: 1, unidade: "mil ha"
+  });
+  atualizarCardSerieSeringueira({
+    id: "kpiSeringueiraProdutividade", label: "Produtividade Centro-Oeste", dados: dadosProdutividade,
+    campo: "produtividadeKgPorHectare", casas: 0, unidade: "kg/ha"
+  });
+}
+
+async function carregarDadosApiSeringueira() {
+  Object.values(ALVOS_API).flat().forEach(id => definirEstadoVisualizacao([id], "loading"));
+  const nomes = ENDPOINTS_SERINGUEIRA;
+  const resultados = await Promise.allSettled(nomes.map(buscarEndpointSeringueira));
+  const resposta = Object.fromEntries(nomes.map((nome, indice) => [nome, resultados[indice]]));
+
+  if (resposta.pam.status === "fulfilled") {
+    try {
+      const pam = resposta.pam.value;
+      const mapear = (campoOrigem, campoDestino, unidadeMedida) => pam
+        .filter(item => Number.isFinite(Number(item[campoOrigem])))
+        .map(item => ({
+          ano: Number(item.ano), uf: item.uf, produto: PRODUTO_BORRACHA,
+          unidadeMedida, [campoDestino]: Number(item[campoOrigem])
+        }));
+      dadosProducao = mapear("producao", "quantidadeProduzidaToneladas", "Toneladas");
+      dadosAreaColhida = mapear("areaColhida", "areaColhidaHectares", "Hectares");
+      dadosAreaDestinada = mapear("areaDestinada", "areaDestinadaColheitaHectares", "Hectares");
+      dadosProdutividade = mapear("rendimento", "produtividadeKgPorHectare", "Quilogramas por Hectare");
+      dadosValorProducao = mapear("valor", "valorProducaoMilReais", "Mil Reais");
+      dadosAreaPerda = pam.filter(item => Number(item.areaDestinada) > 0 && Number.isFinite(Number(item.areaColhida))).map(item => ({
+        ano: Number(item.ano), uf: item.uf, produto: PRODUTO_BORRACHA, unidadeMedida: "%",
+        percentualPerdaArea: Math.max(0, (Number(item.areaDestinada) - Number(item.areaColhida)) / Number(item.areaDestinada) * 100)
+      }));
+      dadosIndicadores = montarIndicadores();
+      const alvosPam = [...ALVOS_API.producao, ...ALVOS_API.areas, ...ALVOS_API.produtividade, ...ALVOS_API.valor, ...ALVOS_API.indicadores];
+      definirEstadoVisualizacao(alvosPam, "ready");
+      marcarFonteApi(alvosPam);
+      const periodo = periodoTexto(ordenarAnos(pam.map(item => item.ano)));
+      atualizarTextoVisualizacao("chartProducaoSeringueira", { subtitulo: `Borracha (látex coagulado), toneladas (${periodo})` });
+      atualizarTextoVisualizacao("chartAreaColhidaSeringueira", { subtitulo: `Hectares (${periodo})` });
+      atualizarTextoVisualizacao("chartAreaDestinadaSeringueira", { subtitulo: `Hectares (${periodo})` });
+      atualizarTextoVisualizacao("chartAreaPerdaSeringueira", { subtitulo: `Percentual da área destinada à colheita (${periodo})` });
+      atualizarTextoVisualizacao("chartProdutividadeSeringueira", { subtitulo: `Quilogramas por hectare (${periodo})` });
+      atualizarTextoVisualizacao("chartValorProducaoSeringueira", { subtitulo: `Mil reais (${periodo})` });
+      atualizarTextoVisualizacao("chartIndicadoresBorracha", { subtitulo: `Produção, área e produtividade no Centro-Oeste (${periodo})` });
+    } catch (erro) {
+      [...ALVOS_API.producao, ...ALVOS_API.areas, ...ALVOS_API.produtividade, ...ALVOS_API.valor, ...ALVOS_API.indicadores]
+        .forEach(id => registrarFalhaApi([id], erro));
+    }
+  } else {
+    [...ALVOS_API.producao, ...ALVOS_API.areas, ...ALVOS_API.produtividade, ...ALVOS_API.valor, ...ALVOS_API.indicadores]
+      .forEach(id => registrarFalhaApi([id], resposta.pam.reason));
+  }
+
+  if (resposta.censo.status === "fulfilled") {
+    dadosEstabelecimentos = resposta.censo.value.map(item => ({
+      ano: Number(item.ano), produto: item.produto, condicaoProdutor: item.condicaoProdutor,
+      numeroEstabelecimentos: Number(item.numeroEstabelecimentos)
+    }));
+    definirEstadoVisualizacao(ALVOS_API.estabelecimentos, "ready");
+    marcarFonteApi(ALVOS_API.estabelecimentos);
+  } else {
+    registrarFalhaApi(ALVOS_API.estabelecimentos, resposta.censo.reason);
+  }
+  atualizarPeriodoDinamico();
+  atualizarCardsSeringueira();
+}
 
 const dadosCusto = anosSeringueira.map((ano, i) => ({
   ano,
@@ -370,7 +653,7 @@ function renderizarChips() {
   if (!container) return;
   const chips = [];
 
-  if (estadoFiltros.anoInicio !== 2012 || estadoFiltros.anoFim !== 2021) {
+  if (estadoFiltros.anoInicio !== periodoPadrao.inicio || estadoFiltros.anoFim !== periodoPadrao.fim) {
     chips.push(`<span class="filter-chip">Período: ${estadoFiltros.anoInicio}–${estadoFiltros.anoFim}<button class="filter-chip__x" data-clear="periodo" aria-label="Remover filtro de período">×</button></span>`);
   }
   estadoFiltros.ufs.forEach(uf => {
@@ -389,10 +672,10 @@ function renderizarChips() {
     btn.addEventListener("click", () => {
       const tipo = btn.dataset.clear;
       if (tipo === "periodo") {
-        estadoFiltros.anoInicio = 2012; estadoFiltros.anoFim = 2021;
+        estadoFiltros.anoInicio = periodoPadrao.inicio; estadoFiltros.anoFim = periodoPadrao.fim;
         const si = document.getElementById("seriAnoInicio");
         const sf = document.getElementById("seriAnoFim");
-        if (si) si.value = "2012"; if (sf) sf.value = "2021";
+        if (si) si.value = String(periodoPadrao.inicio); if (sf) sf.value = String(periodoPadrao.fim);
       } else if (tipo === "uf") {
         estadoFiltros.ufs.delete(btn.dataset.value);
         const cb = document.querySelector(`#seriUfMenu input[value="${btn.dataset.value}"]`);
@@ -443,12 +726,14 @@ function inicializarFiltrosUI() {
   const selectInicio = document.getElementById("seriAnoInicio");
   const selectFim    = document.getElementById("seriAnoFim");
   if (selectInicio && selectFim) {
+    selectInicio.replaceChildren();
+    selectFim.replaceChildren();
     anosSeringueira.forEach(ano => {
       const criarOpt = (sel) => {
         const o = document.createElement("option"); o.value = String(ano); o.textContent = String(ano); o.selected = sel; return o;
       };
-      selectInicio.appendChild(criarOpt(ano === 2012));
-      selectFim.appendChild(criarOpt(ano === 2021));
+      selectInicio.appendChild(criarOpt(ano === periodoPadrao.inicio));
+      selectFim.appendChild(criarOpt(ano === periodoPadrao.fim));
     });
     selectInicio.addEventListener("change", () => {
       estadoFiltros.anoInicio = Number(selectInicio.value);
@@ -481,10 +766,10 @@ function inicializarFiltrosUI() {
 
   // Limpar
   document.getElementById("seriLimparFiltros")?.addEventListener("click", () => {
-    estadoFiltros.anoInicio = 2012; estadoFiltros.anoFim = 2021;
+    estadoFiltros.anoInicio = periodoPadrao.inicio; estadoFiltros.anoFim = periodoPadrao.fim;
     estadoFiltros.ufs = new Set(); estadoFiltros.produto = new Set();
-    if (selectInicio) selectInicio.value = "2012";
-    if (selectFim)    selectFim.value    = "2021";
+    if (selectInicio) selectInicio.value = String(periodoPadrao.inicio);
+    if (selectFim)    selectFim.value    = String(periodoPadrao.fim);
     document.querySelectorAll("#seriUfMenu input, #seriProdutoMenu input").forEach(i => i.checked = false);
     labelDropdown("seriUfBtn",     [], "Todas");
     labelDropdown("seriProdutoBtn", [], "Todos");
@@ -498,7 +783,9 @@ function inicializarFiltrosUI() {
 }
 
 // ── MAIN ─────────────────────────────────────────────────────────────
-function inicializarDashboard() {
+async function inicializarDashboard() {
+  comentarVisualizacoesSemEndpoint();
+  await carregarDadosApiSeringueira();
   criarGraficoLinhasUF("chartProducaoSeringueira",   dadosProducao,     "quantidadeProduzidaToneladas",    "t");
   criarGraficoLinhasUF("chartAreaColhidaSeringueira",dadosAreaColhida,  "areaColhidaHectares",             "ha");
   criarGraficoLinhasUF("chartAreaDestinadaSeringueira",dadosAreaDestinada,"areaDestinadaColheitaHectares", "ha");
@@ -507,10 +794,6 @@ function inicializarDashboard() {
   criarGraficoLinhasUF("chartValorProducaoSeringueira",dadosValorProducao,"valorProducaoMilReais",         "mil R$");
   criarGraficoEstabelecimentos();
   criarGraficoIndicadores();
-  criarGraficoCusto("chartCustoBorracha");
-  criarGraficoRankingMundial();
-  criarGraficoParticipacaoMundial();
-  criarGraficoCusto("chartCustoComp");
   inicializarFiltrosUI();
 }
 

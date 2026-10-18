@@ -163,10 +163,6 @@
       margin-bottom: .75rem;
     }
 
-    .chart-card__head .chart-card__sub {
-      margin-bottom: 0;
-    }
-
     .chart-card__tools {
       display: flex;
       gap: .45rem;
@@ -210,7 +206,7 @@
     <div class="container">
       <div class="d-flex align-items-center justify-content-between w-100">
         <a class="navbar-brand" href="index.html" aria-label="Projeto Cerrado — página inicial">
-          <img class="brand-logo" src="public/img/logo.avif" alt="Projeto Cerrado · Goiás" />
+          <img class="brand-logo" src="public/img/logo.avif" alt="Projeto Cerrado" />
         </a>
         <ul class="desktop-nav nav d-none d-md-flex" role="list">
           <li><a class="nav-link" href="index.html">Início</a></li>
@@ -259,7 +255,6 @@
         <button class="filter-btn" type="button" data-filter="abate">Abate</button>
         <button class="filter-btn" type="button" data-filter="precos">Preços</button>
         <button class="filter-btn" type="button" data-filter="consumo">Consumo</button>
-        <button class="filter-btn" type="button" data-filter="projecoes">Projeções</button>
         <button class="filter-btn" type="button" data-filter="pastagens">Pastagens</button>
       </div>
     </div>
@@ -339,8 +334,6 @@
       id="btn-ct-precos">Preços</button>
     <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="ct-mundial" aria-controls="ct-mundial"
       id="btn-ct-mundial">Consumo</button>
-    <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="ct-projecoes" aria-controls="ct-projecoes"
-      id="btn-ct-projecoes">Projeções</button>
     <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="ct-pastagens" aria-controls="ct-pastagens"
       id="btn-ct-pastagens">Pastagens</button>
     <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="ct-plano" aria-controls="ct-plano"
@@ -368,31 +361,31 @@
           <!-- KPIs -->
           <div class="row g-3 mb-4">
             <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--terra">
+              <div id="kpiCorteRebanhoBrasil" class="kpi-card kpi-card--terra">
                 <div class="kpi-label">Rebanho Brasil 2021</div>
-                <div class="kpi-value">224,6<span class="kpi-unit">mi cab.</span></div>
-                <span class="kpi-badge kpi-badge--up">▲ +6,3% desde 2012</span>
+                <div class="kpi-value">—</div>
+                <span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
             </div>
             <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--gold">
+              <div id="kpiCorteRebanhoGoias" class="kpi-card kpi-card--gold">
                 <div class="kpi-label">Rebanho Goiás 2021</div>
-                <div class="kpi-value">24,3<span class="kpi-unit">mi cab.</span></div>
-                <span class="kpi-badge kpi-badge--up">▲ +10,2% desde 2012</span>
+                <div class="kpi-value">—</div>
+                <span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
             </div>
             <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card">
+              <div id="kpiCorteAbateBrasil" class="kpi-card">
                 <div class="kpi-label">Abate Brasil 2022</div>
-                <div class="kpi-value">29,9<span class="kpi-unit">mi cab.</span></div>
-                <span class="kpi-badge kpi-badge--neutral">↗ recuperação pós-2020</span>
+                <div class="kpi-value">—</div>
+                <span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
             </div>
             <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--light">
+              <div id="kpiCorteAbateGoias" class="kpi-card kpi-card--light">
                 <div class="kpi-label">Abate Goiás 2022</div>
-                <div class="kpi-value">3,0<span class="kpi-unit">mi cab.</span></div>
-                <span class="kpi-badge kpi-badge--neutral">10% do Brasil</span>
+                <div class="kpi-value">—</div>
+                <span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
             </div>
           </div>
@@ -439,7 +432,7 @@
           <!-- Tabela rebanho -->
           <div class="row g-4">
             <div class="col-lg-6" data-category="rebanho">
-              <div class="table-card" role="figure" aria-label="Tabela: Rebanho bovino dos principais estados">
+              <div id="tabelaRebanhoCorte" class="table-card" role="figure" aria-label="Tabela: Rebanho bovino dos principais estados">
                 <div class="table-card__head">
                   <div class="chart-card__title">Rebanho Bovino por Estado</div>
                   <div class="chart-card__sub">Milhões de cabeças (2012–2021)</div>
@@ -504,7 +497,7 @@
               </div>
             </div>
             <div class="col-lg-6" data-category="abate">
-              <div class="table-card" role="figure" aria-label="Tabela: Abate bovino anual por estado">
+              <div id="tabelaAbateCorte" class="table-card" role="figure" aria-label="Tabela: Abate bovino anual por estado">
                 <div class="table-card__head">
                   <div class="chart-card__title">Abate Bovino Anual por Estado</div>
                   <div class="chart-card__sub">Milhões de cabeças (2013–2022)</div>
@@ -743,86 +736,6 @@
           </div>
         </div><!-- /tab mundial -->
 
-        <!-- ══ TAB: PROJEÇÕES ════════════════════════════════ -->
-        <div data-tab-content="ct-projecoes" role="tabpanel" id="ct-projecoes" aria-labelledby="btn-ct-projecoes">
-          <div class="row mb-2">
-            <div class="col-12">
-              <p class="section-label">MAPA</p>
-              <h2 class="section-title">Projeções do Agronegócio — Carne Bovina</h2>
-              <div class="section-divider"></div>
-            </div>
-          </div>
-
-          <div class="info-bar" role="note">
-            <span aria-hidden="true">📊</span>
-            Projeções do Ministério da Agricultura, Pecuária e Abastecimento (MAPA) — Secretaria de Política Agrícola —
-            para o período 2021/2022 a 2031/2032.
-          </div>
-
-          <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card">
-                <div class="kpi-label">Produção 2021/22</div>
-                <div class="kpi-value">8.423<span class="kpi-unit">mil t</span></div>
-                <span class="kpi-badge kpi-badge--neutral">base de projeção</span>
-              </div>
-            </div>
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--gold">
-                <div class="kpi-label">Projeção 2031/32</div>
-                <div class="kpi-value">9.677<span class="kpi-unit">mil t</span></div>
-                <span class="kpi-badge kpi-badge--up">▲ cenário central</span>
-              </div>
-            </div>
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--light">
-                <div class="kpi-label">Crescimento 10 anos</div>
-                <div class="kpi-value">+14,9<span class="kpi-unit">%</span></div>
-                <span class="kpi-badge kpi-badge--up">cenário central</span>
-              </div>
-            </div>
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--terra">
-                <div class="kpi-label">Taxa de cresc. a.a.</div>
-                <div class="kpi-value">1,31<span class="kpi-unit">%</span></div>
-                <span class="kpi-badge kpi-badge--neutral">CAGR 2021–2031</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="row g-4">
-            <div class="col-lg-8">
-              <div class="chart-card" role="figure"
-                aria-label="Gráfico: Projeções de produção de carne bovina no Brasil até 2031/32">
-                <div class="chart-card__title">Projeção de Produção — Carne Bovina Brasil</div>
-                <div id="subProjecaoProducao" class="chart-card__sub">Mil toneladas — cenário central, inferior e
-                  superior (MAPA)</div>
-                <div id="chartProjecaoProducaoCarne" class="chart-area chart-area--tall" aria-hidden="true"></div>
-              </div>
-            </div>
-            <div class="col-lg-4">
-              <div class="chart-card" role="figure"
-                aria-label="Gráfico: Projeções de consumo de carne bovina no Brasil até 2031/32">
-                <div class="chart-card__title">Projeção de Consumo — Carne Bovina Brasil</div>
-                <div id="subProjecaoConsumo" class="chart-card__sub">Mil toneladas — cenário central, inferior e
-                  superior (MAPA)</div>
-                <div id="chartProjecaoConsumoCarne" class="chart-area chart-area--tall" aria-hidden="true"></div>
-              </div>
-            </div>
-          </div>
-          <div class="row g-4">
-            <div class="col-12">
-              <div class="chart-card" role="figure"
-                aria-label="Gráfico: Projeções de exportação de carne bovina no Brasil até 2031/32">
-                <div class="chart-card__title">Projeção de Exportação — Carne Bovina Brasil</div>
-                <div id="subProjecaoExportacao" class="chart-card__sub">Mil toneladas — cenário central, inferior e
-                  superior (MAPA)</div>
-                <div id="chartProjecaoExportacaoCarne" class="chart-area chart-area--tall" aria-hidden="true"></div>
-              </div>
-            </div>
-          </div>
-        </div><!-- /tab projecoes -->
-
         <!-- ══ TAB: PASTAGENS ════════════════════════════════ -->
         <div data-tab-content="ct-pastagens" role="tabpanel" id="ct-pastagens" aria-labelledby="btn-ct-pastagens">
           <div class="row mb-2">
@@ -834,29 +747,29 @@
           </div>
 
           <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card">
+            <div class="col-12 col-sm-6 col-xl-3 fade-up d-flex">
+              <div class="kpi-card w-100">
                 <div class="kpi-label">Cerrado CO</div>
                 <div class="kpi-value">31,4<span class="kpi-unit">mi ha</span></div>
                 <span class="kpi-badge kpi-badge--up">1º bioma em pastagem</span>
               </div>
             </div>
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--terra">
+            <div class="col-12 col-sm-6 col-xl-3 fade-up d-flex">
+              <div class="kpi-card kpi-card--terra w-100">
                 <div class="kpi-label">Goiás</div>
                 <div class="kpi-value">13,4<span class="kpi-unit">mi ha</span></div>
                 <span class="kpi-badge kpi-badge--neutral">3º estado CO</span>
               </div>
             </div>
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--gold">
+            <div class="col-12 col-sm-6 col-xl-3 fade-up d-flex">
+              <div class="kpi-card kpi-card--gold w-100">
                 <div class="kpi-label">Mato Grosso</div>
                 <div class="kpi-value">19,6<span class="kpi-unit">mi ha</span></div>
                 <span class="kpi-badge kpi-badge--up">1º estado CO</span>
               </div>
             </div>
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--light">
+            <div class="col-12 col-sm-6 col-xl-3 fade-up d-flex">
+              <div class="kpi-card kpi-card--light w-100">
                 <div class="kpi-label">Mato Grosso do Sul</div>
                 <div class="kpi-value">15,3<span class="kpi-unit">mi ha</span></div>
                 <span class="kpi-badge kpi-badge--neutral">2º estado CO</span>
@@ -1287,7 +1200,8 @@
       <div class="row g-3">
         <div class="col-lg-4">
           <div class="footer__title">Pecuária de Corte</div>
-          <p>Indicadores de rebanho, abate, preços e mercado internacional da bovinocultura de corte no Cerrado goiano.
+          <p>Indicadores de rebanho, abate e preços da bovinocultura de corte no Centro-Oeste e no Brasil, além do
+            mercado internacional.
           </p>
         </div>
         <div class="col-lg-4">
@@ -1306,11 +1220,11 @@
       <div class="footer-logos" aria-label="Instituições parceiras">
         <img src="public/img/LogoFuntec.png" alt="FUNTEC" />
         <img src="public/img/logo.png" alt="Projeto Cerrado" />
-        <img src="public/img/logo_mapa.png" alt="Ministério da Agricultura e Pecuária" />
+<!--        <img src="public/img/logo_mapa.png" alt="Ministério da Agricultura e Pecuária" />-->
         <img src="public/img/logo_ifg.jpg" alt="Instituto Federal de Goiás" />
       </div>
       <div class="footer__bottom d-flex flex-wrap justify-content-between gap-2">
-        <span>© 2026 Projeto Cerrado · Goiás</span>
+        <span>© 2026 Projeto Cerrado</span>
         <span>Bootstrap 5 · amCharts 5</span>
       </div>
     </div>

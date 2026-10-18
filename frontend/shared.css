@@ -223,16 +223,9 @@
         border-bottom: 2px solid var(--cinza-claro);
         padding: 0 .5rem;
         display: flex;
+        flex-wrap: wrap;
         gap: .2rem;
-        overflow-x: auto;
-    }
-
-    .tab-nav::-webkit-scrollbar {
-        height: 3px;
-    }
-
-    .tab-nav::-webkit-scrollbar-thumb {
-        background: var(--cinza-claro);
+        overflow-x: visible;
     }
 
     .tab-nav__btn {
@@ -264,10 +257,104 @@
         background: var(--creme);
         border-bottom: 1px solid var(--cinza-claro);
         padding: .6rem 1rem;
+        display: block;
+    }
+
+    .filter-bar__toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        margin-bottom: .65rem;
+    }
+
+    .filter-bar__title {
+        color: var(--cinza-med);
+        font-family: var(--font-d);
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .filter-bar__toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        min-height: 2rem;
+        border: 0;
+        border-radius: 8px;
+        padding: .35rem .65rem;
+        background: transparent;
+        color: var(--verde);
+        font-family: var(--font-d);
+        font-size: .75rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background-color .2s, color .2s;
+    }
+
+    .filter-bar__toggle:hover {
+        background: #f2f8f0;
+    }
+
+    .filter-bar__toggle:focus-visible {
+        outline: 3px solid rgba(74, 124, 63, .22);
+        outline-offset: 2px;
+    }
+
+    .filter-bar__toggle-icon {
+        position: relative;
+        width: .75rem;
+        height: .5rem;
+    }
+
+    .filter-bar__toggle-icon::before,
+    .filter-bar__toggle-icon::after {
+        content: "";
+        position: absolute;
+        top: .2rem;
+        width: .48rem;
+        height: 2px;
+        border-radius: 2px;
+        background: currentColor;
+        transition: transform .2s ease;
+    }
+
+    .filter-bar__toggle-icon::before {
+        left: 0;
+        transform: rotate(-42deg);
+    }
+
+    .filter-bar__toggle-icon::after {
+        right: 0;
+        transform: rotate(42deg);
+    }
+
+    .filter-bar__content {
         display: flex;
         flex-wrap: wrap;
         gap: .75rem;
         align-items: center;
+    }
+
+    .filter-bar--analitica .filter-bar__content,
+    .filter-bar--eucalipto .filter-bar__content {
+        align-items: flex-start;
+        gap: .75rem 1rem;
+    }
+
+    .filter-bar.is-collapsed .filter-bar__toolbar {
+        margin-bottom: 0;
+    }
+
+    .filter-bar.is-collapsed .filter-bar__toggle-icon::before {
+        transform: rotate(42deg);
+    }
+
+    .filter-bar.is-collapsed .filter-bar__toggle-icon::after {
+        transform: rotate(-42deg);
     }
 
     .filter-bar--analitica,
@@ -555,6 +642,7 @@
         box-shadow: var(--shadow-sm);
         padding: 1.4rem 1.4rem .9rem;
         margin-bottom: 1.4rem;
+        position: relative;
     }
 
     .chart-card__title {
@@ -591,6 +679,98 @@
         box-shadow: var(--shadow-sm);
         overflow: hidden;
         margin-bottom: 1.4rem;
+        position: relative;
+    }
+
+    .data-card--loading,
+    .data-card--error,
+    .data-card--empty {
+        min-height: 220px;
+    }
+
+    .data-state {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: .65rem;
+        padding: 1.5rem;
+        background: rgba(249, 246, 240, .94);
+        color: var(--cinza-med);
+        font: 600 .8rem/1.45 var(--font-d);
+        text-align: center;
+        border-radius: inherit;
+    }
+
+    .data-state__spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid rgba(74, 124, 63, .2);
+        border-top-color: var(--verde);
+        border-radius: 50%;
+        animation: data-spin .75s linear infinite;
+    }
+
+    .data-state__icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: 2px solid var(--dourado);
+        border-radius: 50%;
+        color: var(--terra);
+        font-size: 1rem;
+    }
+
+    .data-state__retry {
+        border: 1.5px solid var(--verde);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--verde);
+        padding: .4rem .85rem;
+        font: 700 .72rem var(--font-d);
+        cursor: pointer;
+        transition: background .18s, color .18s;
+    }
+
+    .data-state__retry:hover,
+    .data-state__retry:focus-visible {
+        background: var(--verde);
+        color: #fff;
+    }
+
+    .data-source-note {
+        margin: -.45rem 0 .75rem;
+        color: var(--terra);
+        font: 600 .66rem/1.4 var(--font-d);
+    }
+
+    .data-source-note--live {
+        color: var(--verde);
+    }
+
+    .table-total-row {
+        background: var(--creme);
+    }
+
+    .table-empty-cell {
+        padding: 1.5rem !important;
+        color: var(--cinza-med);
+        text-align: center;
+    }
+
+    @keyframes data-spin {
+        to { transform: rotate(360deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .data-state__spinner {
+            animation-duration: 1.5s;
+        }
     }
 
     .table-card__head {
@@ -823,8 +1003,9 @@
             height: 280px;
         }
 
-        .filter-bar {
-            gap: .5rem;
+        .filter-bar--analitica .filter-bar__content,
+        .filter-bar--eucalipto .filter-bar__content {
+            gap: .75rem .5rem;
         }
 
         .tab-content-obs {
@@ -866,6 +1047,24 @@
 
     /* ── RESPONSIVIDADE MOBILE — 480px ──────────────────────── */
     @media (max-width: 480px) {
+        .filter-bar__toggle {
+            width: 2rem;
+            padding-right: .45rem;
+            padding-left: .45rem;
+        }
+
+        .filter-bar__toggle-text {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
         body {
             font-size: 1rem;
         }

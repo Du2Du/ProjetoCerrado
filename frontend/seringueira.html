@@ -189,7 +189,7 @@
     <div class="container">
       <div class="d-flex align-items-center justify-content-between w-100">
         <a class="navbar-brand" href="index.html" aria-label="Projeto Cerrado — página inicial">
-          <img class="brand-logo" src="public/img/logo.avif" alt="Projeto Cerrado · Goiás" />
+          <img class="brand-logo" src="public/img/logo.avif" alt="Projeto Cerrado" />
         </a>
         <ul class="desktop-nav nav d-none d-md-flex" role="list">
           <li><a class="nav-link" href="index.html">Início</a></li>
@@ -225,7 +225,7 @@
       <h1>Floresta Plantada da Seringueira</h1>
       <p>Produção, área, produtividade e custos da heveicultura no Centro-Oeste — posição do Brasil no mercado mundial
         de borracha.</p>
-      <p class="page-hero__meta">Fonte: IBGE (LSPA) · MAPA · 2012–2021</p>
+      <p class="page-hero__meta">Fonte: SIDRA/IBGE</p>
     </div>
   </header>
 
@@ -314,31 +314,27 @@
           </div>
           <div class="row g-3 mb-4">
             <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card">
-                <div class="kpi-label">Produção CO 2021</div>
-                <div class="kpi-value">59,4<span class="kpi-unit">mil t</span></div><span
-                  class="kpi-badge kpi-badge--up">▲ pico histórico</span>
+              <div id="kpiSeringueiraProducao" class="kpi-card" aria-busy="true">
+                <div class="kpi-label">Produção Centro-Oeste</div>
+                <div class="kpi-value">—</div><span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
             </div>
             <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--gold">
-                <div class="kpi-label">Receita CO 2021</div>
-                <div class="kpi-value">R$ 196<span class="kpi-unit">mi</span></div><span
-                  class="kpi-badge kpi-badge--up">▲ maior valor</span>
+              <div id="kpiSeringueiraValor" class="kpi-card kpi-card--gold" aria-busy="true">
+                <div class="kpi-label">Valor da produção Centro-Oeste</div>
+                <div class="kpi-value">—</div><span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
             </div>
             <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--terra">
-                <div class="kpi-label">Área Colhida 2021</div>
-                <div class="kpi-value">33,5<span class="kpi-unit">mil ha</span></div><span
-                  class="kpi-badge kpi-badge--up">▲ expansão</span>
+              <div id="kpiSeringueiraArea" class="kpi-card kpi-card--terra" aria-busy="true">
+                <div class="kpi-label">Área colhida Centro-Oeste</div>
+                <div class="kpi-value">—</div><span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
             </div>
             <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--light">
-                <div class="kpi-label">Produtividade 2021</div>
-                <div class="kpi-value">1.771<span class="kpi-unit">kg/ha</span></div><span
-                  class="kpi-badge kpi-badge--neutral">kg/hectare</span>
+              <div id="kpiSeringueiraProdutividade" class="kpi-card kpi-card--light" aria-busy="true">
+                <div class="kpi-label">Produtividade Centro-Oeste</div>
+                <div class="kpi-value">—</div><span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
             </div>
           </div>
@@ -346,42 +342,42 @@
             <div class="col-lg-6" data-category="producao">
               <div class="chart-card" role="figure" aria-label="Gráfico: Evolução da produção de borracha">
                 <div class="chart-card__title">Evolução da Produção</div>
-                <div class="chart-card__sub">Borracha (látex coagulado), toneladas (2012–2021)</div>
+                <div class="chart-card__sub">Borracha (látex coagulado), toneladas</div>
                 <div id="chartProducaoSeringueira" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
             <div class="col-lg-6" data-category="area">
               <div class="chart-card" role="figure" aria-label="Gráfico: Evolução da área colhida">
                 <div class="chart-card__title">Evolução da Área Colhida</div>
-                <div class="chart-card__sub">Hectares (2012–2021)</div>
+                <div class="chart-card__sub">Hectares</div>
                 <div id="chartAreaColhidaSeringueira" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
             <div class="col-lg-6" data-category="area">
               <div class="chart-card" role="figure" aria-label="Gráfico: Área destinada à colheita">
                 <div class="chart-card__title">Área Destinada à Colheita</div>
-                <div class="chart-card__sub">Hectares (2012–2021)</div>
+                <div class="chart-card__sub">Hectares</div>
                 <div id="chartAreaDestinadaSeringueira" class="chart-area" aria-hidden="true"></div>
               </div>
             </div>
             <div class="col-lg-6" data-category="area">
               <div class="chart-card" role="figure" aria-label="Gráfico: Área de perda">
                 <div class="chart-card__title">Área de Perda</div>
-                <div class="chart-card__sub">Percentual da área destinada à colheita (2012–2021)</div>
+                <div class="chart-card__sub">Percentual da área destinada à colheita</div>
                 <div id="chartAreaPerdaSeringueira" class="chart-area" aria-hidden="true"></div>
               </div>
             </div>
             <div class="col-lg-6" data-category="producao">
               <div class="chart-card" role="figure" aria-label="Gráfico: Produtividade da seringueira">
                 <div class="chart-card__title">Produtividade</div>
-                <div class="chart-card__sub">Quilogramas por hectare (2012–2021)</div>
+                <div class="chart-card__sub">Quilogramas por hectare</div>
                 <div id="chartProdutividadeSeringueira" class="chart-area" aria-hidden="true"></div>
               </div>
             </div>
             <div class="col-lg-6" data-category="producao">
               <div class="chart-card" role="figure" aria-label="Gráfico: Valor da produção">
                 <div class="chart-card__title">Valor da Produção</div>
-                <div class="chart-card__sub">Mil reais (2012–2021)</div>
+                <div class="chart-card__sub">Mil reais</div>
                 <div id="chartValorProducaoSeringueira" class="chart-area" aria-hidden="true"></div>
               </div>
             </div>
@@ -458,7 +454,7 @@
               </div>
             </div>
             <div class="col-lg-5">
-              <div class="table-card">
+              <div id="tabelaRankingMundial" class="table-card">
                 <div class="table-card__head">
                   <div class="chart-card__title">Ranking Mundial</div>
                   <div class="chart-card__sub">Área plantada de seringueira</div>
@@ -846,17 +842,16 @@
         </div>
         <div class="col-lg-4">
           <div class="footer__title">Fonte</div>
-          <p>IBGE — LSPA (Levantamento Sistemático da Produção Agrícola) · MAPA · 2012–2021</p>
+          <p>SIDRA/IBGE</p>
         </div>
       </div>
       <div class="footer-logos" aria-label="Instituições parceiras">
         <img src="public/img/LogoFuntec.png" alt="FUNTEC" />
         <img src="public/img/logo.png" alt="Projeto Cerrado" />
-        <img src="public/img/logo_mapa.png" alt="Ministério da Agricultura e Pecuária" />
+<!--        <img src="public/img/logo_mapa.png" alt="Ministério da Agricultura e Pecuária" />-->
         <img src="public/img/logo_ifg.jpg" alt="Instituto Federal de Goiás" />
       </div>
-      <div class="footer__bottom d-flex flex-wrap justify-content-between gap-2"><span>© 2026 Projeto Cerrado
-          · Goiás</span><span>Bootstrap 5 · amCharts 5</span></div>
+      <div class="footer__bottom d-flex flex-wrap justify-content-between gap-2"><span>© 2026 Projeto Cerrado</span><span>Bootstrap 5 · amCharts 5</span></div>
     </div>
   </footer>
 

@@ -11,7 +11,7 @@ const produtosEucalipto = [
 // DASHBOARD_EUCALIPTO.txt pede uf, municipio e ranking na Tabela 1.
 // A planilha traz esses dados como localidade hierárquica, não como colunas explícitas;
 // por isso uf/municipio foram extraídos do texto "Município (UF)" e ranking foi calculado por quantidade.
-const dadosRankingProducao = [
+let dadosRankingProducao = [
   { localidade: "Três Lagoas (MS)", uf: "MS", municipio: "Três Lagoas", produtoSilvicultura: "Madeira em tora de eucalipto para papel e celulose", quantidadeProduzida: 4729905, unidadeMedida: "Metros cúbicos", ranking: 1 },
   { localidade: "Ribas do Rio Pardo (MS)", uf: "MS", municipio: "Ribas do Rio Pardo", produtoSilvicultura: "Madeira em tora de eucalipto para papel e celulose", quantidadeProduzida: 3692019, unidadeMedida: "Metros cúbicos", ranking: 2 },
   { localidade: "Brasilândia (MS)", uf: "MS", municipio: "Brasilândia", produtoSilvicultura: "Madeira em tora de eucalipto para papel e celulose", quantidadeProduzida: 1475643, unidadeMedida: "Metros cúbicos", ranking: 3 },
@@ -24,7 +24,7 @@ const dadosRankingProducao = [
   { localidade: "Paranaíba (MS)", uf: "MS", municipio: "Paranaíba", produtoSilvicultura: "Madeira em tora de eucalipto para papel e celulose", quantidadeProduzida: 203124, unidadeMedida: "Metros cúbicos", ranking: 10 }
 ];
 
-const dadosQuantidadeProduzida = [
+let dadosQuantidadeProduzida = [
   { ano: 2012, localidade: "Centro-Oeste", carvao: 93462, lenha: 4065556, papelCelulose: 4968944, outrasFinalidades: null, folha: 3975 },
   { ano: 2013, localidade: "Centro-Oeste", carvao: 145073, lenha: 6230147, papelCelulose: 8033052, outrasFinalidades: 863064, folha: 2400 },
   { ano: 2014, localidade: "Centro-Oeste", carvao: 139192, lenha: 6472880, papelCelulose: 8293047, outrasFinalidades: 790701, folha: 1700 },
@@ -39,7 +39,7 @@ const dadosQuantidadeProduzida = [
 
 // Em Tabela 2, algumas células de 2021 estavam gravadas 1000x acima da unidade "Mil Reais".
 // Foram normalizadas para manter a unidade dos demais anos e coerência com Tabela 3.
-const dadosValorProducao = [
+let dadosValorProducao = [
   { ano: 2012, uf: "Centro-Oeste", carvao: 42518, lenha: 253003, papelCelulose: 273169, outrasFinalidades: 143563, folha: 190 },
   { ano: 2013, uf: "Centro-Oeste", carvao: 70016, lenha: 361651, papelCelulose: 427042, outrasFinalidades: 97468, folha: 121 },
   { ano: 2014, uf: "Centro-Oeste", carvao: 64846, lenha: 391061, papelCelulose: 580513, outrasFinalidades: 85478, folha: 186 },
@@ -54,7 +54,7 @@ const dadosValorProducao = [
 
 // Tabela 3 tem apenas percentuais de participação por produto.
 // principalProdutoPorQuantidade e valorTotalProducaoMilReais não existem nesta aba; ficam nulos e o gráfico usa os percentuais disponíveis.
-const dadosParticipacaoValor = [
+let dadosParticipacaoValor = [
   { ano: 2012, uf: "Centro-Oeste", carvao: 5.93, lenha: 35.26, papelCelulose: 38.07, outrasFinalidades: 20.01, folha: 0.03, principalProdutoPorValor: "papelCelulose", percentualPrincipalProduto: 38.07, principalProdutoPorQuantidade: null, valorTotalProducaoMilReais: null },
   { ano: 2013, uf: "Centro-Oeste", carvao: 6.6, lenha: 34.11, papelCelulose: 40.28, outrasFinalidades: 9.19, folha: 0.01, principalProdutoPorValor: "papelCelulose", percentualPrincipalProduto: 40.28, principalProdutoPorQuantidade: null, valorTotalProducaoMilReais: null },
   { ano: 2014, uf: "Centro-Oeste", carvao: 5.33, lenha: 32.14, papelCelulose: 47.72, outrasFinalidades: 7.03, folha: 0.02, principalProdutoPorValor: "papelCelulose", percentualPrincipalProduto: 47.72, principalProdutoPorQuantidade: null, valorTotalProducaoMilReais: null },
@@ -67,11 +67,11 @@ const dadosParticipacaoValor = [
   { ano: 2021, uf: "Centro-Oeste", carvao: 6.57, lenha: 20.98, papelCelulose: 55.39, outrasFinalidades: 7.17, folha: 0.02, principalProdutoPorValor: "papelCelulose", percentualPrincipalProduto: 55.39, principalProdutoPorQuantidade: null, valorTotalProducaoMilReais: null }
 ];
 
-const anosDisponiveis = dadosQuantidadeProduzida.map(item => String(item.ano));
+let anosDisponiveis = dadosQuantidadeProduzida.map(item => String(item.ano));
 const filtrosAtivos = {
   indicador: "all",
-  anoInicio: "2012",
-  anoFim: "2021",
+  anoInicio: anosDisponiveis[0],
+  anoFim: anosDisponiveis[anosDisponiveis.length - 1],
   produtos: [],
   ufs: [],
   municipios: [],
@@ -385,14 +385,22 @@ function atualizarKpis() {
     .sort((a, b) => b.valor - a.valor)[0];
   const ranking = dadosRankingFiltrados()[0];
 
-  document.getElementById("kpiQuantidadeLider").innerHTML = liderQuantidade ? formatarCompacto(liderQuantidade.valor, liderQuantidade.produto.unidade) : "0";
-  document.getElementById("kpiQuantidadeLiderBadge").textContent = liderQuantidade ? `${liderQuantidade.produto.nomeCurto} · ${ano}` : `sem dados · ${ano}`;
-  document.getElementById("kpiRankingLider").innerHTML = ranking ? formatarCompacto(ranking.quantidadeProduzida, "m³") : "0";
-  document.getElementById("kpiRankingLiderBadge").textContent = ranking ? ranking.localidade : "sem município";
-  document.getElementById("kpiValorTotal").innerHTML = formatarCompacto(valorTotal * 1000, "R$");
-  document.getElementById("kpiValorTotalBadge").textContent = `Tabela 2 · ${ano}`;
-  document.getElementById("kpiParticipacaoLider").innerHTML = liderParticipacao ? `${formatarNumero(liderParticipacao.valor, 2)}<span class="kpi-unit">%</span>` : "0";
-  document.getElementById("kpiParticipacaoLiderBadge").textContent = liderParticipacao ? `${liderParticipacao.produto.nomeCurto} · ${ano}` : `sem dados · ${ano}`;
+  if (estadoApiEucalipto.quantidade) {
+    document.getElementById("kpiQuantidadeLider").innerHTML = liderQuantidade ? formatarCompacto(liderQuantidade.valor, liderQuantidade.produto.unidade) : "—";
+    document.getElementById("kpiQuantidadeLiderBadge").textContent = liderQuantidade ? `${liderQuantidade.produto.nomeCurto} · ${ano}` : "Sem dados";
+  }
+  if (estadoApiEucalipto.ranking) {
+    document.getElementById("kpiRankingLider").innerHTML = ranking ? formatarCompacto(ranking.quantidadeProduzida, "m³") : "—";
+    document.getElementById("kpiRankingLiderBadge").textContent = ranking ? ranking.localidade : "Sem dados";
+  }
+  if (estadoApiEucalipto.valor) {
+    document.getElementById("kpiValorTotal").innerHTML = formatarCompacto(valorTotal * 1000, "R$");
+    document.getElementById("kpiValorTotalBadge").textContent = `Tabela 2 · ${ano}`;
+  }
+  if (estadoApiEucalipto.participacao) {
+    document.getElementById("kpiParticipacaoLider").innerHTML = liderParticipacao ? `${formatarNumero(liderParticipacao.valor, 2)}<span class="kpi-unit">%</span>` : "—";
+    document.getElementById("kpiParticipacaoLiderBadge").textContent = liderParticipacao ? `${liderParticipacao.produto.nomeCurto} · ${ano}` : "Sem dados";
+  }
 }
 
 function atualizarGraficos() {
@@ -411,11 +419,6 @@ function atualizarVisibilidadeCards() {
     const categoriaOk = filtrosAtivos.indicador === "all" || card.dataset.category === filtrosAtivos.indicador;
     card.classList.toggle("is-filter-hidden", !categoriaOk);
   });
-
-  const existeVisivel = Array.from(document.querySelectorAll("[data-tab-content].active [data-category]"))
-    .some(card => !card.classList.contains("is-filter-hidden") && !card.classList.contains("is-chart-empty"));
-  const semDados = document.getElementById("semDadosEucalipto");
-  if (semDados) semDados.style.display = existeVisivel ? "none" : "block";
 }
 
 function atualizarResumoFiltros() {
@@ -471,8 +474,8 @@ function atualizarMunicipiosDisponiveis() {
 function limparFiltros() {
   Object.assign(filtrosAtivos, {
     indicador: "all",
-    anoInicio: "2012",
-    anoFim: "2021",
+    anoInicio: anosDisponiveis[0],
+    anoFim: anosDisponiveis[anosDisponiveis.length - 1],
     produtos: [],
     ufs: [],
     municipios: [],
@@ -535,4 +538,97 @@ window.onFilterChange = function (filterId, group) {
   atualizarGraficos();
 };
 
-am5.ready(inicializarDashboardEucalipto);
+const API_EUCALIPTO = "https://api.projetocerradoifg.org/webhook/eucalipto";
+const ALVOS_API_EUCALIPTO = Object.freeze({
+  quantidade: ["chartQuantidadeProduzidaEucalipto"],
+  ranking: ["chartRankingProducaoEucalipto"],
+  valor: ["chartValorProducaoEucalipto"],
+  participacao: ["chartParticipacaoValorEucalipto"]
+});
+const estadoApiEucalipto = { quantidade: false, ranking: false, valor: false, participacao: false };
+
+async function buscarEndpointEucalipto(nome) {
+  if (window.simularErroApi) throw new Error("Falha simulada para teste da interface.");
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 15000);
+  try {
+    const resposta = await fetch(`${API_EUCALIPTO}/${nome}`, {
+      headers: { Accept: "application/json" },
+      signal: controller.signal
+    });
+    if (!resposta.ok) throw new Error(`${nome}: HTTP ${resposta.status}`);
+    const dados = await resposta.json();
+    if (!Array.isArray(dados) || !dados.length) throw new Error(`${nome}: resposta vazia`);
+    return dados;
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
+function definirKpiEucalipto(chave, estado) {
+  const ids = {
+    quantidade: ["kpiQuantidadeLider", "kpiQuantidadeLiderBadge"],
+    ranking: ["kpiRankingLider", "kpiRankingLiderBadge"],
+    valor: ["kpiValorTotal", "kpiValorTotalBadge"],
+    participacao: ["kpiParticipacaoLider", "kpiParticipacaoLiderBadge"]
+  }[chave];
+  ids?.forEach((id, indice) => {
+    const elemento = document.getElementById(id);
+    if (!elemento) return;
+    elemento.textContent = indice === 0 ? "—" : (estado === "loading" ? "Carregando…" : "Dados indisponíveis");
+  });
+}
+
+function atualizarTextosPeriodo() {
+  if (!anosDisponiveis.length) return;
+  const periodo = `${anosDisponiveis[0]}–${anosDisponiveis.at(-1)}`;
+  const meta = document.querySelector(".page-hero__meta");
+  if (meta) meta.textContent = `Fonte: IBGE — Tabela 291 · ${periodo}`;
+  document.querySelectorAll("p").forEach(p => {
+    if (p.textContent.includes("Tabela 291, quantidade produzida")) {
+      p.textContent = `IBGE — Tabela 291, quantidade produzida e valor da produção na silvicultura · ${periodo}`;
+    }
+  });
+  const subRanking = document.getElementById("chartRankingProducaoEucalipto")?.closest(".chart-card")?.querySelector(".chart-card__sub");
+  const anoRanking = dadosRankingProducao[0]?.ano;
+  if (subRanking && anoRanking) subRanking.textContent = `Tabela 1 — madeira para papel e celulose, municípios em ${anoRanking}`;
+}
+
+async function carregarDadosEucalipto() {
+  Object.entries(ALVOS_API_EUCALIPTO).forEach(([nome, alvos]) => {
+    window.dashboardDataUi.definirEstado(alvos, "loading");
+    definirKpiEucalipto(nome, "loading");
+  });
+  dadosQuantidadeProduzida = [];
+  dadosValorProducao = [];
+  dadosParticipacaoValor = [];
+  dadosRankingProducao = [];
+
+  const nomes = Object.keys(ALVOS_API_EUCALIPTO);
+  const resultados = await Promise.allSettled(nomes.map(buscarEndpointEucalipto));
+  resultados.forEach((resultado, indice) => {
+    const nome = nomes[indice];
+    if (resultado.status === "fulfilled") {
+      if (nome === "quantidade") dadosQuantidadeProduzida = resultado.value;
+      if (nome === "ranking") dadosRankingProducao = resultado.value;
+      if (nome === "valor") dadosValorProducao = resultado.value;
+      if (nome === "participacao") dadosParticipacaoValor = resultado.value;
+      estadoApiEucalipto[nome] = true;
+      window.dashboardDataUi.definirEstado(ALVOS_API_EUCALIPTO[nome], "ready");
+      window.dashboardDataUi.marcarFonte(ALVOS_API_EUCALIPTO[nome], "IBGE");
+    } else {
+      definirKpiEucalipto(nome, "error");
+      window.dashboardDataUi.definirEstado(ALVOS_API_EUCALIPTO[nome], "error", "Não foi possível carregar os dados.");
+      console.error(`Falha ao carregar dados de eucalipto (${nome}):`, resultado.reason);
+    }
+  });
+
+  anosDisponiveis = Array.from(new Set([
+    ...dadosQuantidadeProduzida, ...dadosValorProducao, ...dadosParticipacaoValor
+  ].map(item => String(item.ano)))).sort((a, b) => Number(a) - Number(b));
+  filtrosAtivos.anoInicio = anosDisponiveis[0] || "";
+  filtrosAtivos.anoFim = anosDisponiveis.at(-1) || "";
+  atualizarTextosPeriodo();
+}
+
+carregarDadosEucalipto().finally(() => am5.ready(inicializarDashboardEucalipto));

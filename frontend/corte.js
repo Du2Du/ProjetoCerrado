@@ -2460,7 +2460,6 @@ const indicadorParaAbaCorte = {
   abate: "ct-rebanho",
   precos: "ct-precos",
   consumo: "ct-mundial",
-  projecoes: "ct-projecoes",
   pastagens: "ct-pastagens"
 };
 
@@ -2620,7 +2619,9 @@ function criarGraficoAbate() {
   const ufsPadrao = ["Brasil", "Goiás", "Mato Grosso", "Mato Grosso do Sul"];
   const ufs = filtrosCorte.ufs.size ? ufsPadrao.filter(uf => filtrosCorte.ufs.has(canonUf(uf))) : ufsPadrao;
   const registrosFiltrados = DADOS_CORTE.abateBovinos.filter(item => dentroPeriodo(item.ano) && ufs.includes(item.uf) && (filtrosCorte.trimestre === "all" || item.trimestre === filtrosCorte.trimestre));
-  const anos = [...new Set(registrosFiltrados.map(item => item.ano))].sort((a, b) => a - b);
+  const anos = [...new Set(registrosFiltrados.map(item => item.ano))]
+    .sort((a, b) => a - b)
+    .filter(ano => filtrosCorte.trimestre !== "all" || anoAbateCompleto(ano, ufs));
   const acumulado = anos.map(ano => {
     const linha = { ano: String(ano) };
     ufs.forEach(uf => {
@@ -2869,10 +2870,6 @@ function renderizarAbaAtivaCorte() {
     criarGraficoPrecos();
   } else if (tabId === "ct-mundial") {
     criarGraficoConsumo();
-  } else if (tabId === "ct-projecoes") {
-    criarGraficoProjecao("chartProjecaoProducaoCarne", DADOS_CORTE.projecaoProducaoCarne, "subProjecaoProducao");
-    criarGraficoProjecao("chartProjecaoConsumoCarne", DADOS_CORTE.projecaoConsumoCarne, "subProjecaoConsumo");
-    criarGraficoProjecao("chartProjecaoExportacaoCarne", DADOS_CORTE.projecaoExportacaoCarne, "subProjecaoExportacao");
   } else if (tabId === "ct-pastagens") {
     criarGraficosPastagens();
   } else if (tabId === "ct-plano") {
@@ -2954,4 +2951,171 @@ window.onTabChange = function () {
   });
 };
 
-am5.ready(inicializarGraficosCorte);
+const API_CORTE = "https://api.projetocerradoifg.org/webhook/corte";
+const UFS_REBANHO_CORTE = ["Brasil", "Mato Grosso", "Goiás", "Pará", "Minas Gerais", "Mato Grosso do Sul"];
+const ALVOS_API_CORTE = Object.freeze({
+  rebanho: ["chartRebanhoCorte", "chartRebanhoPartic", "tabelaRebanhoCorte"],
+  abate: ["chartAbateBovinos", "tabelaAbateCorte"]
+});
+const ABAS_CORTE_SEM_ENDPOINT = Object.freeze([
+  { id: "ct-precos", indicador: "precos", titulo: "Preços" },
+  { id: "ct-mundial", indicador: "consumo", titulo: "Consumo" }
+]);
+const GRAFICOS_CORTE_SEM_ENDPOINT = [
+  "chartPrecos", "chartConsumoCarne", "chartPastagemUfBr",
+  "chartPastagemMunicipioBr", "chartPastagemBiomaBr", "chartPastagemUfCo",
+  "chartPastagemMunicipioCo", "chartPastagemBiomaCo", "chartQualidadePastagens",
+  "chartCustoPastagens"
+];
+
+function comentarAbasCorteSemEndpoint() {
+  ABAS_CORTE_SEM_ENDPOINT.forEach(({ id, indicador, titulo }) => {
+    document.querySelector(`[data-tab="${id}"]`)
+      ?.replaceWith(document.createComment(` Aba ${titulo} comentada — endpoint não documentado. `));
+    document.querySelector(`[data-filter="${indicador}"]`)
+      ?.replaceWith(document.createComment(` Filtro ${titulo} comentado — endpoint não documentado. `));
+    document.getElementById(id)
+      ?.replaceWith(document.createComment(` Conteúdo da aba ${titulo} comentado — endpoint não documentado. `));
+  });
+}
+
+async function buscarEndpointCorte(nome) {
+  if (window.simularErroApi) throw new Error("Falha simulada para teste da interface.");
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 15000);
+  try {
+    const resposta = await fetch(`${API_CORTE}/${nome}`, {
+      headers: { Accept: "application/json" },
+      signal: controller.signal
+    });
+    if (!resposta.ok) throw new Error(`${nome}: HTTP ${resposta.status}`);
+    const dados = await resposta.json();
+    if (!Array.isArray(dados) || !dados.length) throw new Error(`${nome}: resposta vazia`);
+    return dados;
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
+function montarRebanhoLargo(linhas) {
+  return UFS_REBANHO_CORTE.map(uf => {
+    const item = { uf };
+    linhas.filter(linha => linha.uf === uf).forEach(linha => {
+      if (Number.isFinite(Number(linha.quantidadeCabecas))) item[String(linha.ano)] = Number(linha.quantidadeCabecas);
+    });
+    return item;
+  }).filter(item => Object.keys(item).length > 1);
+}
+
+function anoAbateCompleto(ano, ufs) {
+  return ufs.every(uf => new Set(
+    DADOS_CORTE.abateBovinos
+      .filter(item => item.uf === uf && item.ano === ano)
+      .map(item => item.trimestre)
+  ).size === 4);
+}
+
+const numeroMiCorte = valor => (Number(valor) / 1_000_000).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const percentualCorte = valor => `${valor >= 0 ? "+" : ""}${valor.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+
+function preencherKpiCorte(id, rotulo, valor, badge, tone = "neutral") {
+  window.atualizarKpiComApi(id, {
+    label: rotulo,
+    value: numeroMiCorte(valor),
+    unit: "mi cab.",
+    badge,
+    tone
+  });
+}
+
+function atualizarRebanhoCorte() {
+  const rebanho = DADOS_CORTE.rebanhoCorte;
+  const anos = anosDeObjetoSerie(rebanho);
+  const primeiro = anos[0];
+  const ultimo = anos.at(-1);
+  const porUf = uf => rebanho.find(item => item.uf === uf);
+  if (!primeiro || !ultimo || !porUf("Brasil") || !porUf("Goiás")) return;
+
+  [["Brasil", "kpiCorteRebanhoBrasil"], ["Goiás", "kpiCorteRebanhoGoias"]].forEach(([uf, id]) => {
+    const variacao = (porUf(uf)[String(ultimo)] / porUf(uf)[String(primeiro)] - 1) * 100;
+    preencherKpiCorte(id, `Rebanho ${uf} ${ultimo}`, porUf(uf)[String(ultimo)],
+      `${variacao >= 0 ? "▲" : "▼"} ${percentualCorte(variacao)} desde ${primeiro}`, variacao >= 0 ? "up" : "down");
+  });
+
+  const tabela = document.querySelector("#tabelaRebanhoCorte table");
+  if (tabela) {
+    const meio = anos[Math.floor((anos.length - 1) / 2)];
+    const colunas = [primeiro, meio, ultimo];
+    tabela.querySelectorAll("thead th").forEach((th, indice) => {
+      if (indice > 0 && indice < 4) th.textContent = String(colunas[indice - 1]);
+    });
+    const ordem = ["Brasil", "Mato Grosso", "Goiás", "Minas Gerais", "Pará", "Mato Grosso do Sul"];
+    tabela.querySelector("tbody").innerHTML = ordem.filter(porUf).map(uf => {
+      const variacao = (porUf(uf)[String(ultimo)] / porUf(uf)[String(primeiro)] - 1) * 100;
+      return `<tr><td>${uf === "Brasil" ? `<strong>${uf}</strong>` : uf}</td>${colunas.map(ano => `<td class="text-end num">${numeroMiCorte(porUf(uf)[String(ano)])}</td>`).join("")}<td class="text-end"><span class="kpi-badge ${variacao >= 0 ? "kpi-badge--up" : "kpi-badge--down"}">${percentualCorte(variacao)}</span></td></tr>`;
+    }).join("");
+    document.querySelector("#tabelaRebanhoCorte .chart-card__sub").textContent = `Milhões de cabeças (${primeiro}–${ultimo})`;
+  }
+}
+
+function atualizarAbateCorte() {
+  const ufs = ["Brasil", "Goiás", "Mato Grosso", "Mato Grosso do Sul"];
+  const anos = [...new Set(DADOS_CORTE.abateBovinos.map(item => item.ano))]
+    .sort((a, b) => a - b).filter(ano => anoAbateCompleto(ano, ufs));
+  const atual = anos.at(-1);
+  const anterior = anos.at(-2);
+  const total = (uf, ano) => DADOS_CORTE.abateBovinos
+    .filter(item => item.uf === uf && item.ano === ano)
+    .reduce((soma, item) => soma + Number(item.quantidadeAbatida || 0), 0);
+  if (!atual) return;
+  const brasil = total("Brasil", atual);
+  const variacao = anterior ? (brasil / total("Brasil", anterior) - 1) * 100 : null;
+  preencherKpiCorte("kpiCorteAbateBrasil", `Abate Brasil ${atual}`, brasil,
+    variacao === null ? "Série disponível" : `${variacao >= 0 ? "↗" : "↘"} ${percentualCorte(variacao)} vs ${anterior}`);
+  preencherKpiCorte("kpiCorteAbateGoias", `Abate Goiás ${atual}`, total("Goiás", atual), `${Math.round(total("Goiás", atual) / brasil * 100)}% do Brasil`);
+
+  const tabela = document.querySelector("#tabelaAbateCorte table");
+  if (tabela) {
+    const exibidos = anos.filter((_ano, indice) => indice % 2 === 0);
+    if (exibidos.at(-1) !== atual) exibidos.push(atual);
+    tabela.querySelector("tbody").innerHTML = exibidos.map(ano =>
+      `<tr><td>${ano}</td>${ufs.map(uf => `<td class="text-end num">${numeroMiCorte(total(uf, ano))}</td>`).join("")}</tr>`
+    ).join("");
+    document.querySelector("#tabelaAbateCorte .chart-card__sub").textContent = `Milhões de cabeças (${anos[0]}–${atual})`;
+  }
+}
+
+async function carregarDadosCorte() {
+  comentarAbasCorteSemEndpoint();
+  window.dashboardDataUi.comentar(GRAFICOS_CORTE_SEM_ENDPOINT);
+  Object.values(ALVOS_API_CORTE).flat().forEach(id => window.dashboardDataUi.definirEstado([id], "loading"));
+  ["kpiCorteRebanhoBrasil", "kpiCorteRebanhoGoias", "kpiCorteAbateBrasil", "kpiCorteAbateGoias"].forEach(id => {
+    document.getElementById(id)?.setAttribute("aria-busy", "true");
+  });
+  DADOS_CORTE.rebanhoCorte = [];
+  DADOS_CORTE.abateBovinos = [];
+
+  const nomes = Object.keys(ALVOS_API_CORTE);
+  const resultados = await Promise.allSettled(nomes.map(buscarEndpointCorte));
+  resultados.forEach((resultado, indice) => {
+    const nome = nomes[indice];
+    if (resultado.status === "fulfilled") {
+      if (nome === "rebanho") {
+        DADOS_CORTE.rebanhoCorte = montarRebanhoLargo(resultado.value);
+        atualizarRebanhoCorte();
+      } else {
+        DADOS_CORTE.abateBovinos = resultado.value;
+        atualizarAbateCorte();
+      }
+      window.dashboardDataUi.definirEstado(ALVOS_API_CORTE[nome], "ready");
+      window.dashboardDataUi.marcarFonte(ALVOS_API_CORTE[nome], nome === "rebanho" ? "IBGE — PPM" : "IBGE — PTA");
+    } else {
+      const kpis = nome === "rebanho" ? ["kpiCorteRebanhoBrasil", "kpiCorteRebanhoGoias"] : ["kpiCorteAbateBrasil", "kpiCorteAbateGoias"];
+      kpis.forEach(id => window.atualizarKpiComApi(id, { state: "error" }));
+      window.dashboardDataUi.definirEstado(ALVOS_API_CORTE[nome], "error", "Não foi possível carregar os dados.");
+      console.error(`Falha ao carregar dados de corte (${nome}):`, resultado.reason);
+    }
+  });
+}
+
+carregarDadosCorte().finally(() => am5.ready(inicializarGraficosCorte));

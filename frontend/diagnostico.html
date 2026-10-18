@@ -168,6 +168,122 @@
             z-index: 9999;
         }
 
+        .app-toast-region {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 11000;
+            display: flex;
+            flex-direction: column;
+            gap: .75rem;
+            width: min(390px, calc(100vw - 2rem));
+            pointer-events: none;
+        }
+
+        .app-toast {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: start;
+            gap: .75rem;
+            padding: .9rem 1rem;
+            border: 1px solid rgba(45, 92, 36, .18);
+            border-left: 5px solid var(--verde);
+            border-radius: var(--radius);
+            background: #fff;
+            box-shadow: var(--shadow-md);
+            color: var(--cinza-esc);
+            font-family: var(--font-d);
+            pointer-events: auto;
+            animation: toast-in .22s ease-out both;
+        }
+
+        .app-toast--error {
+            border-left-color: var(--terra);
+        }
+
+        .app-toast--warning {
+            border-left-color: var(--dourado);
+        }
+
+        .app-toast__icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--creme);
+            color: var(--verde);
+            font-size: .85rem;
+            font-weight: 800;
+        }
+
+        .app-toast--error .app-toast__icon {
+            color: var(--terra);
+        }
+
+        .app-toast--warning .app-toast__icon {
+            color: #8b681d;
+        }
+
+        .app-toast__title {
+            margin: 0 0 .15rem;
+            color: var(--verde);
+            font-size: .82rem;
+            font-weight: 800;
+        }
+
+        .app-toast__message {
+            margin: 0;
+            color: var(--cinza-med);
+            font-size: .78rem;
+            line-height: 1.45;
+        }
+
+        .app-toast__close {
+            border: 0;
+            background: transparent;
+            color: var(--cinza-med);
+            cursor: pointer;
+            font-size: 1.1rem;
+            line-height: 1;
+            padding: .1rem;
+        }
+
+        .app-toast__close:hover,
+        .app-toast__close:focus-visible {
+            color: var(--terra);
+        }
+
+        .app-toast--leaving {
+            animation: toast-out .18s ease-in both;
+        }
+
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateX(18px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes toast-out {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(18px); }
+        }
+
+        @media (max-width: 576px) {
+            .app-toast-region {
+                top: .75rem;
+                right: .75rem;
+                width: calc(100vw - 1.5rem);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .app-toast,
+            .app-toast--leaving {
+                animation: none;
+            }
+        }
+
         @media print {
 
             .navbar-obs,
@@ -193,6 +309,8 @@
 
 <body>
 
+    <div id="toast-region" class="app-toast-region" aria-live="assertive" aria-atomic="false"></div>
+
     <a class="skip-link" href="#main-content">Ir para o conteúdo principal</a>
 
     <!-- ── NAVBAR ───────────────────────────────────────────── -->
@@ -200,7 +318,7 @@
         <div class="container">
             <div class="d-flex align-items-center justify-content-between w-100">
                 <a class="navbar-brand" href="index.html" aria-label="Projeto Cerrado — página inicial">
-                    <img class="brand-logo" src="public/img/logo.avif" alt="Projeto Cerrado · Goiás" />
+                    <img class="brand-logo" src="public/img/logo.avif" alt="Projeto Cerrado" />
                 </a>
                 <ul class="desktop-nav nav d-none d-md-flex" role="list">
                     <li><a class="nav-link" href="index.html">Início</a></li>
@@ -393,7 +511,7 @@
         <div class="container">
             <div class="row g-3">
                 <div class="col-lg-5">
-                    <div class="footer__title">Projeto Cerrado · Goiás</div>
+                    <div class="footer__title">Projeto Cerrado</div>
                     <p>Monitoramento de cadeias produtivas do Cerrado. Dados baseados em pesquisas oficiais.</p>
                 </div>
                 <div class="col-lg-4">
@@ -415,11 +533,11 @@
             <div class="footer-logos" aria-label="Instituições parceiras">
                 <img src="public/img/LogoFuntec.png" alt="FUNTEC" />
                 <img src="public/img/logo.png" alt="Projeto Cerrado" />
-                <img src="public/img/logo_mapa.png" alt="Ministério da Agricultura e Pecuária" />
+<!--                <img src="public/img/logo_mapa.png" alt="Ministério da Agricultura e Pecuária" />-->
                 <img src="public/img/logo_ifg.jpg" alt="Instituto Federal de Goiás" />
             </div>
             <div class="footer__bottom d-flex flex-wrap justify-content-between gap-2">
-                <span>© 2026 Projeto Cerrado · Goiás. Dados: IBGE / MAPA / OECD.</span>
+                <span>© 2026 Projeto Cerrado. Dados: IBGE / MAPA / OECD.</span>
                 <span>Bootstrap 5 · amCharts 5</span>
             </div>
         </div>
