@@ -3,43 +3,19 @@ const P = ["#4a7c3f", "#c8943a", "#a0622b", "#6fa65e", "#2d5c24", "#e8a84c", "#7
 const DADOS_LEITE = {
   producaoBilhoes: [],
   participacaoRegiao: [],
-  producaoCO: [{"uf":"Mato Grosso do Sul","producaoLeiteMilhoesLitros":284823,"percentualParticipacao":7.2068},{"uf":"Mato Grosso","producaoLeiteMilhoesLitros":545924,"percentualParticipacao":13.8134},{"uf":"Goiás","producaoLeiteMilhoesLitros":3121391,"percentualParticipacao":78.9798}],
-  producaoMeso: [{"ano":2013,"Noroeste goiano":302402,"Norte goiano":227167,"Centro goiano":983197,"Leste goiano":317277,"Sul goiano":1946760},{"ano":2014,"Noroeste goiano":294984,"Norte goiano":149130,"Centro goiano":1037974,"Leste goiano":309287,"Sul goiano":1867817},{"ano":2015,"Noroeste goiano":265306,"Norte goiano":141152,"Centro goiano":1000323,"Leste goiano":306458,"Sul goiano":1692274},{"ano":2016,"Noroeste goiano":239519,"Norte goiano":136726,"Centro goiano":946816,"Leste goiano":245780,"Sul goiano":1364600},{"ano":2017,"Noroeste goiano":219930,"Norte goiano":118696,"Centro goiano":992101,"Leste goiano":250031,"Sul goiano":1409074},{"ano":2018,"Noroeste goiano":218721,"Norte goiano":117443,"Centro goiano":1030281,"Leste goiano":272550,"Sul goiano":1445085},{"ano":2019,"Noroeste goiano":222374,"Norte goiano":120718,"Centro goiano":1051259,"Leste goiano":337869,"Sul goiano":1432743},{"ano":2020,"Noroeste goiano":221802,"Norte goiano":135239,"Centro goiano":1030888,"Leste goiano":342818,"Sul goiano":1442764},{"ano":2021,"Noroeste goiano":230043,"Norte goiano":145770,"Centro goiano":998924,"Leste goiano":295256,"Sul goiano":1451399}],
-  municipiosProducao: [{"ano":2013,"Orizona":80000,"Piracanjuba":147490,"Jataí":143100,"Bela Vista de Goiás":44250,"Rio Verde":70000,"Pontalina":46690,"Silvânia":48000,"Pirenópolis":39165,"Itapuranga":30147,"Vianópolis":30610,"Morrinhos":165495},{"ano":2014,"Orizona":82500,"Piracanjuba":154800,"Jataí":144700,"Bela Vista de Goiás":71000,"Rio Verde":91000,"Pontalina":77000,"Silvânia":48500,"Pirenópolis":39230,"Itapuranga":31654,"Vianópolis":40000,"Morrinhos":80000},{"ano":2015,"Orizona":90000,"Piracanjuba":105805,"Jataí":98000,"Bela Vista de Goiás":71500,"Rio Verde":90000,"Pontalina":70020,"Silvânia":49000,"Pirenópolis":36000,"Itapuranga":33273,"Vianópolis":40500,"Morrinhos":75800},{"ano":2016,"Orizona":88000,"Piracanjuba":85500,"Jataí":87000,"Bela Vista de Goiás":70000,"Rio Verde":70000,"Pontalina":53515,"Silvânia":46500,"Pirenópolis":28000,"Itapuranga":34895,"Vianópolis":40000,"Morrinhos":56500},{"ano":2017,"Orizona":93000,"Piracanjuba":95000,"Jataí":85000,"Bela Vista de Goiás":73500,"Rio Verde":71300,"Pontalina":64200,"Silvânia":54000,"Pirenópolis":29720,"Itapuranga":54000,"Vianópolis":43500,"Morrinhos":56550},{"ano":2018,"Orizona":110000,"Piracanjuba":94878,"Jataí":86100,"Bela Vista de Goiás":79000,"Rio Verde":65800,"Pontalina":63800,"Silvânia":63500,"Pirenópolis":41272,"Itapuranga":55620,"Vianópolis":60000,"Morrinhos":59060},{"ano":2019,"Orizona":110500,"Piracanjuba":94975,"Jataí":88400,"Bela Vista de Goiás":78000,"Rio Verde":65950,"Pontalina":63500,"Silvânia":63000,"Pirenópolis":62611,"Itapuranga":61980,"Vianópolis":61000,"Morrinhos":60000},{"ano":2020,"Orizona":113000,"Piracanjuba":95100,"Jataí":88700,"Bela Vista de Goiás":77839,"Rio Verde":72122,"Pontalina":63600,"Silvânia":64500,"Pirenópolis":64324,"Itapuranga":62090,"Vianópolis":61325,"Morrinhos":60700},{"ano":2021,"Orizona":115826,"Piracanjuba":95800,"Jataí":89500,"Bela Vista de Goiás":78799,"Rio Verde":71450,"Pontalina":63890,"Silvânia":66000,"Pirenópolis":54904,"Itapuranga":64105,"Vianópolis":61649,"Morrinhos":60625}],
-  produtividadeMunicipios: [{"municipio":"Orizona","2019":2833.3333,"2020":2825},{"municipio":"Piracanjuba","2019":2638.1944,"2020":2616.2311},{"municipio":"Jataí","2019":1890.9091,"2020":1879.2373},{"municipio":"Bela Vista de Goiás","2019":3095.2381,"2020":3094.9901},{"municipio":"Rio Verde","2019":1730.9711,"2020":1892.9659},{"municipio":"Pontalina","2019":2595.0143,"2020":2595.9184},{"municipio":"Silvânia","2019":3000,"2020":3000},{"municipio":"Pirenópolis","2019":2879.9908,"2020":2859.9884},{"municipio":"Itapuranga","2019":2574.9896,"2020":2563.5838},{"municipio":"Vianópolis","2019":3230.9322,"2020":3244.709},{"municipio":"Morrinhos","2019":1935.4839,"2020":1908.805}],
-  rebanhoCO: [{"uf":"Centro-Oeste","2013":71124329,"2014":71234141,"2015":72705736,"2016":75112421,"2017":74128217,"2018":73838407,"2019":73970616,"2020":75075950,"2021":75413186},{"uf":"Mato Grosso do Sul","2013":21047274,"2014":21003830,"2015":21357398,"2016":21800990,"2017":21474693,"2018":20896700,"2019":19407908,"2020":19027086,"2021":18608503},{"uf":"Mato Grosso","2013":28395205,"2014":28592183,"2015":29364042,"2016":30296096,"2017":29725378,"2018":30199598,"2019":31654882,"2020":32338031,"2021":32424958},{"uf":"Goiás","2013":21580398,"2014":21538072,"2015":21887720,"2016":22919070,"2017":22835005,"2018":22651910,"2019":22823401,"2020":23626608,"2021":24293954}],
+  producaoCO: [],
+  producaoMeso: [],
+  municipiosProducao: [],
+  produtividadeMunicipios: [],
+  rebanhoCO: [],
   vacasRegiao2021: [],
   produtividadeRegiao: [],
   vacasRegiaoSerie: [],
-  vacasMeso: [{"mesorregiao":"Noroeste Goiano","2013":276437,"2014":276837,"2015":245128,"2016":219901,"2017":188501,"2018":181685,"2019":174503,"2020":171367,"2021":176931},{"mesorregiao":"Norte Goiano","2013":217279,"2014":155111,"2015":151212,"2016":150515,"2017":112101,"2018":109271,"2019":111000,"2020":123643,"2021":133462},{"mesorregiao":"Centro Goiano","2013":755684,"2014":784678,"2015":798556,"2016":745602,"2017":643948,"2018":645267,"2019":615727,"2020":594697,"2021":564432},{"mesorregiao":"Leste Goiano","2013":254484,"2014":249397,"2015":260516,"2016":224252,"2017":192997,"2018":181567,"2019":179845,"2020":187644,"2021":182744},{"mesorregiao":"Sul Goiano","2013":1219710,"2014":1172350,"2015":1063519,"2016":897602,"2017":847434,"2018":812804,"2019":799946,"2020":784705,"2021":748152}],
-  precos: [{"produto":"Leite pasteurizado","go2020":3.01,"br2020":2.72,"go2021":3.68,"br2021":3.28},{"produto":"Leite UHT","go2020":3.3,"br2020":3.23,"go2021":3.32,"br2021":3.44},{"produto":"Queijo prato","go2020":29.45,"br2020":28.45,"go2021":30.87,"br2021":28.86},{"produto":"Leite em pó integral","go2020":22,"br2020":22.84,"go2021":24.06,"br2021":24.95},{"produto":"Manteiga","go2020":31.13,"br2020":29.12,"go2021":33.42,"br2021":32.7},{"produto":"Queijo muçarela","go2020":25.28,"br2020":26.29,"go2021":27.72,"br2021":25.55}],
-  consumo: [{"produto":"Leite Pasteurizado","taxaCrescimento":-4.2732,"2011":1625,"2012":1430,"2013":1340,"2014":1220,"2015":1094,"2016":1105,"2017":1120,"2018":1090,"2019":1080,"2020":1050},{"produto":"Leite UHT","taxaCrescimento":1.8332,"2011":5818,"2012":6132,"2013":6385,"2014":6600,"2015":6730,"2016":6832,"2017":7026,"2018":6880,"2019":6858,"2020":6977},{"produto":"Leite em Pó","taxaCrescimento":1.557,"2011":6099,"2012":6252,"2013":6370,"2014":6260,"2015":6340,"2016":6607,"2017":6638,"2018":6708,"2019":6853,"2020":7118},{"produto":"Queijos","taxaCrescimento":2.5021,"2011":7059,"2012":7253,"2013":7763,"2014":8173,"2015":8198,"2016":8243,"2017":8406,"2018":8587,"2019":8776,"2020":9038},{"produto":"Demais Produtos","taxaCrescimento":1.0521,"2011":2293,"2012":2361,"2013":2573,"2014":2728,"2015":2287,"2016":1954,"2017":2221,"2018":2254,"2019":2414,"2020":2546}],
-  rankingConsumo: [],
-  vbpEstados: [],
-  vbpRanking: [{"ranking":"1º","atividadePecuaria":"Bovinos","valorBilhoesReais":150.94,"percentualParticipacao":41.8395},{"ranking":"2º","atividadePecuaria":"Frango","valorBilhoesReais":108.93,"percentualParticipacao":30.1946},{"ranking":"3º","atividadePecuaria":"Leite","valorBilhoesReais":51.77,"percentualParticipacao":14.3503},{"ranking":"4º","atividadePecuaria":"Suínos","valorBilhoesReais":31.39,"percentualParticipacao":8.7011},{"ranking":"5º","atividadePecuaria":"Ovos","valorBilhoesReais":17.73,"percentualParticipacao":4.9146}],
-  exportacoesAno: [{"ano":2012,"valorExportacaoUsd":10924170,"pesoExportadoKg":4304563},{"ano":2013,"valorExportacaoUsd":1218145,"pesoExportadoKg":374633},{"ano":2014,"valorExportacaoUsd":603624,"pesoExportadoKg":265464},{"ano":2015,"valorExportacaoUsd":820447,"pesoExportadoKg":458725},{"ano":2016,"valorExportacaoUsd":584668,"pesoExportadoKg":266634},{"ano":2017,"valorExportacaoUsd":833625,"pesoExportadoKg":283540},{"ano":2018,"valorExportacaoUsd":945647,"pesoExportadoKg":306693},{"ano":2019,"valorExportacaoUsd":888546,"pesoExportadoKg":515183},{"ano":2020,"valorExportacaoUsd":1037428,"pesoExportadoKg":472961},{"ano":2021,"valorExportacaoUsd":890688,"pesoExportadoKg":358140},{"ano":2022,"valorExportacaoUsd":1069480,"pesoExportadoKg":360654}],
-  destinoExportacoes: [{"paisDestino":"Bolívia","valorExportacaoUsd":2346875,"percentualParticipacao":23.85},{"paisDestino":"Argélia","valorExportacaoUsd":1642157,"percentualParticipacao":16.69},{"paisDestino":"Uruguai","valorExportacaoUsd":1329867,"percentualParticipacao":13.52},{"paisDestino":"Venezuela","valorExportacaoUsd":1019062,"percentualParticipacao":10.36},{"paisDestino":"Chile","valorExportacaoUsd":955975,"percentualParticipacao":9.72},{"paisDestino":"Paraguai","valorExportacaoUsd":788300,"percentualParticipacao":8.01},{"paisDestino":"Estados unidos","valorExportacaoUsd":614966,"percentualParticipacao":6.25},{"paisDestino":"Angola","valorExportacaoUsd":507037,"percentualParticipacao":5.15}],
-  produtosExportados: [{"produto":"Manteiga e demais gorduras","valorExportacaoUsd":2784850,"percentualParticipacao":28.31},{"produto":"Creme de leite","valorExportacaoUsd":1524043,"percentualParticipacao":15.49},{"produto":"Leite em pó","valorExportacaoUsd":1222263,"percentualParticipacao":12.42},{"produto":"Queijo","valorExportacaoUsd":1080271,"percentualParticipacao":10.98},{"produto":"Leitelho","valorExportacaoUsd":1066682,"percentualParticipacao":10.84},{"produto":"Demais produtos lácteos","valorExportacaoUsd":1030045,"percentualParticipacao":10.47},{"produto":"Leite condensado","valorExportacaoUsd":917892,"percentualParticipacao":9.33}],
-  importacoesAno: [{"ano":2011,"valorImportacaoUsd":122245},{"ano":2012,"valorImportacaoUsd":635914},{"ano":2013,"valorImportacaoUsd":2460000},{"ano":2015,"valorImportacaoUsd":425114},{"ano":2016,"valorImportacaoUsd":2176286},{"ano":2017,"valorImportacaoUsd":5544200},{"ano":2018,"valorImportacaoUsd":6638770},{"ano":2019,"valorImportacaoUsd":11085966},{"ano":2020,"valorImportacaoUsd":8318982}],
-  origemImportacoes: [{"paisOrigem":"Uruguai","valorImportacaoUsd":31290231,"percentualParticipacao":83.65},{"paisOrigem":"Argentina","valorImportacaoUsd":4102857,"percentualParticipacao":10.97},{"paisOrigem":"Chile","valorImportacaoUsd":1567310,"percentualParticipacao":4.19},{"paisOrigem":"Estados unidos","valorImportacaoUsd":446265,"percentualParticipacao":1.19}],
-  produtosImportados: [{"produto":"Demais produtos lácteos","valorImportacaoUsd":447079,"pesoImportadoKg":280335},{"produto":"Leite fluido e leite em pó","valorImportacaoUsd":36649318,"pesoImportadoKg":11810000},{"produto":"Soro de leite","valorImportacaoUsd":311080,"pesoImportadoKg":360000}],
-  caracteristicasGrupo: [{"ano":2017,"uf":"Goiás","grupoCabecasBovinos":"De 1 a 2","numeroEstabelecimentos":548,"quantidadeLeiteProduzido":1580},{"ano":2017,"uf":"Goiás","grupoCabecasBovinos":"De 3 a 5","numeroEstabelecimentos":2189,"quantidadeLeiteProduzido":9773},{"ano":2017,"uf":"Goiás","grupoCabecasBovinos":"De 6 a 10","numeroEstabelecimentos":5635,"quantidadeLeiteProduzido":38080},{"ano":2017,"uf":"Goiás","grupoCabecasBovinos":"De 11 a 20","numeroEstabelecimentos":11028,"quantidadeLeiteProduzido":127175},{"ano":2017,"uf":"Goiás","grupoCabecasBovinos":"De 21 a 50","numeroEstabelecimentos":23361,"quantidadeLeiteProduzido":556959},{"ano":2017,"uf":"Goiás","grupoCabecasBovinos":"De 51 a 100","numeroEstabelecimentos":13314,"quantidadeLeiteProduzido":591432},{"ano":2017,"uf":"Goiás","grupoCabecasBovinos":"De 101 a 200","numeroEstabelecimentos":8055,"quantidadeLeiteProduzido":578630},{"ano":2017,"uf":"Goiás","grupoCabecasBovinos":"De 201 a 500","numeroEstabelecimentos":5304,"quantidadeLeiteProduzido":499385},{"ano":2017,"uf":"Goiás","grupoCabecasBovinos":"De 501 a 1000","numeroEstabelecimentos":1745,"quantidadeLeiteProduzido":156785},{"ano":2017,"uf":"Goiás","grupoCabecasBovinos":"De 1001 e mais","numeroEstabelecimentos":984,"quantidadeLeiteProduzido":107212}],
-  caracteristicasCondicao: [{"ano":2017,"uf":"Goiás","condicaoProdutor":"Agricultura familiar - não","numeroEstabelecimentos":22297,"quantidadeLeiteProduzido":1258709},{"ano":2017,"uf":"Goiás","condicaoProdutor":"Agricultura familiar - sim","numeroEstabelecimentos":50056,"quantidadeLeiteProduzido":1411682},{"ano":2017,"uf":"Goiás","condicaoProdutor":"Pronamp - sim","numeroEstabelecimentos":22044,"quantidadeLeiteProduzido":1185175},{"ano":2017,"uf":"Goiás","condicaoProdutor":"Pronamp - não","numeroEstabelecimentos":50309,"quantidadeLeiteProduzido":1485216}]
+  vacasMeso: [],
+  rankingConsumo: []
 };
 
-// Conjuntos cobertos pelos endpoints atuais nunca usam os dados fixos acima como fallback.
-Object.assign(DADOS_LEITE, {
-  producaoCO: [], producaoMeso: [], municipiosProducao: [], produtividadeMunicipios: [],
-  rebanhoCO: [], vacasMeso: []
-});
-
-// Atributos ausentes no Excel: quantidadeVacasOrdenhadas e valorProducaoLeite na aba
-// "Características dos produtores"; quantidadeLeiteVendido e valorVendaLeite no bloco
-// "Produtos lácteos importados". Foram usados os atributos disponíveis mais próximos.
-
 let ANOS_PRODUCAO = ["2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021"];
-const ANOS_CONSUMO = ["2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020"];
-const ANOS_PROJECAO = ["2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030", "2031", "2032", "2033"];
 const SERIES_PRODUCAO_UF = ["Brasil", "Minas Gerais", "Paraná", "Rio Grande do Sul", "Goiás", "Santa Catarina"];
 const SERIES_MESO = ["Noroeste goiano", "Norte goiano", "Centro goiano", "Leste goiano", "Sul goiano"];
 const SERIES_MESO_LABEL = ["Noroeste Goiano", "Norte Goiano", "Centro Goiano", "Leste Goiano", "Sul Goiano"];
@@ -48,7 +24,6 @@ let SERIES_UF_CO = [];
 let TODOS_MUNICIPIOS = [];
 let ANOS_PRODUTIVIDADE_MUNICIPIOS = [];
 let PRODUTOS_FILTRO = [];
-let SERIES_VBP = [];
 let PERIODO_PADRAO = { inicio: "2013", fim: "2021" };
 
 const estadoFiltros = {
@@ -64,16 +39,6 @@ const estadoFiltros = {
 
 const graficos = {};
 
-const SIDRA_BASE_URL = "https://apisidra.ibge.gov.br/values";
-const SIDRA_ENDPOINTS = Object.freeze({
-  producaoBrasilEstados: "/t/74/n1/all/n3/31,41,43,52,42/v/106/p/last%2010/c80/2682",
-  producaoRegioes: "/t/74/n2/all/v/106/p/last%201/c80/2682",
-  vacasRegioes: "/t/94/n2/all/v/107/p/last%2010",
-  rankingConsumo: "/t/2393/n3/all/v/all/p/2018/c217/4554,104442",
-  vbpCentroOeste: "/t/74/n3/50,51,52/v/215/p/last%2010/c80/2682"
-});
-const VALORES_SIDRA_AUSENTES = new Set(["...", "..", "-", "X", ""]);
-const requisicoesSidra = new Map();
 const metadadosApi = {};
 const API_LEITE = "https://api.projetocerradoifg.org/webhook/leite";
 const ENDPOINTS_LEITE = Object.freeze({
@@ -94,21 +59,7 @@ const ALVOS_API = Object.freeze({
   ranking: ["chartRankingConsumo"]
 });
 
-const VISUALIZACOES_SEM_ENDPOINT = [
-  "chartPrecosLacteos", "chartConsumoLacteos", "chartVbpLeite", "chartRankingVbp",
-  "chartExportacoesAno", "chartDestinoExportacoes", "chartProdutosExportados",
-  "chartImportacoesAno", "chartOrigemImportacoes", "chartProdutosImportados",
-  "chartProducaoPorRebanho", "chartProducaoPorCondicao", "chartLeiteProjecoes"
-];
-
 class ErroDadosVazios extends Error {}
-
-function numeroSidra(valor) {
-  const texto = String(valor ?? "").trim();
-  if (VALORES_SIDRA_AUSENTES.has(texto)) return null;
-  const numero = Number(texto);
-  return Number.isFinite(numero) ? numero : null;
-}
 
 function ordenarAnos(anos) {
   return Array.from(new Set(anos.map(String).filter(ano => /^\d{4}$/.test(ano))))
@@ -166,171 +117,6 @@ function definirEstadoVisualizacao(ids, estado, mensagem = "") {
   });
 }
 
-function comentarVisualizacoesSemEndpoint() {
-  VISUALIZACOES_SEM_ENDPOINT.forEach(id => {
-    const container = containerVisualizacao(id);
-    if (!container) return;
-    const bloco = container.closest("[data-category]") || container;
-    const titulo = container.querySelector(".chart-card__title")?.textContent.trim() || id;
-    bloco.replaceWith(document.createComment(` Visualização comentada: ${titulo} — endpoint não documentado. `));
-  });
-}
-
-async function buscarSidra(caminho) {
-  if (requisicoesSidra.has(caminho)) return requisicoesSidra.get(caminho);
-
-  const requisicao = (async () => {
-    if (window.simularErroApi) throw new Error("Falha simulada para teste da interface.");
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 15000);
-    try {
-      const resposta = await fetch(`${SIDRA_BASE_URL}${caminho}`, {
-        headers: { Accept: "application/json" },
-        signal: controller.signal
-      });
-      if (!resposta.ok) throw new Error(`SIDRA respondeu com HTTP ${resposta.status}`);
-      const payload = await resposta.json();
-      if (!Array.isArray(payload) || payload.length < 2) {
-        throw new ErroDadosVazios("O Servidor não retornou registros.");
-      }
-      return payload.slice(1);
-    } finally {
-      window.clearTimeout(timeout);
-    }
-  })();
-
-  requisicoesSidra.set(caminho, requisicao);
-  return requisicao;
-}
-
-function validarLinhasSidra(linhas, { unidade, produto } = {}) {
-  const validas = linhas.filter(linha => numeroSidra(linha.V) !== null);
-  if (!validas.length) throw new ErroDadosVazios("O Servidor não retornou valores válidos.");
-  if (unidade && validas.some(linha => linha.MN !== unidade)) {
-    throw new Error(`Unidade inesperada na resposta do SIDRA (esperado: ${unidade}).`);
-  }
-  if (produto && validas.some(linha => linha.D4N !== produto)) {
-    throw new Error(`Produto inesperado na resposta do SIDRA (esperado: ${produto}).`);
-  }
-  return validas;
-}
-
-function mapearProducaoBrasilEstados(linhas) {
-  const validas = validarLinhasSidra(linhas, { unidade: "Mil litros", produto: "Leite" });
-  const porAno = new Map();
-  validas.forEach(linha => {
-    const ano = String(linha.D3N);
-    if (!porAno.has(ano)) porAno.set(ano, { Ano: Number(ano) });
-    porAno.get(ano)[linha.D1N] = numeroSidra(linha.V) / 1_000_000;
-  });
-  return Array.from(porAno.values()).sort((a, b) => a.Ano - b.Ano);
-}
-
-function mapearProducaoRegioes(linhas) {
-  const validas = validarLinhasSidra(linhas, { unidade: "Mil litros", produto: "Leite" });
-  const anos = ordenarAnos(validas.map(linha => linha.D3N));
-  const ano = anos.at(-1);
-  const atuais = validas.filter(linha => linha.D3N === ano);
-  const totalMilLitros = atuais.reduce((soma, linha) => soma + numeroSidra(linha.V), 0);
-  if (!totalMilLitros) throw new ErroDadosVazios("A produção regional retornou total zero.");
-  return {
-    ano,
-    dados: atuais.map(linha => ({
-      codigoRegiao: linha.D1C,
-      regiao: linha.D1N,
-      producaoLeiteMilhoesLitros: numeroSidra(linha.V) / 1_000,
-      percentualParticipacao: numeroSidra(linha.V) / totalMilLitros * 100
-    }))
-  };
-}
-
-function mapearVacasRegioes(linhas) {
-  const validas = validarLinhasSidra(linhas, { unidade: "Cabeças" });
-  const anos = ordenarAnos(validas.map(linha => linha.D3N));
-  const anoAtual = anos.at(-1);
-  const porRegiao = new Map();
-
-  validas.forEach(linha => {
-    if (!porRegiao.has(linha.D1C)) {
-      porRegiao.set(linha.D1C, { codigoRegiao: linha.D1C, regiao: linha.D1N });
-    }
-    porRegiao.get(linha.D1C)[linha.D3N] = numeroSidra(linha.V);
-  });
-
-  const atuais = validas.filter(linha => linha.D3N === anoAtual);
-  const total = atuais.reduce((soma, linha) => soma + numeroSidra(linha.V), 0);
-  if (!total) throw new ErroDadosVazios("O total de vacas ordenhadas retornou zero.");
-
-  return {
-    anos,
-    anoAtual,
-    serie: Array.from(porRegiao.values()),
-    atuais: atuais.map(linha => ({
-      codigoRegiao: linha.D1C,
-      regiao: linha.D1N,
-      quantidadeVacasOrdenhadas: numeroSidra(linha.V),
-      percentualParticipacao: numeroSidra(linha.V) / total * 100
-    }))
-  };
-}
-
-function calcularProdutividadeRegional(producao, vacas) {
-  if (!producao || !vacas || producao.ano !== vacas.anoAtual) {
-    throw new ErroDadosVazios("Produção e vacas ordenhadas não possuem um ano comum.");
-  }
-  const vacasPorCodigo = new Map(vacas.atuais.map(item => [item.codigoRegiao, item.quantidadeVacasOrdenhadas]));
-  const produtividade = producao.dados.map(item => {
-    const quantidadeVacas = vacasPorCodigo.get(item.codigoRegiao);
-    if (!quantidadeVacas) return null;
-    return {
-      regiao: item.regiao,
-      produtividadeLitrosPorVacaAno: item.producaoLeiteMilhoesLitros * 1_000_000 / quantidadeVacas
-    };
-  }).filter(Boolean);
-  if (!produtividade.length) throw new ErroDadosVazios("Não foi possível calcular a produtividade regional.");
-  return produtividade;
-}
-
-function nomeProdutoPof(nome) {
-  return String(nome).replace(/^\d+(?:\.\d+)*\s*/, "").trim();
-}
-
-function mapearRankingConsumo(linhas) {
-  const validas = validarLinhasSidra(linhas, { unidade: "Quilogramas" });
-  const porProduto = new Map();
-  validas.forEach(linha => {
-    if (!porProduto.has(linha.D4C)) porProduto.set(linha.D4C, []);
-    porProduto.get(linha.D4C).push(linha);
-  });
-
-  const ranking = Array.from(porProduto.values()).map(produto => {
-    const ordenado = produto.sort((a, b) => numeroSidra(b.V) - numeroSidra(a.V));
-    const posicaoGoias = ordenado.findIndex(linha => linha.D1C === "52") + 1;
-    return {
-      produto: nomeProdutoPof(produto[0].D4N),
-      melhorPosicao: posicaoGoias,
-      ano: produto[0].D3N
-    };
-  }).filter(item => item.melhorPosicao > 0 && item.melhorPosicao <= 5);
-
-  if (!ranking.length) throw new ErroDadosVazios("Goiás não aparece no Top 5 dos produtos consultados.");
-  return ranking.sort((a, b) => a.melhorPosicao - b.melhorPosicao);
-}
-
-function mapearVbpCentroOeste(linhas) {
-  const validas = validarLinhasSidra(linhas, { unidade: "Mil Reais", produto: "Leite" });
-  const anos = ordenarAnos(validas.map(linha => linha.D3N));
-  const comparados = [anos[0], anos.at(-1)];
-  const porEstado = new Map();
-  validas.filter(linha => comparados.includes(linha.D3N)).forEach(linha => {
-    if (!porEstado.has(linha.D1C)) porEstado.set(linha.D1C, { estado: linha.D1N });
-    porEstado.get(linha.D1C)[linha.D3N] = numeroSidra(linha.V) * 1_000;
-  });
-  const dados = Array.from(porEstado.values());
-  if (!dados.length) throw new ErroDadosVazios("O Servidor não retornou dados de VBP.");
-  return { anos: comparados, dados };
-}
-
 function atualizarTextoVisualizacao(id, { titulo, subtitulo, ariaLabel } = {}) {
   const container = containerVisualizacao(id);
   if (!container) return;
@@ -376,150 +162,14 @@ function atualizarColecoesDinamicas() {
     ...DADOS_LEITE.vacasRegiaoSerie.map(item => item.regiao),
     ...DADOS_LEITE.participacaoRegiao.map(item => item.regiao)
   ]));
-  PRODUTOS_FILTRO = Array.from(new Set([
-    ...DADOS_LEITE.precos.map(d => d.produto),
-    ...DADOS_LEITE.consumo.map(d => d.produto),
-    ...DADOS_LEITE.rankingConsumo.map(d => d.produto),
-    ...DADOS_LEITE.produtosExportados.map(d => d.produto),
-    ...DADOS_LEITE.produtosImportados.map(d => d.produto),
-    ...DADOS_LEITE.caracteristicasGrupo.map(d => d.grupoCabecasBovinos),
-    ...DADOS_LEITE.caracteristicasCondicao.map(d => d.condicaoProdutor)
-  ])).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  PRODUTOS_FILTRO = Array.from(new Set(DADOS_LEITE.rankingConsumo.map(d => d.produto)))
+    .sort((a, b) => a.localeCompare(b, "pt-BR"));
 
   if (anosApi.length) {
     PERIODO_PADRAO = { inicio: anosApi[0], fim: anosApi.at(-1) };
     estadoFiltros.anoInicio = PERIODO_PADRAO.inicio;
     estadoFiltros.anoFim = PERIODO_PADRAO.fim;
   }
-}
-
-async function carregarDadosApiLeite() {
-  Object.values(ALVOS_API).flat().forEach(id => definirEstadoVisualizacao([id], "loading"));
-
-  const nomes = Object.keys(SIDRA_ENDPOINTS);
-  const resultados = await Promise.allSettled(
-    nomes.map(nome => buscarSidra(SIDRA_ENDPOINTS[nome]))
-  );
-  const resposta = Object.fromEntries(nomes.map((nome, indice) => [nome, resultados[indice]]));
-
-  if (resposta.producaoBrasilEstados.status === "fulfilled") {
-    try {
-      DADOS_LEITE.producaoBilhoes = mapearProducaoBrasilEstados(resposta.producaoBrasilEstados.value);
-      metadadosApi.anosProducao = ordenarAnos(DADOS_LEITE.producaoBilhoes.map(item => item.Ano));
-      definirEstadoVisualizacao(ALVOS_API.producao, "ready");
-      marcarFonteApi(ALVOS_API.producao);
-      atualizarTextoVisualizacao("chartLeiteSeries", {
-        subtitulo: `Bilhões de litros por ano (${periodoTexto(metadadosApi.anosProducao)})`,
-        ariaLabel: `Gráfico: produção de leite no Brasil e estados, de ${periodoTexto(metadadosApi.anosProducao)}`
-      });
-    } catch (erro) {
-      registrarFalhaApi(ALVOS_API.producao, erro);
-    }
-  } else {
-    registrarFalhaApi(ALVOS_API.producao, resposta.producaoBrasilEstados.reason);
-  }
-
-  let producaoRegioes;
-  if (resposta.producaoRegioes.status === "fulfilled") {
-    try {
-      producaoRegioes = mapearProducaoRegioes(resposta.producaoRegioes.value);
-      DADOS_LEITE.participacaoRegiao = producaoRegioes.dados;
-      metadadosApi.anoRegioes = producaoRegioes.ano;
-      definirEstadoVisualizacao(ALVOS_API.regioes, "ready");
-      marcarFonteApi(ALVOS_API.regioes);
-      atualizarTextoVisualizacao("chartLeiteRegiao", {
-        titulo: `Participação Regional (${producaoRegioes.ano})`,
-        ariaLabel: `Gráfico: participação regional na produção de leite em ${producaoRegioes.ano}`
-      });
-      atualizarTextoVisualizacao("tabelaRegioesLeite", {
-        titulo: `Regiões Brasileiras — ${producaoRegioes.ano}`,
-        ariaLabel: `Produção de leite por região em ${producaoRegioes.ano}`
-      });
-    } catch (erro) {
-      registrarFalhaApi(ALVOS_API.regioes, erro);
-    }
-  } else {
-    registrarFalhaApi(ALVOS_API.regioes, resposta.producaoRegioes.reason);
-  }
-
-  let vacasRegioes;
-  if (resposta.vacasRegioes.status === "fulfilled") {
-    try {
-      vacasRegioes = mapearVacasRegioes(resposta.vacasRegioes.value);
-      DADOS_LEITE.vacasRegiaoSerie = vacasRegioes.serie;
-      DADOS_LEITE.vacasRegiao2021 = vacasRegioes.atuais;
-      metadadosApi.anosVacas = vacasRegioes.anos;
-      metadadosApi.anoVacas = vacasRegioes.anoAtual;
-      definirEstadoVisualizacao(ALVOS_API.vacas, "ready");
-      marcarFonteApi(ALVOS_API.vacas);
-      atualizarTextoVisualizacao("chartVacasRegiao", {
-        titulo: `Vacas Ordenhadas por Região (${vacasRegioes.anoAtual})`,
-        ariaLabel: `Gráfico: vacas ordenhadas por região em ${vacasRegioes.anoAtual}`
-      });
-      atualizarTextoVisualizacao("chartVacasRegiaoSerie", {
-        subtitulo: `Cabeças — ${periodoTexto(vacasRegioes.anos)}`,
-        ariaLabel: `Gráfico: série de vacas ordenhadas por região, de ${periodoTexto(vacasRegioes.anos)}`
-      });
-    } catch (erro) {
-      registrarFalhaApi(ALVOS_API.vacas, erro);
-    }
-  } else {
-    registrarFalhaApi(ALVOS_API.vacas, resposta.vacasRegioes.reason);
-  }
-
-  if (producaoRegioes && vacasRegioes) {
-    try {
-      DADOS_LEITE.produtividadeRegiao = calcularProdutividadeRegional(producaoRegioes, vacasRegioes);
-      definirEstadoVisualizacao(ALVOS_API.produtividade, "ready");
-      marcarFonteApi(ALVOS_API.produtividade);
-      atualizarTextoVisualizacao("chartProdutividade", {
-        titulo: `Produtividade por Região (${producaoRegioes.ano})`,
-        ariaLabel: `Gráfico: produtividade por região em ${producaoRegioes.ano}`
-      });
-    } catch (erro) {
-      registrarFalhaApi(ALVOS_API.produtividade, erro);
-    }
-  } else {
-    registrarFalhaApi(ALVOS_API.produtividade, new Error("Falha nas fontes usadas para calcular a produtividade."));
-  }
-
-  if (resposta.rankingConsumo.status === "fulfilled") {
-    try {
-      DADOS_LEITE.rankingConsumo = mapearRankingConsumo(resposta.rankingConsumo.value);
-      metadadosApi.anoRanking = DADOS_LEITE.rankingConsumo[0]?.ano;
-      definirEstadoVisualizacao(ALVOS_API.ranking, "ready");
-      marcarFonteApi(ALVOS_API.ranking);
-      atualizarTextoVisualizacao("chartRankingConsumo", {
-        subtitulo: `Posição de Goiás na aquisição domiciliar per capita — POF ${metadadosApi.anoRanking}`
-      });
-    } catch (erro) {
-      registrarFalhaApi(ALVOS_API.ranking, erro);
-    }
-  } else {
-    registrarFalhaApi(ALVOS_API.ranking, resposta.rankingConsumo.reason);
-  }
-
-  if (resposta.vbpCentroOeste.status === "fulfilled") {
-    try {
-      const vbp = mapearVbpCentroOeste(resposta.vbpCentroOeste.value);
-      DADOS_LEITE.vbpEstados = vbp.dados;
-      SERIES_VBP = vbp.anos.map(ano => ({ nome: ano, campo: ano }));
-      metadadosApi.anosVbp = vbp.anos;
-      definirEstadoVisualizacao(ALVOS_API.vbp, "ready");
-      marcarFonteApi(ALVOS_API.vbp);
-      atualizarTextoVisualizacao("chartVbpLeite", {
-        subtitulo: `Centro-Oeste — ${vbp.anos[0]} vs ${vbp.anos.at(-1)}`,
-        ariaLabel: `Gráfico: valor bruto da produção de leite no Centro-Oeste, ${vbp.anos[0]} e ${vbp.anos.at(-1)}`
-      });
-    } catch (erro) {
-      registrarFalhaApi(ALVOS_API.vbp, erro);
-    }
-  } else {
-    registrarFalhaApi(ALVOS_API.vbp, resposta.vbpCentroOeste.reason);
-  }
-
-  atualizarColecoesDinamicas();
-  atualizarCardsLeite();
 }
 
 async function buscarEndpointLeite(nome) {
@@ -1148,20 +798,7 @@ function inicializarEstruturaGraficos() {
   graficoLinhas("chartMunicipios", "ano", TODOS_MUNICIPIOS);
   graficoBarrasAgrupadas("chartMunicipiosBars", "municipio", [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }]);
   graficoBarrasAgrupadas("chartProdutividadeMunicipios", "municipio", ANOS_PRODUTIVIDADE_MUNICIPIOS.map(ano => ({ nome: ano, campo: ano })), " L/vaca/ano");
-  graficoBarrasAgrupadas("chartPrecosLacteos", "produto", [{ nome: "GO 2020", campo: "go2020" }, { nome: "BR 2020", campo: "br2020" }, { nome: "GO 2021", campo: "go2021" }, { nome: "BR 2021", campo: "br2021" }], " R$");
-  graficoLinhas("chartConsumoLacteos", "ano", DADOS_LEITE.consumo.map(d => d.produto));
   graficoBarras("chartRankingConsumo", "produto", "melhorPosicao", true);
-  graficoBarrasAgrupadas("chartVbpLeite", "estado", SERIES_VBP, " R$");
-  graficoBarras("chartRankingVbp", "atividadePecuaria", "valorBilhoesReais", true, " bi R$");
-  graficoBarrasAgrupadas("chartExportacoesAno", "ano", [{ nome: "Valor US$", campo: "valorExportacaoUsd" }, { nome: "Peso kg", campo: "pesoExportadoKg" }]);
-  graficoPizza("chartDestinoExportacoes", "paisDestino", "percentualParticipacao");
-  graficoBarras("chartProdutosExportados", "produto", "valorExportacaoUsd", true, " US$");
-  graficoBarras("chartImportacoesAno", "ano", "valorImportacaoUsd", false, " US$");
-  graficoPizza("chartOrigemImportacoes", "paisOrigem", "percentualParticipacao");
-  graficoBarras("chartProdutosImportados", "produto", "valorExportacaoUsd", true, " US$");
-  graficoBarrasAgrupadas("chartProducaoPorRebanho", "grupoCabecasBovinos", [{ nome: "Estabelecimentos", campo: "numeroEstabelecimentos" }, { nome: "Leite produzido (mil L)", campo: "quantidadeLeiteProduzido" }]);
-  graficoBarrasAgrupadas("chartProducaoPorCondicao", "condicaoProdutor", [{ nome: "Estabelecimentos", campo: "numeroEstabelecimentos" }, { nome: "Leite produzido (mil L)", campo: "quantidadeLeiteProduzido" }]);
-  graficoLinhas("chartLeiteProjecoes", "ano", ["otimista", "base", "pessimista"], " bi L");
 }
 
 function aplicarFiltros() {
@@ -1170,9 +807,6 @@ function aplicarFiltros() {
   const anosVacasMeso = anosNoPeriodo(ordenarAnos(DADOS_LEITE.vacasMeso.flatMap(d => Object.keys(d).filter(k => /^\d{4}$/.test(k)))));
   const anosRebanho = anosNoPeriodo(ordenarAnos(DADOS_LEITE.rebanhoCO.flatMap(d => Object.keys(d).filter(k => /^\d{4}$/.test(k)))));
   const anosMunicipios = anosNoPeriodo(ordenarAnos(DADOS_LEITE.municipiosProducao.map(d => d.ano)));
-  const anosConsumo = anosNoPeriodo(ANOS_CONSUMO);
-  const anosExportacao = anosNoPeriodo(DADOS_LEITE.exportacoesAno.map(d => String(d.ano)));
-  const anosImportacao = anosNoPeriodo(DADOS_LEITE.importacoesAno.map(d => String(d.ano)));
   const regioes = seriesSelecionadas(SERIES_REGIAO, estadoFiltros.regioes);
   const mesorregioes = SERIES_MESO.filter((_, i) => !estadoFiltros.regioes.length || estadoFiltros.regioes.includes(SERIES_MESO_LABEL[i]));
   const mesorregioesLabel = SERIES_MESO_LABEL.filter(label => !estadoFiltros.regioes.length || estadoFiltros.regioes.includes(label));
@@ -1206,25 +840,7 @@ function aplicarFiltros() {
     seriesProdutividadeMunicipios
   );
 
-  const precos = DADOS_LEITE.precos.filter(d => temIntersecaoProduto(d.produto));
-  const consumo = DADOS_LEITE.consumo.filter(d => temIntersecaoProduto(d.produto));
-  graficos.chartPrecosLacteos?.update(precos, [{ nome: "GO 2020", campo: "go2020" }, { nome: "BR 2020", campo: "br2020" }, { nome: "GO 2021", campo: "go2021" }, { nome: "BR 2021", campo: "br2021" }]);
-  graficos.chartConsumoLacteos?.update(dadosPorAno(consumo, "produto", anosConsumo, consumo.map(d => d.produto)), consumo.map(d => d.produto));
   graficos.chartRankingConsumo?.update(DADOS_LEITE.rankingConsumo.filter(d => temIntersecaoProduto(d.produto)));
-  graficos.chartVbpLeite?.update(filtrarPorCampo(DADOS_LEITE.vbpEstados, "estado", estadoFiltros.ufs), SERIES_VBP);
-  graficos.chartRankingVbp?.update(DADOS_LEITE.vbpRanking.filter(d => temIntersecaoProduto(d.atividadePecuaria)));
-
-  graficos.chartExportacoesAno?.update(DADOS_LEITE.exportacoesAno.filter(d => anosExportacao.includes(String(d.ano))), [{ nome: "Valor US$", campo: "valorExportacaoUsd" }, { nome: "Peso kg", campo: "pesoExportadoKg" }]);
-  graficos.chartDestinoExportacoes?.update(DADOS_LEITE.destinoExportacoes);
-  graficos.chartProdutosExportados?.update(DADOS_LEITE.produtosExportados.filter(d => temIntersecaoProduto(d.produto)));
-  graficos.chartImportacoesAno?.update(DADOS_LEITE.importacoesAno.filter(d => anosImportacao.includes(String(d.ano))));
-  graficos.chartOrigemImportacoes?.update(DADOS_LEITE.origemImportacoes);
-  graficos.chartProdutosImportados?.update(DADOS_LEITE.produtosImportados.filter(d => temIntersecaoProduto(d.produto)));
-
-  graficos.chartProducaoPorRebanho?.update(DADOS_LEITE.caracteristicasGrupo.filter(d => temIntersecaoProduto(d.grupoCabecasBovinos)), [{ nome: "Estabelecimentos", campo: "numeroEstabelecimentos" }, { nome: "Leite produzido (mil L)", campo: "quantidadeLeiteProduzido" }]);
-  graficos.chartProducaoPorCondicao?.update(DADOS_LEITE.caracteristicasCondicao.filter(d => temIntersecaoProduto(d.condicaoProdutor)), [{ nome: "Estabelecimentos", campo: "numeroEstabelecimentos" }, { nome: "Leite produzido (mil L)", campo: "quantidadeLeiteProduzido" }]);
-  const projecoes = ANOS_PROJECAO.map((ano, i) => ({ ano, otimista: [3.809,3.982,4.164,4.354,4.552,4.76,4.977,5.204,5.441,5.689,5.948,6.22][i], base: [3.809,3.927,4.049,4.175,4.304,4.438,4.576,4.718,4.863,5.014,5.17,5.33][i], pessimista: [3.809,3.836,3.864,3.891,3.919,3.948,3.976,4.005,4.034,4.063,4.092,4.122][i] }));
-  graficos.chartLeiteProjecoes?.update(projecoes, ["otimista", "base", "pessimista"]);
 
   atualizarVisibilidadeCards();
   atualizarResumoFiltros();
@@ -1304,12 +920,12 @@ function atualizarLabelsDropdowns() {
   atualizarLabelDropdown("filtroProdutoBtn", estadoFiltros.produtos, "Todos");
 }
 function inicializarFiltros() {
-  setSelectOptions("filtroAnoInicio", Array.from(new Set([...ANOS_CONSUMO, ...ANOS_PRODUCAO, ...DADOS_LEITE.exportacoesAno.map(d => String(d.ano)), ...DADOS_LEITE.importacoesAno.map(d => String(d.ano))])).sort());
-  setSelectOptions("filtroAnoFim", Array.from(new Set([...ANOS_CONSUMO, ...ANOS_PRODUCAO, ...DADOS_LEITE.exportacoesAno.map(d => String(d.ano)), ...DADOS_LEITE.importacoesAno.map(d => String(d.ano))])).sort());
+  setSelectOptions("filtroAnoInicio", ANOS_PRODUCAO);
+  setSelectOptions("filtroAnoFim", ANOS_PRODUCAO);
   document.getElementById("filtroAnoInicio").value = estadoFiltros.anoInicio;
   document.getElementById("filtroAnoFim").value = estadoFiltros.anoFim;
   setDropdownOptions("filtroRegiaoMenu", [...SERIES_REGIAO, ...SERIES_MESO_LABEL]);
-  setDropdownOptions("filtroUfMenu", Array.from(new Set([...SERIES_PRODUCAO_UF, ...DADOS_LEITE.producaoCO.map(d => d.uf), ...DADOS_LEITE.vbpEstados.map(d => d.estado)])).sort((a, b) => a.localeCompare(b, "pt-BR")));
+  setDropdownOptions("filtroUfMenu", Array.from(new Set([...SERIES_PRODUCAO_UF, ...DADOS_LEITE.producaoCO.map(d => d.uf)])).sort((a, b) => a.localeCompare(b, "pt-BR")));
   const municipiosOrdenados = TODOS_MUNICIPIOS.sort((a, b) => a.localeCompare(b, "pt-BR"));
   setDropdownOptions("filtroMunicipioMenu", municipiosOrdenados);
   setDropdownOptions("filtroProdutoMenu", PRODUTOS_FILTRO);
@@ -1335,7 +951,6 @@ function inicializarFiltros() {
   document.getElementById("btnLimparFiltros")?.addEventListener("click", limparFiltros);
 }
 async function inicializarDashboardLeite() {
-  comentarVisualizacoesSemEndpoint();
   await carregarDadosNovaApiLeite();
   inicializarFiltros();
   inicializarEstruturaGraficos();

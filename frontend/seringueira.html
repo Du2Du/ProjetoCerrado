@@ -247,7 +247,6 @@
         <button class="filter-btn active" type="button" data-filter="all">Todos</button>
         <button class="filter-btn" type="button" data-filter="producao">Produção</button>
         <button class="filter-btn" type="button" data-filter="area">Área</button>
-        <button class="filter-btn" type="button" data-filter="custo">Custo</button>
       </div>
     </div>
 
@@ -338,7 +337,7 @@
               </div>
             </div>
           </div>
-          <div class="row g-4">
+<div class="row g-4">
             <div class="col-lg-6" data-category="producao">
               <div class="chart-card" role="figure" aria-label="Gráfico: Evolução da produção de borracha">
                 <div class="chart-card__title">Evolução da Produção</div>
@@ -396,13 +395,7 @@
                 <div id="chartIndicadoresBorracha" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
-            <div class="col-12" data-category="custo">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Custo de produção da borracha no Centro-Oeste">
-                <div class="chart-card__title">Custo de Produção da Borracha</div>
-                <div class="chart-card__sub">R$ por hectare e R$ por kg (2012–2021)</div>
-                <div id="chartCustoBorracha" class="chart-area" aria-hidden="true"></div>
-              </div>
-            </div>
+
           </div>
         </div>
 
@@ -441,103 +434,6 @@
                 <div class="kpi-label">Potencial CO</div>
                 <div class="kpi-value">+40<span class="kpi-unit">%</span></div><span
                   class="kpi-badge kpi-badge--up">expansão possível</span>
-              </div>
-            </div>
-          </div>
-          <div class="row g-4">
-            <div class="col-lg-7" data-category="producao">
-              <div class="chart-card" role="figure"
-                aria-label="Gráfico: Maiores países produtores de borracha por área">
-                <div class="chart-card__title">Maiores Países Produtores — Área Plantada</div>
-                <div class="chart-card__sub">Milhões de hectares de Hevea brasiliensis</div>
-                <div id="chartMundo" class="chart-area chart-area--tall" aria-hidden="true"></div>
-              </div>
-            </div>
-            <div class="col-lg-5">
-              <div id="tabelaRankingMundial" class="table-card">
-                <div class="table-card__head">
-                  <div class="chart-card__title">Ranking Mundial</div>
-                  <div class="chart-card__sub">Área plantada de seringueira</div>
-                </div>
-                <div class="table-responsive">
-                  <table class="table table-obs" aria-label="Ranking mundial de produtores de borracha natural">
-                    <thead>
-                      <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">País</th>
-                        <th scope="col" class="text-end">Área (mi ha)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td><span class="badge-rank">1</span></td>
-                        <td>Indonésia</td>
-                        <td class="text-end num">12,5</td>
-                      </tr>
-                      <tr>
-                        <td><span class="badge-rank badge-rank--2">2</span></td>
-                        <td>Tailândia</td>
-                        <td class="text-end num">5,2</td>
-                      </tr>
-                      <tr>
-                        <td><span class="badge-rank badge-rank--3">3</span></td>
-                        <td>Vietnã</td>
-                        <td class="text-end num">4,2</td>
-                      </tr>
-                      <tr>
-                        <td>4</td>
-                        <td>Malásia</td>
-                        <td class="text-end num">2,2</td>
-                      </tr>
-                      <tr>
-                        <td>5</td>
-                        <td>China</td>
-                        <td class="text-end num">2,1</td>
-                      </tr>
-                      <tr>
-                        <td>6</td>
-                        <td>Índia</td>
-                        <td class="text-end num">1,9</td>
-                      </tr>
-                      <tr>
-                        <td>7</td>
-                        <td><strong>Brasil 🇧🇷</strong></td>
-                        <td class="text-end num"><strong>1,7</strong></td>
-                      </tr>
-                      <tr>
-                        <td>8</td>
-                        <td>Colômbia</td>
-                        <td class="text-end num">1,6</td>
-                      </tr>
-                      <tr>
-                        <td>9</td>
-                        <td>Nigéria</td>
-                        <td class="text-end num">1,5</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="row g-4">
-            <div class="col-lg-6" data-category="producao">
-              <div class="chart-card" role="figure"
-                aria-label="Gráfico: Participação percentual dos maiores produtores mundiais">
-                <div class="chart-card__title">Participação no Mercado Mundial</div>
-                <div class="chart-card__sub">% da área total plantada de seringueira</div>
-                <div id="chartMundoPie" class="chart-area" aria-hidden="true"></div>
-              </div>
-            </div>
-            <div class="col-lg-6" data-category="custo">
-              <div class="info-bar" role="note"><span aria-hidden="true">🌎</span>O Brasil, berço de origem da <em>Hevea
-                  brasiliensis</em>, possui grande potencial de expansão, especialmente nas regiões de Cerrado, que
-                oferecem condições climáticas favoráveis para a heveicultura.</div>
-              <div class="chart-card" role="figure"
-                aria-label="Gráfico: Evolução do custo de produção vs custo por kg no Centro-Oeste">
-                <div class="chart-card__title">Custo/ha vs Custo/kg — CO</div>
-                <div class="chart-card__sub">Evolução comparada (2012–2021)</div>
-                <div id="chartCustoComp" class="chart-area" aria-hidden="true"></div>
               </div>
             </div>
           </div>

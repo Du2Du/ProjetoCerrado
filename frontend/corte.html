@@ -253,8 +253,6 @@
         <button class="filter-btn active" type="button" data-filter="all">Todos</button>
         <button class="filter-btn" type="button" data-filter="rebanho">Rebanho</button>
         <button class="filter-btn" type="button" data-filter="abate">Abate</button>
-        <button class="filter-btn" type="button" data-filter="precos">Preços</button>
-        <button class="filter-btn" type="button" data-filter="consumo">Consumo</button>
         <button class="filter-btn" type="button" data-filter="pastagens">Pastagens</button>
       </div>
     </div>
@@ -277,30 +275,6 @@
         </div>
       </div>
     </div>
-    <div class="filter-cluster filter-cluster--wide">
-      <span class="filter-label">Município</span>
-      <div class="dropdown" data-bs-auto-close="outside">
-        <button id="filtroMunicipioCorteBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
-          data-bs-auto-close="outside" aria-expanded="false">Todos</button>
-        <div class="dropdown-menu filter-dropdown-menu">
-          <input id="buscaMunicipioCorte" class="filter-search w-100 mb-2" type="search" placeholder="Buscar município"
-            aria-label="Buscar município" />
-          <div id="filtroMunicipioCorteMenu"></div>
-        </div>
-      </div>
-    </div>
-    <div class="filter-cluster filter-cluster--wide">
-      <span class="filter-label">País</span>
-      <div class="dropdown" data-bs-auto-close="outside">
-        <button id="filtroPaisCorteBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
-          data-bs-auto-close="outside" aria-expanded="false">Todos</button>
-        <div class="dropdown-menu filter-dropdown-menu">
-          <input id="buscaPaisCorte" class="filter-search w-100 mb-2" type="search" placeholder="Buscar país"
-            aria-label="Buscar país" />
-          <div id="filtroPaisCorteMenu"></div>
-        </div>
-      </div>
-    </div>
     <div class="filter-cluster">
       <span class="filter-label">Trimestre</span>
       <select id="filtroTrimestreCorte" class="filter-select" aria-label="Trimestre do abate">
@@ -309,15 +283,6 @@
         <option value="2º">2º trimestre</option>
         <option value="3º">3º trimestre</option>
         <option value="4º">4º trimestre</option>
-      </select>
-    </div>
-    <div class="filter-cluster">
-      <span class="filter-label">Área mínima</span>
-      <select id="filtroAreaMinCorte" class="filter-select" aria-label="Área mínima de pastagem">
-        <option value="0">Todas</option>
-        <option value="500000">≥ 500 mil ha</option>
-        <option value="1000000">≥ 1 milhão ha</option>
-        <option value="5000000">≥ 5 milhões ha</option>
       </select>
     </div>
     <div class="filter-actions">
@@ -330,10 +295,6 @@
   <div class="tab-nav" role="tablist" aria-label="Seções da pecuária de corte">
     <button class="tab-nav__btn active" role="tab" aria-selected="true" data-tab="ct-rebanho" aria-controls="ct-rebanho"
       id="btn-ct-rebanho">Rebanho &amp; Abate</button>
-    <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="ct-precos" aria-controls="ct-precos"
-      id="btn-ct-precos">Preços</button>
-    <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="ct-mundial" aria-controls="ct-mundial"
-      id="btn-ct-mundial">Consumo</button>
     <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="ct-pastagens" aria-controls="ct-pastagens"
       id="btn-ct-pastagens">Pastagens</button>
     <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="ct-plano" aria-controls="ct-plano"
@@ -343,10 +304,6 @@
   <main id="main-content">
     <section class="tab-scope">
       <div class="container tab-content-obs">
-        <div id="semDadosCorte" class="filter-empty" role="status">
-          Nenhum gráfico tem dados para a combinação de filtros atual.
-        </div>
-
         <!-- ══ TAB: REBANHO & ABATE ══════════════════════════ -->
         <div data-tab-content="ct-rebanho" class="active" role="tabpanel" id="ct-rebanho"
           aria-labelledby="btn-ct-rebanho">
@@ -564,178 +521,6 @@
           </div>
         </div><!-- /tab rebanho -->
 
-        <!-- ══ TAB: PREÇOS ══════════════════════════════════ -->
-        <div data-tab-content="ct-precos" role="tabpanel" id="ct-precos" aria-labelledby="btn-ct-precos">
-          <div class="row mb-2">
-            <div class="col-12">
-              <p class="section-label">Mercado</p>
-              <h2 class="section-title">Preços do Boi Gordo e Carne Bovina</h2>
-              <div class="section-divider"></div>
-            </div>
-          </div>
-
-          <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--terra">
-                <div class="kpi-label">Boi gordo 2023</div>
-                <div class="kpi-value">R$ 285<span class="kpi-unit">/@</span></div>
-                <span class="kpi-badge kpi-badge--down">▼ -10% vs 2022</span>
-              </div>
-            </div>
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--gold">
-                <div class="kpi-label">Pico histórico 2022</div>
-                <div class="kpi-value">R$ 317<span class="kpi-unit">/@</span></div>
-                <span class="kpi-badge kpi-badge--up">Maior valor registrado</span>
-              </div>
-            </div>
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card">
-                <div class="kpi-label">Abate R$/kg 2023</div>
-                <div class="kpi-value">R$ 19,0<span class="kpi-unit">/kg</span></div>
-                <span class="kpi-badge kpi-badge--down">▼ vs 2022</span>
-              </div>
-            </div>
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--light">
-                <div class="kpi-label">Variação 2001–2023</div>
-                <div class="kpi-value">+575<span class="kpi-unit">%</span></div>
-                <span class="kpi-badge kpi-badge--up">boi gordo R$/@</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="row g-4">
-            <div class="col-lg-8">
-              <div class="chart-card" role="figure"
-                aria-label="Gráfico: Série histórica do preço do boi gordo e carne bovina">
-                <div class="chart-card__title">Preços: Boi Gordo (R$/@) &amp; Carne (R$/kg)</div>
-                <div id="subPrecosCorte" class="chart-card__sub">Série anual filtrada</div>
-                <div id="chartPrecos" class="chart-area chart-area--tall" aria-hidden="true"></div>
-              </div>
-            </div>
-            <div class="col-lg-4">
-              <div class="table-card">
-                <div class="table-card__head">
-                  <div class="chart-card__title">Preços Históricos</div>
-                  <div class="chart-card__sub">Boi gordo R$/@ e carne R$/kg</div>
-                </div>
-                <div class="table-responsive">
-                  <table class="table table-obs" aria-label="Preços históricos do boi gordo">
-                    <thead>
-                      <tr>
-                        <th scope="col">Ano</th>
-                        <th scope="col" class="text-end">R$/@</th>
-                        <th scope="col" class="text-end">R$/kg</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>2001</td>
-                        <td class="text-end num">42,35</td>
-                        <td class="text-end num">2,52</td>
-                      </tr>
-                      <tr>
-                        <td>2005</td>
-                        <td class="text-end num">54,63</td>
-                        <td class="text-end num">3,33</td>
-                      </tr>
-                      <tr>
-                        <td>2010</td>
-                        <td class="text-end num">88,52</td>
-                        <td class="text-end num">5,55</td>
-                      </tr>
-                      <tr>
-                        <td>2015</td>
-                        <td class="text-end num">145,45</td>
-                        <td class="text-end num">9,40</td>
-                      </tr>
-                      <tr>
-                        <td>2018</td>
-                        <td class="text-end num">144,99</td>
-                        <td class="text-end num">9,88</td>
-                      </tr>
-                      <tr>
-                        <td>2020</td>
-                        <td class="text-end num">226,29</td>
-                        <td class="text-end num">15,27</td>
-                      </tr>
-                      <tr>
-                        <td>2021</td>
-                        <td class="text-end num">305,65</td>
-                        <td class="text-end num">19,83</td>
-                      </tr>
-                      <tr>
-                        <td>2022</td>
-                        <td class="text-end num">317,74</td>
-                        <td class="text-end num">20,49</td>
-                      </tr>
-                      <tr>
-                        <td>2023</td>
-                        <td class="text-end num">285,82</td>
-                        <td class="text-end num">19,01</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div><!-- /tab precos -->
-
-        <!-- ══ TAB: MUNDIAL ══════════════════════════════════ -->
-        <div data-tab-content="ct-mundial" role="tabpanel" id="ct-mundial" aria-labelledby="btn-ct-mundial">
-          <div class="row mb-2">
-            <div class="col-12">
-              <p class="section-label">Contexto Internacional</p>
-              <h2 class="section-title">Consumo de Carne Bovina</h2>
-              <div class="section-divider"></div>
-            </div>
-          </div>
-
-          <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card">
-                <div class="kpi-label">Produção Mundial 2021</div>
-                <div class="kpi-value">70,7<span class="kpi-unit">mi t</span></div>
-                <span class="kpi-badge kpi-badge--up">eq. carcaça</span>
-              </div>
-            </div>
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--terra">
-                <div class="kpi-label">Brasil 2021</div>
-                <div class="kpi-value">8,62<span class="kpi-unit">mi t</span></div>
-                <span class="kpi-badge kpi-badge--neutral">2º produtor mundial</span>
-              </div>
-            </div>
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--gold">
-                <div class="kpi-label">EUA 2021 (1º)</div>
-                <div class="kpi-value">12,3<span class="kpi-unit">mi t</span></div>
-                <span class="kpi-badge kpi-badge--up">Maior produtor</span>
-              </div>
-            </div>
-            <div class="col-6 col-md-3 fade-up">
-              <div class="kpi-card kpi-card--light">
-                <div class="kpi-label">Participação Brasil</div>
-                <div class="kpi-value">12,2<span class="kpi-unit">%</span></div>
-                <span class="kpi-badge kpi-badge--up">da produção global</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="row g-4">
-            <div class="col-12">
-              <div class="chart-card" role="figure"
-                aria-label="Gráfico: Produção mundial de carne bovina por país — 2012 a 2021">
-                <div class="chart-card__title">Consumo de Carne Bovina</div>
-                <div id="subConsumoCarne" class="chart-card__sub">Mil toneladas — OECD</div>
-                <div id="chartConsumoCarne" class="chart-area chart-area--tall" aria-hidden="true"></div>
-              </div>
-            </div>
-          </div>
-        </div><!-- /tab mundial -->
-
         <!-- ══ TAB: PASTAGENS ════════════════════════════════ -->
         <div data-tab-content="ct-pastagens" role="tabpanel" id="ct-pastagens" aria-labelledby="btn-ct-pastagens">
           <div class="row mb-2">
@@ -773,75 +558,6 @@
                 <div class="kpi-label">Mato Grosso do Sul</div>
                 <div class="kpi-value">15,3<span class="kpi-unit">mi ha</span></div>
                 <span class="kpi-badge kpi-badge--neutral">2º estado CO</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="row g-4">
-            <div class="col-lg-4">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Área de pastagem por UF no Brasil">
-                <div class="chart-card__head">
-                  <div>
-                    <div class="chart-card__title">Área de Pastagem por UF — Brasil</div>
-                    <div class="chart-card__sub">Ranking em hectares</div>
-                  </div>
-                  <div class="chart-card__tools">
-                    <select id="filtroTopPastagens" class="filter-select" aria-label="Quantidade de itens no ranking">
-                      <option value="5">Top 5</option>
-                      <option value="10" selected>Top 10</option>
-                    </select>
-                  </div>
-                </div>
-                <div id="chartPastagemUfBr" class="chart-area" aria-hidden="true"></div>
-              </div>
-            </div>
-            <div class="col-lg-4">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Área de pastagem por município no Brasil">
-                <div class="chart-card__title">Área de Pastagem por Município — Brasil</div>
-                <div class="chart-card__sub">Top 10 em hectares</div>
-                <div id="chartPastagemMunicipioBr" class="chart-area" aria-hidden="true"></div>
-              </div>
-            </div>
-            <div class="col-lg-4">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Área de pastagem por bioma no Brasil">
-                <div class="chart-card__title">Área de Pastagem por Bioma — Brasil</div>
-                <div class="chart-card__sub">Hectares</div>
-                <div id="chartPastagemBiomaBr" class="chart-area" aria-hidden="true"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="row g-4">
-            <div class="col-lg-4">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Área de pastagem por UF no Centro-Oeste">
-                <div class="chart-card__title">Área de Pastagem por UF — Centro-Oeste</div>
-                <div class="chart-card__sub">Ranking em hectares</div>
-                <div id="chartPastagemUfCo" class="chart-area" aria-hidden="true"></div>
-              </div>
-            </div>
-            <div class="col-lg-4">
-              <div class="chart-card" role="figure"
-                aria-label="Gráfico: Área de pastagem por município no Centro-Oeste">
-                <div class="chart-card__title">Área de Pastagem por Município — Centro-Oeste</div>
-                <div class="chart-card__sub">Top 10 em hectares</div>
-                <div id="chartPastagemMunicipioCo" class="chart-area" aria-hidden="true"></div>
-              </div>
-            </div>
-            <div class="col-lg-4">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Área de pastagem por bioma no Centro-Oeste">
-                <div class="chart-card__title">Área de Pastagem por Bioma — Centro-Oeste</div>
-                <div class="chart-card__sub">Hectares</div>
-                <div id="chartPastagemBiomaCo" class="chart-area" aria-hidden="true"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="row g-4">
-            <div class="col-12">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Qualidade das pastagens por classe">
-                <div class="chart-card__title">Qualidade das Pastagens</div>
-                <div class="chart-card__sub">Área de pastagem por classe — Centro-Oeste (2021)</div>
-                <div id="chartQualidadePastagens" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
           </div>
@@ -982,15 +698,7 @@
             </div>
           </div>
           <div class="row g-4">
-            <div class="col-lg-8">
-              <div class="chart-card" role="figure"
-                aria-label="Gráfico: Custo de recuperação de pastagens degradadas no Cerrado">
-                <div class="chart-card__title">Custo de Recuperação de Pastagens — Cerrado</div>
-                <div class="chart-card__sub">R$/hectare — custo atual vs. projeção 2033</div>
-                <div id="chartCustoPastagens" class="chart-area" aria-hidden="true"></div>
-              </div>
-            </div>
-            <div class="col-lg-4">
+            <div class="col-12">
               <div class="table-card">
                 <div class="table-card__head">
                   <div class="chart-card__title">Custo por Nível de Degradação</div>

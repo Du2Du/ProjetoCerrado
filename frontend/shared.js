@@ -1,30 +1,3 @@
-// ── SHARED PALETTE & HELPERS ──────────────────────────────
-const PALETTE = [
-    "#4a7c3f", "#c8943a", "#a0622b", "#6fa65e", "#2d5c24",
-    "#e8a84c", "#7fb069", "#5c4033", "#3a6b4a", "#d4a843"
-];
-
-function makeRoot(divId) {
-    const root = am5.Root.new(divId);
-    root.setThemes([am5themes_Animated.new(root)]);
-    root.numberFormatter.set("numberFormat", "#,###");
-    return root;
-}
-
-function styleAxis(axis) {
-    axis.get("renderer").labels.template.setAll({
-        fontSize: 11, fontFamily: "Arial, sans-serif", fill: am5.color("#5a5a5a")
-    });
-}
-
-function makeLegend(chart, root) {
-    const l = chart.children.push(am5.Legend.new(root, {
-        centerX: am5.p50, x: am5.p50, marginTop: 8
-    }));
-    l.labels.template.setAll({ fontSize: 11, fontFamily: "Arial, sans-serif" });
-    return l;
-}
-
 function atualizarKpiComApi(id, { label, value, unit = "", badge = "", tone = "neutral", state = "ready" } = {}) {
     const card = document.getElementById(id);
     if (!card) return;
@@ -97,20 +70,6 @@ function definirEstadoDeDados(ids, estado, mensagem = "") {
     });
 }
 
-function comentarVisualizacoes(ids) {
-    ids.forEach(id => {
-        const container = containerDeDados(id);
-        if (!container) return;
-        const bloco = container.closest("[data-category]") || container.closest("[class*='col-']") || container;
-        const linha = bloco.closest(".row");
-        const titulo = container.querySelector(".chart-card__title")?.textContent.trim() || id;
-        bloco.replaceWith(document.createComment(` Visualização comentada: ${titulo} — endpoint não documentado. `));
-        // Uma linha Bootstrap vazia mantém a margem superior negativa do gutter e
-        // puxa o próximo bloco para cima. Removê-la preserva o fluxo da página.
-        if (linha && linha.children.length === 0) linha.remove();
-    });
-}
-
 function marcarFonteDeDados(ids, fonte) {
     ids.forEach(id => {
         const container = containerDeDados(id);
@@ -124,7 +83,6 @@ function marcarFonteDeDados(ids, fonte) {
 
 window.dashboardDataUi = Object.freeze({
     definirEstado: definirEstadoDeDados,
-    comentar: comentarVisualizacoes,
     marcarFonte: marcarFonteDeDados
 });
 

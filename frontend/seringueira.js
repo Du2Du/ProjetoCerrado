@@ -27,7 +27,6 @@ let dadosIndicadores = [];
 
 const API_SERINGUEIRA = "https://api.projetocerradoifg.org/webhook/seringueira";
 const ENDPOINTS_SERINGUEIRA = ["pam", "censo"];
-const VALORES_SIDRA_AUSENTES = new Set(["...", "..", "-", "X", ""]);
 const requisicoesSeringueira = new Map();
 const PRODUTO_BORRACHA = "Borracha (látex coagulado)";
 const ORDEM_LOCALIDADES = ["Centro-Oeste", "Mato Grosso do Sul", "Mato Grosso", "Goiás"];
@@ -39,19 +38,9 @@ const ALVOS_API = Object.freeze({
   estabelecimentos: ["chartEstabelecimentosSeringueira"],
   indicadores: ["chartIndicadoresBorracha"]
 });
-const VISUALIZACOES_SEM_ENDPOINT = [
-  "chartCustoBorracha", "chartMundo", "tabelaRankingMundial", "chartMundoPie", "chartCustoComp"
-];
 let periodoPadrao = { inicio: null, fim: null };
 
 class ErroDadosVazios extends Error {}
-
-function numeroSidra(valor) {
-  const texto = String(valor ?? "").trim();
-  if (VALORES_SIDRA_AUSENTES.has(texto)) return null;
-  const numero = Number(texto);
-  return Number.isFinite(numero) ? numero : null;
-}
 
 function ordenarAnos(anos) {
   return Array.from(new Set(anos.map(Number).filter(Number.isInteger))).sort((a, b) => a - b);
@@ -102,16 +91,6 @@ function definirEstadoVisualizacao(ids, estado, mensagem = "") {
   });
 }
 
-function comentarVisualizacoesSemEndpoint() {
-  VISUALIZACOES_SEM_ENDPOINT.forEach(id => {
-    const container = containerVisualizacao(id);
-    if (!container) return;
-    const bloco = container.closest("[data-category]") || container.closest("[class*='col-']") || container;
-    const titulo = container.querySelector(".chart-card__title")?.textContent.trim() || id;
-    bloco.replaceWith(document.createComment(` Visualização comentada: ${titulo} — endpoint não documentado. `));
-  });
-}
-
 async function buscarEndpointSeringueira(nome) {
   if (requisicoesSeringueira.has(nome)) return requisicoesSeringueira.get(nome);
   const requisicao = (async () => {
@@ -133,63 +112,6 @@ async function buscarEndpointSeringueira(nome) {
   })();
   requisicoesSeringueira.set(nome, requisicao);
   return requisicao;
-}
-
-function validarLinhasSidra(linhas, { unidade, produto, variaveis } = {}) {
-  if (!Array.isArray(linhas) || !linhas.length) throw new ErroDadosVazios("O Servidor não retornou registros.");
-  if (unidade && linhas.some(linha => linha.MN !== unidade)) throw new Error(`Unidade inesperada no SIDRA: ${unidade}.`);
-  if (produto && linhas.some(linha => linha.D4N !== produto)) throw new Error(`Produto inesperado no SIDRA: ${produto}.`);
-  if (variaveis && linhas.some(linha => !variaveis.includes(linha.D2C))) throw new Error("Variável inesperada na resposta do Servidor.");
-  const validas = linhas.filter(linha => numeroSidra(linha.V) !== null);
-  if (!validas.length) throw new ErroDadosVazios("O Servidor não retornou valores válidos.");
-  return validas;
-}
-
-function mapearSerieSidra(linhas, { campo, unidade, variavel }) {
-  const validas = validarLinhasSidra(linhas, { unidade, produto: PRODUTO_BORRACHA, variaveis: [variavel] });
-  return validas.map(linha => ({
-    ano: Number(linha.D3N),
-    uf: linha.D1N,
-    produto: linha.D4N,
-    unidadeMedida: linha.MN,
-    [campo]: numeroSidra(linha.V)
-  })).sort((a, b) => a.ano - b.ano || ORDEM_LOCALIDADES.indexOf(a.uf) - ORDEM_LOCALIDADES.indexOf(b.uf));
-}
-
-function mapearAreas(linhas) {
-  validarLinhasSidra(linhas, { unidade: "Hectares", produto: PRODUTO_BORRACHA, variaveis: ["8331", "216"] });
-  const colhida = mapearSerieSidra(linhas.filter(linha => linha.D2C === "216"), {
-    campo: "areaColhidaHectares", unidade: "Hectares", variavel: "216"
-  });
-  const destinada = mapearSerieSidra(linhas.filter(linha => linha.D2C === "8331"), {
-    campo: "areaDestinadaColheitaHectares", unidade: "Hectares", variavel: "8331"
-  });
-  const colhidaPorChave = new Map(colhida.map(item => [`${item.ano}|${item.uf}`, item.areaColhidaHectares]));
-  const perda = destinada.map(item => {
-    const areaColhida = colhidaPorChave.get(`${item.ano}|${item.uf}`);
-    if (areaColhida === undefined || !item.areaDestinadaColheitaHectares) return null;
-    return {
-      ano: item.ano,
-      uf: item.uf,
-      produto: item.produto,
-      unidadeMedida: "%",
-      percentualPerdaArea: (item.areaDestinadaColheitaHectares - areaColhida) / item.areaDestinadaColheitaHectares * 100
-    };
-  }).filter(Boolean);
-  if (!perda.length) throw new ErroDadosVazios("Não foi possível calcular a perda de área.");
-  return { colhida, destinada, perda };
-}
-
-function mapearEstabelecimentos(linhas) {
-  const validas = validarLinhasSidra(linhas, { unidade: "Unidades", variaveis: ["9504"] });
-  const dados = validas.map(linha => ({
-    ano: Number(linha.D3N),
-    condicaoProdutor: linha.D5N,
-    produto: linha.D4N,
-    numeroEstabelecimentos: numeroSidra(linha.V)
-  }));
-  if (!dados.length) throw new ErroDadosVazios("O Servidor não retornou estabelecimentos válidos.");
-  return dados;
 }
 
 function montarIndicadores() {
@@ -372,25 +294,6 @@ async function carregarDadosApiSeringueira() {
   atualizarCardsSeringueira();
 }
 
-const dadosCusto = anosSeringueira.map((ano, i) => ({
-  ano,
-  custoProducaoPorHectare: [3151.2,3307.99,3692.58,3905.03,4117.57,7941.73,7736.33,8388.31,8833.52,8873.64][i],
-  custoProducaoPorKg:      [2.52,2.24,2.93,3.1,3.3,3.2,3.15,3.4,3.54,3.89][i]
-}));
-
-const dadosRankingMundial = [
-  { pais:"Nigéria",   area:1.5,  isBrasil:false },
-  { pais:"Colômbia",  area:1.6,  isBrasil:false },
-  { pais:"Brasil",    area:1.7,  isBrasil:true  },
-  { pais:"Índia",     area:1.9,  isBrasil:false },
-  { pais:"China",     area:2.1,  isBrasil:false },
-  { pais:"Malásia",   area:2.2,  isBrasil:false },
-  { pais:"Vietnã",    area:4.2,  isBrasil:false },
-  { pais:"Tailândia", area:5.2,  isBrasil:false },
-  { pais:"Indonésia", area:12.5, isBrasil:false }
-];
-
-// ── FILTRO HELPERS ───────────────────────────────────────────────────
 function anosVisiveis() {
   return anosSeringueira.filter(a => a >= estadoFiltros.anoInicio && a <= estadoFiltros.anoFim);
 }
@@ -539,80 +442,6 @@ function criarGraficoIndicadores() {
   criarLegenda(chart, root).data.setAll(chart.series.values);
   chart.appear(1000, 100);
   graficosFixos["chartIndicadoresBorracha"] = { eixoX, seriesList, getDados };
-}
-
-function criarGraficoCusto(containerId) {
-  const ctx = inicializarXY(containerId, { layoutVertical: true });
-  if (!ctx) return;
-  const { root, chart } = ctx;
-  const getDados = () => dadosCusto.filter(d => d.ano >= estadoFiltros.anoInicio && d.ano <= estadoFiltros.anoFim).map(d => ({ ...d, ano: String(d.ano) }));
-  const dados = getDados();
-
-  const eixoX  = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 40 }), tooltip: am5.Tooltip.new(root, {}) }));
-  const eixoY  = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
-  const eixoY2 = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, { opposite: true }) }));
-  configurarEixo(eixoX); configurarEixo(eixoY); configurarEixo(eixoY2);
-  eixoX.data.setAll(dados);
-
-  const colunas = chart.series.push(am5xy.ColumnSeries.new(root, {
-    name: "R$/ha", xAxis: eixoX, yAxis: eixoY,
-    valueYField: "custoProducaoPorHectare", categoryXField: "ano",
-    fill: am5.color(P[0]), stroke: am5.color(P[0]),
-    tooltip: am5.Tooltip.new(root, { labelText: "R$ {valueY}/ha" })
-  }));
-  colunas.columns.template.setAll({ cornerRadiusTL: 3, cornerRadiusTR: 3, width: am5.percent(55) });
-  colunas.data.setAll(dados);
-
-  const linha = chart.series.push(am5xy.LineSeries.new(root, {
-    name: "R$/kg", xAxis: eixoX, yAxis: eixoY2,
-    valueYField: "custoProducaoPorKg", categoryXField: "ano",
-    stroke: am5.color(P[1]), fill: am5.color(P[1]),
-    tooltip: am5.Tooltip.new(root, { labelText: "R$ {valueY}/kg" })
-  }));
-  linha.strokes.template.setAll({ strokeWidth: 2.5 });
-  linha.bullets.push(() => am5.Bullet.new(root, { sprite: am5.Circle.new(root, { radius: 4, fill: linha.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2 }) }));
-  linha.data.setAll(dados);
-
-  criarLegenda(chart, root).data.setAll(chart.series.values);
-  chart.appear(1000, 100);
-  graficosFixos[containerId] = { eixoX, seriesList: [colunas, linha], getDados };
-}
-
-function criarGraficoRankingMundial() {
-  const ctx = inicializarXY("chartMundo");
-  if (!ctx) return;
-  const { root, chart } = ctx;
-  const eixoY = chart.yAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "pais", renderer: am5xy.AxisRendererY.new(root, { minGridDistance: 20 }) }));
-  const eixoX = chart.xAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererX.new(root, {}) }));
-  configurarEixo(eixoX); configurarEixo(eixoY);
-  eixoY.data.setAll(dadosRankingMundial);
-  const serie = chart.series.push(am5xy.ColumnSeries.new(root, {
-    name: "Área (mi ha)", xAxis: eixoX, yAxis: eixoY,
-    valueXField: "area", categoryYField: "pais",
-    tooltip: am5.Tooltip.new(root, { labelText: "{categoryY}: {valueX} mi ha" })
-  }));
-  serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65) });
-  serie.columns.template.adapters.add("fill",   (_, t) => am5.color(t.dataItem?.dataContext?.isBrasil ? P[2] : P[0]));
-  serie.columns.template.adapters.add("stroke",  (_, t) => am5.color(t.dataItem?.dataContext?.isBrasil ? P[2] : P[0]));
-  serie.data.setAll(dadosRankingMundial);
-  chart.appear(1000, 100);
-}
-
-function criarGraficoParticipacaoMundial() {
-  if (!document.getElementById("chartMundoPie")) return;
-  const root = am5.Root.new("chartMundoPie");
-  root.setThemes([am5themes_Animated.new(root)]);
-  root.numberFormatter.set("numberFormat", "#,###.##");
-  rootsSeringueira.push(root);
-  const chart = root.container.children.push(am5percent.PieChart.new(root, { layout: root.verticalLayout, innerRadius: am5.percent(55) }));
-  const serie = chart.series.push(am5percent.PieSeries.new(root, { valueField: "area", categoryField: "pais" }));
-  serie.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
-  serie.data.setAll([...dadosRankingMundial].reverse());
-  serie.get("colors").set("colors", P.map(c => am5.color(c)));
-  const legenda = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 10 }));
-  legenda.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
-  legenda.data.setAll(serie.dataItems);
-  chart.appear(1000, 100);
 }
 
 // ── APLICAR FILTROS ──────────────────────────────────────────────────
@@ -784,7 +613,6 @@ function inicializarFiltrosUI() {
 
 // ── MAIN ─────────────────────────────────────────────────────────────
 async function inicializarDashboard() {
-  comentarVisualizacoesSemEndpoint();
   await carregarDadosApiSeringueira();
   criarGraficoLinhasUF("chartProducaoSeringueira",   dadosProducao,     "quantidadeProduzidaToneladas",    "t");
   criarGraficoLinhasUF("chartAreaColhidaSeringueira",dadosAreaColhida,  "areaColhidaHectares",             "ha");
