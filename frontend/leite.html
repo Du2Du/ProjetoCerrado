@@ -180,39 +180,8 @@
 <body>
   <a class="skip-link" href="#main-content">Ir para o conteúdo principal</a>
 
-  <nav class="navbar-obs" role="navigation" aria-label="Navegação principal">
-    <div class="container">
-      <div class="d-flex align-items-center justify-content-between w-100">
-        <a class="navbar-brand" href="index.html" aria-label="Projeto Cerrado — página inicial">
-          <img class="brand-logo" src="public/img/logo.avif" alt="Projeto Cerrado" />
-        </a>
-        <ul class="desktop-nav nav d-none d-md-flex" role="list">
-          <li><a class="nav-link" href="index.html">Início</a></li>
-          <li><a class="nav-link active-page" href="leite.html">Pecuária de Leite</a></li>
-          <li><a class="nav-link" href="corte.html">Pecuária de Corte</a></li>
-          <li><a class="nav-link" href="eucalipto.html">Floresta Plantada do Eucalipto</a></li>
-          <li><a class="nav-link" href="seringueira.html">Floresta Plantada da Seringueira</a></li>
-          <li><a class="nav-link" href="cursos.html">Capacitações</a></li>
-          <li><a class="nav-link" href="diagnostico.html">Diagnóstico</a></li>
-        </ul>
-        <button class="navbar-toggler d-md-none border-0 bg-transparent" type="button" data-bs-toggle="collapse"
-          data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false" aria-label="Abrir menu">
-          <span style="color:var(--verde);font-size:1.4rem;">&#9776;</span>
-        </button>
-      </div>
-      <div class="collapse d-md-none" id="mobileNav">
-        <ul class="nav flex-column py-2" role="list">
-          <li><a class="nav-link" href="index.html">Início</a></li>
-          <li><a class="nav-link active-page" href="leite.html">Pecuária de Leite</a></li>
-          <li><a class="nav-link" href="corte.html">Pecuária de Corte</a></li>
-          <li><a class="nav-link" href="eucalipto.html">Floresta Plantada do Eucalipto</a></li>
-          <li><a class="nav-link" href="seringueira.html">Floresta Plantada da Seringueira</a></li>
-          <li><a class="nav-link" href="cursos.html">Capacitações</a></li>
-          <li><a class="nav-link" href="diagnostico.html">Diagnóstico</a></li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+  <div data-site-header></div>
+  <script src="components/site-layout.js" defer></script>
   <header class="page-hero page-hero--leite" role="banner">
     <div class="container position-relative">
       <span class="page-hero__label">Pecuária de Leite</span>
@@ -813,35 +782,7 @@
     </section>
   </main>
 
-  <footer class="footer" role="contentinfo">
-    <div class="container">
-      <div class="row g-3">
-        <div class="col-lg-4">
-          <div class="footer__title">Pecuária de Leite</div>
-          <p>Indicadores de produção e produtividade leiteira no Brasil e no Centro-Oeste, com recortes de Goiás.</p>
-        </div>
-        <div class="col-lg-4">
-          <div class="footer__title">Outros Painéis</div>
-          <p><a href="corte.html" style="color:rgba(255,255,255,.6)">→ Pecuária de Corte</a><br>
-            <a href="eucalipto.html" style="color:rgba(255,255,255,.6)">→ Eucalipto</a><br>
-            <a href="seringueira.html" style="color:rgba(255,255,255,.6)">→ Seringueira</a><br>
-            <a href="index.html" style="color:rgba(255,255,255,.6)">→ Página Inicial</a>
-          </p>
-        </div>
-        <div class="col-lg-4">
-          <div class="footer__title">Fonte</div>
-          <p>IBGE — Pesquisa Pecuária Municipal (PPM) · SIDRA</p>
-        </div>
-      </div>
-      <div class="footer-logos" aria-label="Instituições parceiras">
-        <img src="public/img/LogoFuntec.png" alt="FUNTEC" />
-        <img src="public/img/logo.png" alt="Projeto Cerrado" />
-<!--        <img src="public/img/logo_mapa.png" alt="Ministério da Agricultura e Pecuária" />-->
-        <img src="public/img/logo_ifg.jpg" alt="Instituto Federal de Goiás" />
-      </div>
-      <div class="footer__bottom d-flex flex-wrap justify-content-between gap-2"><span>© 2026 Projeto Cerrado</span><span>Bootstrap 5 · amCharts 5</span></div>
-    </div>
-  </footer>
+  <div data-site-footer></div>
 
   <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
   <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>

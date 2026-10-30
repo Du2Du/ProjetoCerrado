@@ -451,39 +451,8 @@
   <a class="skip-link" href="#main-content">Ir para o conteúdo principal</a>
 
   <!-- ── NAVBAR ───────────────────────────────────────────────── -->
-  <nav class="navbar-obs" role="navigation" aria-label="Navegação principal">
-    <div class="container">
-      <div class="d-flex align-items-center justify-content-between w-100">
-        <a class="navbar-brand" href="index.html" aria-label="Projeto Cerrado — página inicial">
-          <img class="brand-logo" src="public/img/logo.avif" alt="Projeto Cerrado" />
-        </a>
-        <ul class="desktop-nav nav d-none d-md-flex" role="list">
-          <li><a class="nav-link" href="index.html">Início</a></li>
-          <li><a class="nav-link" href="leite.html">Pecuária de Leite</a></li>
-          <li><a class="nav-link" href="corte.html">Pecuária de Corte</a></li>
-          <li><a class="nav-link" href="eucalipto.html">Floresta Plantada do Eucalipto</a></li>
-          <li><a class="nav-link" href="seringueira.html">Floresta Plantada da Seringueira</a></li>
-          <li><a class="nav-link active-page" href="cursos.html">Capacitações</a></li>
-          <li><a class="nav-link" href="diagnostico.html">Diagnóstico</a></li>
-        </ul>
-        <button class="navbar-toggler d-md-none border-0 bg-transparent" type="button" data-bs-toggle="collapse"
-          data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false" aria-label="Abrir menu">
-          <span style="color:var(--verde);font-size:1.4rem;">&#9776;</span>
-        </button>
-      </div>
-      <div class="collapse d-md-none" id="mobileNav">
-        <ul class="nav flex-column py-2" role="list">
-          <li><a class="nav-link" href="index.html">Início</a></li>
-          <li><a class="nav-link" href="leite.html">Pecuária de Leite</a></li>
-          <li><a class="nav-link" href="corte.html">Pecuária de Corte</a></li>
-          <li><a class="nav-link" href="eucalipto.html">Floresta Plantada do Eucalipto</a></li>
-          <li><a class="nav-link" href="seringueira.html">Floresta Plantada da Seringueira</a></li>
-          <li><a class="nav-link active-page" href="cursos.html">Capacitações</a></li>
-          <li><a class="nav-link" href="diagnostico.html">Diagnóstico</a></li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+  <div data-site-header></div>
+  <script src="components/site-layout.js" defer></script>
 
   <!-- ── HERO ─────────────────────────────────────────────────── -->
   <header class="page-hero page-hero--cursos" role="banner">
@@ -979,39 +948,7 @@
 
   </main>
 
-  <footer class="footer" role="contentinfo">
-    <div class="container">
-      <div class="row g-3">
-        <div class="col-lg-5">
-          <div class="footer__title">Projeto Cerrado</div>
-          <p>Monitoramento de cadeias produtivas do Cerrado. Dados baseados em pesquisas oficiais.</p>
-        </div>
-        <div class="col-lg-4">
-          <div class="footer__title">Cadeias Monitoradas</div>
-          <p>
-            <a href="leite.html" style="color:rgba(255,255,255,.6)">Pecuária de Leite</a><br>
-            <a href="corte.html" style="color:rgba(255,255,255,.6)">Pecuária de Corte</a><br>
-            <a href="eucalipto.html" style="color:rgba(255,255,255,.6)">Floresta Plantada do Eucalipto</a><br>
-            <a href="seringueira.html" style="color:rgba(255,255,255,.6)">Floresta Plantada da Seringueira</a>
-          </p>
-        </div>
-        <div class="col-lg-3">
-          <div class="footer__title">Acessibilidade</div>
-          <p>Site desenvolvido seguindo as diretrizes WCAG 2.1 AA. Navegação por teclado disponível.</p>
-        </div>
-      </div>
-      <div class="footer-logos" aria-label="Instituições parceiras">
-        <img src="public/img/LogoFuntec.png" alt="FUNTEC" />
-        <img src="public/img/logo.png" alt="Projeto Cerrado" />
-<!--        <img src="public/img/logo_mapa.png" alt="Ministério da Agricultura e Pecuária" />-->
-        <img src="public/img/logo_ifg.jpg" alt="Instituto Federal de Goiás" />
-      </div>
-      <div class="footer__bottom d-flex flex-wrap justify-content-between gap-2">
-        <span>© 2026 Projeto Cerrado. Parceria: IFG · MAPA.</span>
-        <span>Bootstrap 5 · IFG Virtual</span>
-      </div>
-    </div>
-  </footer>
+  <div data-site-footer></div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="shared.js"></script>
