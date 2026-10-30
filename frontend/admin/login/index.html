@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Acesso à administração da Biblioteca de Documentos do Projeto Cerrado.">
+  <title>Entrar — Administração do Projeto Cerrado</title>
+  <link rel="icon" href="../../public/favicon.ico">
+  <link rel="stylesheet" href="../../shared.css">
+  <link rel="stylesheet" href="../../documentos.css">
+</head>
+<body class="login-page">
+  <a class="skip-link" href="#login-form">Ir para o formulário de acesso</a>
+  <main class="login-layout">
+    <section class="login-panel" aria-label="Biblioteca do Projeto Cerrado">
+      <div class="login-panel__content">
+        <img src="../../public/img/logo.avif" alt="Projeto Cerrado">
+        <h1>Gestão da Biblioteca de Documentos</h1>
+        <p>Área reservada para cadastro, edição e gerenciamento dos materiais técnicos disponibilizados ao público.</p>
+      </div>
+    </section>
+
+    <section class="login-card-wrap">
+      <div class="login-card">
+        <div class="login-card__eyebrow">Área administrativa</div>
+        <h2>Acesse sua conta</h2>
+        <p class="login-card__intro">Informe seus dados para continuar.</p>
+
+        <form id="login-form" novalidate>
+          <div class="form-field">
+            <label for="usuario">Usuário</label>
+            <input id="usuario" name="usuario" type="text" autocomplete="username" required
+              aria-describedby="usuario-error">
+            <span id="usuario-error" class="field-error"></span>
+          </div>
+          <div class="form-field">
+            <label for="senha">Senha</label>
+            <div class="password-control">
+              <input id="senha" name="senha" type="password" autocomplete="current-password" required
+                aria-describedby="senha-error">
+              <button id="password-toggle" class="password-toggle" type="button" aria-label="Mostrar senha"
+                aria-pressed="false">Mostrar</button>
+            </div>
+            <span id="senha-error" class="field-error"></span>
+          </div>
+          <div id="login-feedback" class="login-feedback" role="alert" aria-live="assertive"></div>
+          <button id="login-submit" class="app-button app-button--primary login-submit" type="submit">Entrar</button>
+        </form>
+
+        <a class="login-back" href="../../documentos/">← Voltar para a biblioteca</a>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="./login.js"></script>
+</body>
+</html>
