@@ -1,59 +1,74 @@
-import { apiConfig, apiRequest, ApiError, wait } from "./api-client.js";
+import {
+  apiRequest,
+  clearCsrfToken,
+  hasCsrfToken,
+  setCsrfToken
+} from "./api-client.js";
 
-const SESSION_KEY = "projeto-cerrado:mock-session";
+function responseObjects(payload) {
+  const root = Array.isArray(payload) ? payload[0] : payload;
+  if (!root || typeof root !== "object") return [];
+  return [root, root.data, root.session, root.auth]
+    .filter((value) => value && typeof value === "object");
+}
 
-function readMockSession() {
-  try {
-    return JSON.parse(window.sessionStorage.getItem(SESSION_KEY) || "null");
-  } catch {
-    return null;
+function captureCsrfToken(payload) {
+  for (const object of responseObjects(payload)) {
+    const candidate = object.csrfToken
+      || object.csrf_token
+      || object.tokenCsrf
+      || object.token_csrf
+      || (typeof object.csrf === "string" ? object.csrf : object.csrf?.token);
+    if (typeof candidate === "string" && candidate.trim()) {
+      setCsrfToken(candidate);
+      return;
+    }
   }
 }
 
-function saveMockSession(session) {
-  window.sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+function normalizeSession(payload) {
+  const objects = responseObjects(payload);
+  const root = objects[0] || {};
+  const data = root.data && typeof root.data === "object" ? root.data : root;
+  const userCandidate = data.user || data.usuario || root.user || root.usuario;
+  const user = userCandidate && typeof userCandidate === "object" ? userCandidate : {};
+  const name = user.name
+    || user.nome
+    || user.username
+    || user.usuario
+    || (typeof userCandidate === "string" ? userCandidate : null)
+    || data.username
+    || (typeof data.usuario === "string" ? data.usuario : null)
+    || "Administrador";
+
+  return { ...data, user: { ...user, name } };
 }
 
 export const authService = Object.freeze({
-  async login({ username, password }) {
-    if (!apiConfig.useMocks) {
-      return apiRequest("/api/auth/login", {
-        method: "POST",
-        body: { username, password }
-      });
-    }
-
-    await wait(650);
-    const simulateInvalidCredentials = new URLSearchParams(window.location.search)
-      .get("simularErro") === "credenciais";
-
-    if (simulateInvalidCredentials || !username.trim() || !password) {
-      throw new ApiError("Usuário ou senha inválidos.", 401);
-    }
-
-    const session = {
-      user: { name: username.trim() },
-      createdAt: new Date().toISOString(),
-      mock: true
-    };
-    saveMockSession(session);
-    return session;
+  async login({ usuario, senha }) {
+    const response = await apiRequest("/api/auth/login", {
+      method: "POST",
+      body: { usuario, senha },
+      notifyOnUnauthorized: false
+    });
+    captureCsrfToken(response);
+    return response;
   },
 
-  async me() {
-    if (!apiConfig.useMocks) return apiRequest("/api/auth/me");
-    await wait(180);
-    const session = readMockSession();
-    if (!session) throw new ApiError("Sessão não encontrada.", 401);
-    return session;
+  async me({ notifyOnUnauthorized = true } = {}) {
+    const response = await apiRequest("/api/auth/me", { notifyOnUnauthorized });
+    captureCsrfToken(response);
+    return normalizeSession(response);
   },
 
   async logout() {
-    if (!apiConfig.useMocks) {
-      return apiRequest("/api/auth/logout", { method: "POST" });
-    }
-    await wait(250);
-    window.sessionStorage.removeItem(SESSION_KEY);
-    return { success: true };
-  }
+    const response = await apiRequest("/api/auth/logout", {
+      method: "POST",
+      requiresCsrf: true
+    });
+    clearCsrfToken();
+    return response;
+  },
+
+  hasCsrfToken
 });

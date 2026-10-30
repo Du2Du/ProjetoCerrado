@@ -28,26 +28,25 @@
 
         <form id="login-form" novalidate>
           <div class="form-field">
-            <label for="username">Usuário</label>
-            <input id="username" name="username" type="text" autocomplete="username" required
-              aria-describedby="username-error">
-            <span id="username-error" class="field-error"></span>
+            <label for="usuario">Usuário</label>
+            <input id="usuario" name="usuario" type="text" autocomplete="username" required
+              aria-describedby="usuario-error">
+            <span id="usuario-error" class="field-error"></span>
           </div>
           <div class="form-field">
-            <label for="password">Senha</label>
+            <label for="senha">Senha</label>
             <div class="password-control">
-              <input id="password" name="password" type="password" autocomplete="current-password" required
-                aria-describedby="password-error">
+              <input id="senha" name="senha" type="password" autocomplete="current-password" required
+                aria-describedby="senha-error">
               <button id="password-toggle" class="password-toggle" type="button" aria-label="Mostrar senha"
                 aria-pressed="false">Mostrar</button>
             </div>
-            <span id="password-error" class="field-error"></span>
+            <span id="senha-error" class="field-error"></span>
           </div>
           <div id="login-feedback" class="login-feedback" role="alert" aria-live="assertive"></div>
           <button id="login-submit" class="app-button app-button--primary login-submit" type="submit">Entrar</button>
         </form>
 
-        <p class="login-note">Ambiente de demonstração: qualquer usuário e senha não vazios permitem o acesso. Esta simulação não oferece segurança real e será substituída pela autenticação da API.</p>
         <a class="login-back" href="../../documentos/">← Voltar para a biblioteca</a>
       </div>
     </section>

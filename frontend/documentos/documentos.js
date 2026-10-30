@@ -1,5 +1,7 @@
 import { documentosService } from "../services/documentos-service.js";
-import { debounce, renderPagination } from "../components/documentos-ui.js";
+import { debounce, renderPagination, setButtonLoading } from "../components/documentos-ui.js";
+
+const FALLBACK_COVER_URL = "/public/img/logo.avif";
 
 const elements = {
   search: document.querySelector("#document-search"),
@@ -10,11 +12,64 @@ const elements = {
   emptyTitle: document.querySelector("#documents-empty-title"),
   emptyMessage: document.querySelector("#documents-empty-message"),
   error: document.querySelector("#documents-error"),
+  errorMessage: document.querySelector("#documents-error-message"),
   retry: document.querySelector("#documents-retry"),
   pagination: document.querySelector("#documents-pagination")
 };
 
 const state = { search: "", page: 1, limit: 10 };
+
+function applyCoverFallback(image) {
+  image.addEventListener("error", () => {
+    if (image.dataset.fallbackApplied) return;
+    image.dataset.fallbackApplied = "true";
+    image.src = FALLBACK_COVER_URL;
+  });
+}
+
+function publicErrorMessage(error) {
+  if (error.status === 0) return "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.";
+  if (error.status === 403) return "O acesso à biblioteca foi negado pelo servidor.";
+  if (error.status >= 500) return "A biblioteca está temporariamente indisponível. Tente novamente em alguns instantes.";
+  return "Não foi possível carregar os documentos. Tente novamente.";
+}
+
+function downloadErrorMessage(error) {
+  if (error.status === 0) return "Falha de conexão. Tente novamente.";
+  if (error.status === 404) return "O arquivo não está mais disponível.";
+  if (error.status >= 500) return "O servidor não conseguiu disponibilizar o PDF.";
+  return "Não foi possível baixar o PDF.";
+}
+
+function downloadFileName(documentData) {
+  const slug = documentData.title
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("pt-BR")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `${slug || "documento"}.pdf`;
+}
+
+async function downloadDocument(documentData, button, feedback) {
+  feedback.textContent = "";
+  setButtonLoading(button, true, "Baixando…");
+  try {
+    const blob = await documentosService.download(documentData.id);
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = downloadFileName(documentData);
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+  } catch (error) {
+    feedback.textContent = downloadErrorMessage(error);
+  } finally {
+    setButtonLoading(button, false);
+  }
+}
 
 function setView(view) {
   elements.loading.hidden = view !== "loading";
@@ -35,6 +90,7 @@ function createDocumentCard(documentData) {
   image.src = documentData.coverUrl;
   image.alt = `Capa do documento ${documentData.title}`;
   image.loading = "lazy";
+  applyCoverFallback(image);
   cover.append(image);
 
   const body = document.createElement("div");
@@ -46,14 +102,17 @@ function createDocumentCard(documentData) {
   title.textContent = documentData.title;
   const description = document.createElement("p");
   description.textContent = documentData.description;
-  const download = document.createElement("a");
+  const download = document.createElement("button");
+  download.type = "button";
   download.className = "app-button app-button--primary document-card__action";
-  download.href = documentData.pdfUrl;
-  download.download = documentData.pdfName || "documento.pdf";
   download.setAttribute("aria-label", `Baixar PDF: ${documentData.title}`);
   download.textContent = "Baixar PDF ↓";
+  const downloadFeedback = document.createElement("span");
+  downloadFeedback.className = "field-error";
+  downloadFeedback.setAttribute("role", "alert");
+  download.addEventListener("click", () => downloadDocument(documentData, download, downloadFeedback));
 
-  body.append(tag, title, description, download);
+  body.append(tag, title, description, download, downloadFeedback);
   article.append(cover, body);
   return article;
 }
@@ -86,7 +145,8 @@ async function loadDocuments({ focusResults = false } = {}) {
     if (focusResults) {
       document.querySelector("#main-content").scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  } catch {
+  } catch (error) {
+    elements.errorMessage.textContent = publicErrorMessage(error);
     setView("error");
   }
 }

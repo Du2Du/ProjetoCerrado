@@ -101,36 +101,123 @@ async function mockList({ search = "", page = 1, limit = 10 } = {}, searchDescri
 
 function toFormData(values) {
   const formData = new FormData();
-  formData.append("title", values.title);
-  formData.append("description", values.description);
-  if (values.coverFile) formData.append("cover", values.coverFile);
+  formData.append("titulo", values.title.trim());
+  formData.append("descricao", values.description.trim());
+  if (values.coverFile) formData.append("imagem", values.coverFile);
   if (values.pdfFile) formData.append("pdf", values.pdfFile);
   return formData;
 }
 
+function contractError(message, details = {}) {
+  return new ApiError(message, 502, {
+    code: "invalid_documents_contract",
+    ...details
+  });
+}
+
+function normalizeDocument(item) {
+  if (!item || typeof item !== "object" || Array.isArray(item)) {
+    throw contractError("A API retornou um documento em formato inválido.");
+  }
+
+  const id = item.uuid;
+  if (typeof id !== "string" || !id.trim()) {
+    throw contractError("A API retornou um documento sem UUID.");
+  }
+  if (typeof item.titulo !== "string" || typeof item.descricao !== "string") {
+    throw contractError("A API retornou um documento sem título ou descrição.", { id });
+  }
+
+  const encodedId = encodeURIComponent(id);
+  return {
+    id,
+    title: item.titulo,
+    description: item.descricao,
+    createdAt: item.created_at || null,
+    updatedAt: item.updated_at || null,
+    active: item.active,
+    coverUrl: `/api/documentos/${encodedId}/imagem`,
+    pdfUrl: `/api/documentos/${encodedId}/download`
+  };
+}
+
+function normalizeListResponse(response) {
+  if (!response || typeof response !== "object" || !Array.isArray(response.items)) {
+    throw contractError("A API retornou uma listagem de documentos inválida.");
+  }
+  const pagination = response.pagination;
+  if (!pagination || typeof pagination !== "object") {
+    throw contractError("A API não retornou os dados de paginação.");
+  }
+
+  const page = Number(pagination.page);
+  const limit = Number(pagination.limit);
+  const totalItems = Number(pagination.total);
+  const totalPages = Number(pagination.totalPages);
+  if (![page, limit, totalItems, totalPages].every(Number.isFinite)) {
+    throw contractError("A API retornou dados de paginação inválidos.");
+  }
+
+  return {
+    items: response.items.map(normalizeDocument),
+    pagination: {
+      page: Math.max(1, page),
+      limit: Math.max(1, limit),
+      totalItems: Math.max(0, totalItems),
+      totalPages: Math.max(0, totalPages)
+    }
+  };
+}
+
+function listQuery(params) {
+  return new URLSearchParams({
+    page: String(params.page || 1),
+    limit: String(params.limit || 10),
+    search: params.search || ""
+  });
+}
+
+async function downloadPdf(id) {
+  let response;
+  try {
+    response = await fetch(`/api/documentos/${encodeURIComponent(id)}/download`, {
+      credentials: "include",
+      headers: { Accept: "application/pdf" }
+    });
+  } catch (cause) {
+    const error = new ApiError("Não foi possível conectar ao servidor.", 0, {
+      code: "network_error"
+    });
+    error.cause = cause;
+    throw error;
+  }
+
+  if (!response.ok) {
+    throw new ApiError("Não foi possível baixar o documento.", response.status);
+  }
+
+  return response.blob();
+}
+
 export const documentosService = Object.freeze({
   async listPublic(params = {}) {
-    if (apiConfig.useMocks) return mockList(params, true);
-    const query = new URLSearchParams({
-      search: params.search || "",
-      page: String(params.page || 1),
-      limit: String(params.limit || 10)
-    });
-    return apiRequest(`/api/documentos?${query}`);
+    if (apiConfig.useDocumentMocks) return mockList(params, true);
+    const response = await apiRequest(`/api/documentos?${listQuery(params)}`);
+    return normalizeListResponse(response);
   },
 
   async listAdmin(params = {}) {
-    if (apiConfig.useMocks) return mockList(params, false);
-    const query = new URLSearchParams({
-      search: params.search || "",
-      page: String(params.page || 1),
-      limit: String(params.limit || 10)
-    });
-    return apiRequest(`/api/documentos?${query}`);
+    if (apiConfig.useDocumentMocks) return mockList(params, false);
+    const response = await apiRequest(`/api/admin/documentos?${listQuery(params)}`);
+    return normalizeListResponse(response);
+  },
+
+  download(id) {
+    return downloadPdf(id);
   },
 
   async create(values) {
-    if (!apiConfig.useMocks) {
+    if (!apiConfig.useDocumentMocks) {
       return apiRequest("/api/admin/documentos", { method: "POST", body: toFormData(values) });
     }
     await wait(700);
@@ -150,7 +237,7 @@ export const documentosService = Object.freeze({
   },
 
   async update(id, values) {
-    if (!apiConfig.useMocks) {
+    if (!apiConfig.useDocumentMocks) {
       return apiRequest(`/api/admin/documentos/${encodeURIComponent(id)}`, {
         method: "PUT",
         body: toFormData(values)
@@ -172,7 +259,7 @@ export const documentosService = Object.freeze({
   },
 
   async remove(id) {
-    if (!apiConfig.useMocks) {
+    if (!apiConfig.useDocumentMocks) {
       return apiRequest(`/api/admin/documentos/${encodeURIComponent(id)}`, { method: "DELETE" });
     }
     await wait(600);

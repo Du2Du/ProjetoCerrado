@@ -1,4 +1,5 @@
 import { authService } from "../../services/auth-service.js";
+import { AUTH_UNAUTHORIZED_EVENT } from "../../services/api-client.js";
 import { documentosService } from "../../services/documentos-service.js";
 import {
   createModalController,
@@ -12,6 +13,7 @@ import {
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_PDF_SIZE = 20 * 1024 * 1024;
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const FALLBACK_COVER_URL = "/public/img/logo.avif";
 
 const elements = {
   userName: document.querySelector("#admin-user-name"),
@@ -24,6 +26,7 @@ const elements = {
   emptyTitle: document.querySelector("#admin-empty-title"),
   emptyMessage: document.querySelector("#admin-empty-message"),
   error: document.querySelector("#admin-error"),
+  errorMessage: document.querySelector("#admin-error-message"),
   retry: document.querySelector("#admin-retry"),
   tableCard: document.querySelector("#admin-table-card"),
   tableBody: document.querySelector("#documents-table-body"),
@@ -75,8 +78,33 @@ const deleteModal = createModalController(elements.deleteModal, {
   onRequestClose: () => !elements.confirmDelete.disabled
 });
 
+let redirectingToLogin = false;
+
+function applyCoverFallback(image) {
+  image.addEventListener("error", () => {
+    if (image.dataset.fallbackApplied) return;
+    image.dataset.fallbackApplied = "true";
+    image.src = FALLBACK_COVER_URL;
+  });
+}
+
+function operationErrorMessage(error, operation) {
+  if (error.details?.code === "csrf_token_missing") {
+    return "A API não forneceu o token CSRF necessário. Atualize a página e tente novamente.";
+  }
+  if (error.status === 0) return "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.";
+  if (error.status === 400) return error.message || `Os dados enviados para ${operation} são inválidos.`;
+  if (error.status === 403) return "Acesso negado. Sua sessão não permite realizar esta operação.";
+  if (error.status === 404) return "O documento não foi encontrado. Atualize a listagem e tente novamente.";
+  if (error.status >= 500) return "O servidor não conseguiu concluir a operação. Tente novamente em alguns instantes.";
+  return `Não foi possível ${operation}. Tente novamente.`;
+}
+
 function redirectToLogin() {
-  const redirect = encodeURIComponent("/admin/documentos/");
+  if (redirectingToLogin) return;
+  redirectingToLogin = true;
+  const requestedRoute = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  const redirect = encodeURIComponent(requestedRoute);
   window.location.replace(`../login/?redirect=${redirect}`);
 }
 
@@ -84,9 +112,16 @@ async function ensureSession() {
   try {
     const session = await authService.me();
     elements.userName.textContent = `Olá, ${session.user.name}`;
-  } catch {
-    redirectToLogin();
-    throw new Error("Sessão ausente");
+    return true;
+  } catch (error) {
+    if (error.status === 401) {
+      redirectToLogin();
+      return false;
+    }
+    elements.userName.textContent = "Não foi possível verificar a sessão";
+    elements.errorMessage.textContent = operationErrorMessage(error, "verificar a sessão");
+    setListView("error");
+    return false;
   }
 }
 
@@ -117,6 +152,8 @@ function createTableRow(documentData) {
   cover.className = "admin-table__cover";
   cover.src = documentData.coverUrl;
   cover.alt = "";
+  cover.loading = "lazy";
+  applyCoverFallback(cover);
   coverCell.append(cover);
 
   const titleCell = document.createElement("td");
@@ -165,7 +202,9 @@ async function loadDocuments({ focusTable = false } = {}) {
       loadDocuments({ focusTable: true });
     });
     if (focusTable) elements.tableCard.scrollIntoView({ behavior: "smooth", block: "start" });
-  } catch {
+  } catch (error) {
+    if (error.status === 401) return;
+    elements.errorMessage.textContent = operationErrorMessage(error, "carregar os documentos");
     setListView("error");
   }
 }
@@ -214,6 +253,7 @@ function openEdit(documentData) {
   elements.pdf.required = false;
   elements.title.value = documentData.title;
   elements.description.value = documentData.description;
+  delete elements.coverPreviewImage.dataset.fallbackApplied;
   elements.coverPreviewImage.src = documentData.coverUrl;
   elements.coverPreviewName.textContent = "Imagem atual";
   elements.coverPreview.hidden = false;
@@ -311,6 +351,7 @@ function previewPdf() {
 
 async function saveDocument(event) {
   event.preventDefault();
+  if (state.submitting) return;
   if (!validateForm()) {
     elements.form.querySelector('[aria-invalid="true"]')?.focus();
     return;
@@ -319,13 +360,11 @@ async function saveDocument(event) {
   state.submitting = true;
   setButtonLoading(elements.save, true, "Salvando…");
   try {
-    const coverFile = elements.cover.files[0];
     const values = {
       title: elements.title.value,
       description: elements.description.value,
-      coverFile,
-      pdfFile: elements.pdf.files[0],
-      coverUrl: coverFile ? await readAsDataUrl(coverFile) : undefined
+      coverFile: elements.cover.files[0],
+      pdfFile: elements.pdf.files[0]
     };
     if (state.editing) {
       await documentosService.update(state.editing.id, values);
@@ -338,8 +377,9 @@ async function saveDocument(event) {
     showToast(elements.toast, message);
     state.page = 1;
     await loadDocuments();
-  } catch {
-    elements.formFeedback.textContent = "Não foi possível salvar o documento. Tente novamente.";
+  } catch (error) {
+    if (error.status === 401) return;
+    elements.formFeedback.textContent = operationErrorMessage(error, "salvar o documento");
   } finally {
     state.submitting = false;
     setButtonLoading(elements.save, false);
@@ -362,8 +402,9 @@ async function deleteDocument() {
     showToast(elements.toast, "Documento excluído da biblioteca.");
     if (state.items.length === 1 && state.page > 1) state.page -= 1;
     await loadDocuments();
-  } catch {
-    elements.deleteFeedback.textContent = "Não foi possível excluir o documento. Tente novamente.";
+  } catch (error) {
+    if (error.status === 401) return;
+    elements.deleteFeedback.textContent = operationErrorMessage(error, "excluir o documento");
   } finally {
     setButtonLoading(elements.confirmDelete, false);
     state.deleting = null;
@@ -371,7 +412,7 @@ async function deleteDocument() {
 }
 
 elements.add.addEventListener("click", openCreate);
-elements.retry.addEventListener("click", () => loadDocuments());
+elements.retry.addEventListener("click", () => initialize());
 elements.search.addEventListener("input", debounce(() => {
   state.search = elements.search.value.trim();
   state.page = 1;
@@ -390,9 +431,26 @@ elements.logout.addEventListener("click", async () => {
   setButtonLoading(elements.logout, true, "Saindo…");
   try {
     await authService.logout();
-  } finally {
     redirectToLogin();
+  } catch (error) {
+    if (error.status === 401) return;
+    const message = error.details?.code === "csrf_token_missing"
+      ? "Não foi possível sair: a API não forneceu o token CSRF da sessão."
+      : error.status === 0
+        ? "Não foi possível conectar ao servidor para encerrar a sessão."
+        : "O servidor não confirmou o encerramento da sessão. Tente novamente.";
+    showToast(elements.toast, message, "error");
+  } finally {
+    setButtonLoading(elements.logout, false);
   }
 });
 
-ensureSession().then(() => loadDocuments());
+window.addEventListener(AUTH_UNAUTHORIZED_EVENT, redirectToLogin);
+applyCoverFallback(elements.coverPreviewImage);
+
+async function initialize() {
+  setListView("loading");
+  if (await ensureSession()) await loadDocuments();
+}
+
+initialize();
