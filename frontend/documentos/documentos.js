@@ -17,7 +17,7 @@ const elements = {
   pagination: document.querySelector("#documents-pagination")
 };
 
-const state = { search: "", page: 1, limit: 10 };
+const state = { search: "", page: 1, limit: 12 };
 
 function applyCoverFallback(image) {
   image.addEventListener("error", () => {
