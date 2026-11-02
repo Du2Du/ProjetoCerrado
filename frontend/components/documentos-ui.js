@@ -1,3 +1,6 @@
+/** Utilitários visuais compartilhados pela biblioteca pública e pelo painel. */
+
+// Adia a execução até o usuário parar de disparar o evento pelo tempo informado.
 export function debounce(callback, delay = 300) {
   let timeout;
   return (...args) => {
@@ -17,6 +20,8 @@ export function formatDate(dateValue) {
 }
 
 export function renderPagination(container, pagination, onPageChange) {
+  // Reconstrói os controles a partir da resposta da API. Em listas longas,
+  // mantém apenas páginas próximas da atual e as duas extremidades.
   container.replaceChildren();
   if (pagination.totalPages <= 1) return;
 
@@ -61,6 +66,7 @@ export function renderPagination(container, pagination, onPageChange) {
 }
 
 export function setButtonLoading(button, loading, loadingLabel = "Aguarde…") {
+  // Preserva o rótulo original no próprio botão para restaurá-lo após a operação.
   if (loading) {
     button.dataset.defaultLabel = button.textContent;
     button.textContent = loadingLabel;
@@ -74,6 +80,8 @@ export function setButtonLoading(button, loading, loadingLabel = "Aguarde…") {
 }
 
 export function createModalController(element, { onRequestClose = () => true } = {}) {
+  // O controlador concentra abertura, fechamento, retorno do foco e o "focus
+  // trap", requisitos de teclado que não devem ser repetidos em cada modal.
   let opener = null;
   const focusableSelector = [
     "a[href]", "button:not([disabled])", "input:not([disabled])",
@@ -125,6 +133,7 @@ export function createModalController(element, { onRequestClose = () => true } =
 }
 
 export function showToast(element, message, tone = "success") {
+  // Um único temporizador global evita que um toast antigo esconda o mais novo.
   element.textContent = message;
   element.className = `app-toast app-toast--${tone} is-visible`;
   element.setAttribute("role", tone === "error" ? "alert" : "status");

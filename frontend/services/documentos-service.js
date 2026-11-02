@@ -1,5 +1,11 @@
 import { apiConfig, apiRequest, ApiError, wait } from "./api-client.js";
 
+/**
+ * Camada de dados da biblioteca de documentos.
+ * Expõe o mesmo contrato para API real e mocks, traduz os nomes do backend para
+ * o modelo usado pela interface e valida respostas antes que cheguem às telas.
+ */
+
 const STORAGE_KEY = "projeto-cerrado:mock-documentos";
 const MOCK_PDF = "data:application/pdf;base64,JVBERi0xLjQKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0NvdW50IDEvS2lkc1szIDAgUl0+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgNTk1IDg0Ml0vQ29udGVudHMgNCAwIFIvUmVzb3VyY2VzPDwvRm9udDw8L0YxIDUgMCBSPj4+Pj4+ZW5kb2JqCjQgMCBvYmo8PC9MZW5ndGggNzQ+PnN0cmVhbQpCVAovRjEgMTggVGYKNzIgNzYwIFRkCihQcm9qZXRvIENlcnJhZG8gLSBEb2N1bWVudG8gZGUgZGVtb25zdHJhY2FvKSBUagpFVAplbmRzdHJlYW0KZW5kb2JqCjUgMCBvYmo8PC9UeXBlL0ZvbnQvU3VidHlwZS9UeXBlMS9CYXNlRm9udC9IZWx2ZXRpY2E+PmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1OCAwMDAwMCBuIAowMDAwMDAwMTE1IDAwMDAwIG4gCjAwMDAwMDAyNTEgMDAwMDAgbiAKMDAwMDAwMDM3NCAwMDAwMCBuIAp0cmFpbGVyPDwvU2l6ZSA2L1Jvb3QgMSAwIFI+PgpzdGFydHhyZWYKNDQ0CiUlRU9G";
 
@@ -38,7 +44,9 @@ const seedContent = [
   ["Documento interno arquivado", "Registro inativo usado para validar o filtro da área pública."]
 ];
 
+// Monta o catálogo inicial usado no modo local de demonstração.
 function buildSeed() {
+  // Dados locais usados apenas quando `useDocumentMocks` está habilitado.
   return seedContent.map(([title, description], index) => ({
     id: String(index + 1),
     title,
@@ -53,6 +61,7 @@ function buildSeed() {
 
 let mockDocuments = loadDocuments();
 
+// Recupera mocks da sessão ou recria o catálogo quando não há estado válido.
 function loadDocuments() {
   try {
     const saved = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) || "null");
@@ -62,6 +71,7 @@ function loadDocuments() {
   }
 }
 
+// Persiste alterações dos mocks enquanto a aba do navegador permanecer aberta.
 function saveDocuments() {
   try {
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(mockDocuments));
@@ -70,11 +80,15 @@ function saveDocuments() {
   }
 }
 
+// Permite exercitar a interface de erro por parâmetro de URL.
 function shouldSimulateError() {
   return new URLSearchParams(window.location.search).get("simularErro") === "documentos";
 }
 
+// Recorta a coleção e devolve metadados de paginação normalizados.
 function paginate(items, page, limit) {
+  // Corrige páginas fora do intervalo para que exclusões na última página não
+  // deixem o usuário preso em uma página inexistente.
   const totalItems = items.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / limit));
   const safePage = Math.min(Math.max(Number(page) || 1, 1), totalPages);
@@ -85,6 +99,7 @@ function paginate(items, page, limit) {
   };
 }
 
+// Simula atraso, busca, ordenação e paginação da API de listagem.
 async function mockList({ search = "", page = 1, limit = 10 } = {}, searchDescription = true) {
   await wait(500);
   if (shouldSimulateError()) throw new ApiError("Não foi possível carregar os documentos.", 500);
@@ -99,7 +114,10 @@ async function mockList({ search = "", page = 1, limit = 10 } = {}, searchDescri
   return paginate(items, page, limit);
 }
 
+// Converte o modelo da interface para os nomes multipart esperados pela API.
 function toFormData(values) {
+  // O backend recebe multipart/form-data porque imagem e PDF podem ser enviados
+  // junto dos campos textuais. O navegador define o boundary automaticamente.
   const formData = new FormData();
   formData.append("titulo", values.title.trim());
   formData.append("descricao", values.description.trim());
@@ -108,6 +126,7 @@ function toFormData(values) {
   return formData;
 }
 
+// Cria um erro específico para respostas incompatíveis com o contrato esperado.
 function contractError(message, details = {}) {
   return new ApiError(message, 502, {
     code: "invalid_documents_contract",
@@ -115,7 +134,10 @@ function contractError(message, details = {}) {
   });
 }
 
+// Valida e traduz um documento do formato do backend para o formato da tela.
 function normalizeDocument(item) {
+  // Valida o contrato externo e o converte para nomes usados no frontend. URLs
+  // dos arquivos são derivadas do UUID, não confiadas à resposta da listagem.
   if (!item || typeof item !== "object" || Array.isArray(item)) {
     throw contractError("A API retornou um documento em formato inválido.");
   }
@@ -129,6 +151,10 @@ function normalizeDocument(item) {
   }
 
   const encodedId = encodeURIComponent(id);
+  const imageVersion = item.updated_at || item.created_at;
+  const coverUrl = `/api/documentos/${encodedId}/imagem${
+    imageVersion ? `?v=${encodeURIComponent(imageVersion)}` : ""
+  }`;
   return {
     id,
     title: item.titulo,
@@ -136,12 +162,15 @@ function normalizeDocument(item) {
     createdAt: item.created_at || null,
     updatedAt: item.updated_at || null,
     active: item.active,
-    coverUrl: `/api/documentos/${encodedId}/imagem`,
+    coverUrl,
     pdfUrl: `/api/documentos/${encodedId}/download`
   };
 }
 
+// Valida itens e paginação antes de liberar a resposta para a interface.
 function normalizeListResponse(response) {
+  // Falha cedo quando o backend muda de formato, produzindo um erro distinguível
+  // de uma lista realmente vazia.
   if (!response || typeof response !== "object" || !Array.isArray(response.items)) {
     throw contractError("A API retornou uma listagem de documentos inválida.");
   }
@@ -169,6 +198,7 @@ function normalizeListResponse(response) {
   };
 }
 
+// Serializa busca e paginação para as rotas pública e administrativa.
 function listQuery(params) {
   return new URLSearchParams({
     page: String(params.page || 1),
@@ -177,7 +207,9 @@ function listQuery(params) {
   });
 }
 
+// Solicita o PDF como Blob preservando cookies e status de erro.
 async function downloadPdf(id) {
+  // Download retorna Blob, portanto não usa `apiRequest`, voltado a JSON/texto.
   let response;
   try {
     response = await fetch(`/api/documentos/${encodeURIComponent(id)}/download`, {
@@ -200,22 +232,28 @@ async function downloadPdf(id) {
 }
 
 export const documentosService = Object.freeze({
+  // A chave de configuração permite desenvolver a interface sem backend. As
+  // telas não precisam saber qual implementação está ativa.
+  // Lista documentos públicos e permite busca também pela descrição.
   async listPublic(params = {}) {
     if (apiConfig.useDocumentMocks) return mockList(params, true);
     const response = await apiRequest(`/api/documentos?${listQuery(params)}`);
     return normalizeListResponse(response);
   },
 
+  // Lista documentos para gestão usando a rota administrativa autenticada.
   async listAdmin(params = {}) {
     if (apiConfig.useDocumentMocks) return mockList(params, false);
     const response = await apiRequest(`/api/admin/documentos?${listQuery(params)}`);
     return normalizeListResponse(response);
   },
 
+  // Delega o download binário para a implementação comum de PDF.
   download(id) {
     return downloadPdf(id);
   },
 
+  // Cadastra via multipart ou atualiza o catálogo local de demonstração.
   async create(values) {
     if (!apiConfig.useDocumentMocks) {
       return apiRequest("/api/admin/documentos", { method: "POST", body: toFormData(values) });
@@ -236,6 +274,7 @@ export const documentosService = Object.freeze({
     return { ...document };
   },
 
+  // Altera metadados e substitui somente os arquivos enviados.
   async update(id, values) {
     if (!apiConfig.useDocumentMocks) {
       return apiRequest(`/api/admin/documentos/${encodeURIComponent(id)}`, {
@@ -258,6 +297,7 @@ export const documentosService = Object.freeze({
     return { ...mockDocuments[index] };
   },
 
+  // Exclui pela API ou marca o mock como inativo.
   async remove(id) {
     if (!apiConfig.useDocumentMocks) {
       return apiRequest(`/api/admin/documentos/${encodeURIComponent(id)}`, { method: "DELETE" });

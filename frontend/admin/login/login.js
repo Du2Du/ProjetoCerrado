@@ -1,6 +1,12 @@
 import { authService } from "../../services/auth-service.js";
 import { setButtonLoading } from "../../components/documentos-ui.js";
 
+/**
+ * Login administrativo.
+ * Valida localmente, autentica pela camada de serviço e redireciona apenas para
+ * caminhos internos de `/admin/`. Na abertura, também verifica sessão existente.
+ */
+
 const form = document.querySelector("#login-form");
 const usuario = document.querySelector("#usuario");
 const senha = document.querySelector("#senha");
@@ -10,12 +16,16 @@ const feedback = document.querySelector("#login-feedback");
 const usuarioError = document.querySelector("#usuario-error");
 const senhaError = document.querySelector("#senha-error");
 
+// Resolve uma rota administrativa segura para depois da autenticação.
 function destinationAfterLogin() {
+  // Restringe o parâmetro de retorno a rotas administrativas locais para evitar
+  // redirecionamento aberto para endereços externos.
   const requested = new URLSearchParams(window.location.search).get("redirect");
   if (requested?.startsWith("/admin/") && !requested.includes("\\")) return requested;
   return "../documentos/";
 }
 
+// Valida os dois campos e associa mensagens aos controles inválidos.
 function validate() {
   let valid = true;
   usuarioError.textContent = "";
@@ -52,6 +62,8 @@ toggle.addEventListener("click", () => {
 }));
 
 form.addEventListener("submit", async (event) => {
+  // Bloqueia envios repetidos enquanto a requisição está em andamento e mantém
+  // mensagens técnicas da API fora da interface de autenticação.
   event.preventDefault();
   feedback.textContent = "";
   if (!validate()) {
@@ -75,6 +87,8 @@ form.addEventListener("submit", async (event) => {
   }
 });
 
+// Uma sessão ainda válida pula o formulário. O 401 esperado não emite o evento
+// global de expiração porque esta já é a página de login.
 authService.me({ notifyOnUnauthorized: false })
   .then(() => window.location.replace(destinationAfterLogin()))
   .catch((error) => {

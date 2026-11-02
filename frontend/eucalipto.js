@@ -1,3 +1,10 @@
+/**
+ * Dashboard do eucalipto.
+ *
+ * Os vetores declarados neste arquivo servem como estrutura inicial. A carga da
+ * API substitui cada conjunto disponível, recalcula anos e filtros e, por fim,
+ * atualiza gráficos, KPIs e textos a partir de `filtrosAtivos`.
+ */
 const P = ["#2d5c24", "#c8943a", "#a0622b", "#4a7c3f", "#6fa65e", "#e8a84c", "#7fb069", "#5c4033", "#1a4a18", "#d4a843"];
 
 const produtosEucalipto = [
@@ -68,6 +75,7 @@ let dadosParticipacaoValor = [
 ];
 
 let anosDisponiveis = dadosQuantidadeProduzida.map(item => String(item.ano));
+// Estado canônico dos filtros; os controles do DOM apenas leem e escrevem aqui.
 const filtrosAtivos = {
   indicador: "all",
   anoInicio: anosDisponiveis[0],
@@ -80,14 +88,17 @@ const filtrosAtivos = {
 };
 const graficos = {};
 
+// Verifica se um container opcional existe antes de tentar criar seu gráfico.
 function existe(id) {
   return !!document.getElementById(id);
 }
 
+// Formata números no padrão brasileiro com quantidade controlada de casas.
 function formatarNumero(valor, casas = 0) {
   return Number(valor || 0).toLocaleString("pt-BR", { maximumFractionDigits: casas, minimumFractionDigits: casas });
 }
 
+// Abrevia valores grandes e devolve também a unidade usada no cartão de KPI.
 function formatarCompacto(valor, unidade) {
   const numero = Number(valor || 0);
   if (numero >= 1000000000) return `${formatarNumero(numero / 1000000000, 2)}<span class="kpi-unit">bi ${unidade}</span>`;
@@ -96,10 +107,12 @@ function formatarCompacto(valor, unidade) {
   return `${formatarNumero(numero)}<span class="kpi-unit">${unidade}</span>`;
 }
 
+// Padroniza a apresentação dos rótulos dos eixos.
 function configurarEixo(eixo) {
   eixo.get("renderer").labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif", fill: am5.color("#5a5a5a") });
 }
 
+// Cria e configura a raiz do amCharts para um container.
 function criarRoot(containerId) {
   const root = am5.Root.new(containerId);
   root.setThemes([am5themes_Animated.new(root)]);
@@ -107,12 +120,14 @@ function criarRoot(containerId) {
   return root;
 }
 
+// Adiciona uma legenda com estilo comum aos gráficos.
 function criarLegenda(chart, root) {
   const legenda = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 8 }));
   legenda.labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif" });
   return legenda;
 }
 
+// Cria a estrutura base de um gráfico XY e devolve suas referências.
 function inicializarXY(containerId, opcoes = {}) {
   const root = criarRoot(containerId);
   const chart = root.container.children.push(am5xy.XYChart.new(root, {
@@ -123,12 +138,14 @@ function inicializarXY(containerId, opcoes = {}) {
   return { root, chart };
 }
 
+// Preenche um select simples preservando os valores recebidos.
 function setSelectOptions(id, valores) {
   const select = document.getElementById(id);
   if (!select) return;
   select.innerHTML = valores.map(valor => `<option value="${valor}">${valor}</option>`).join("");
 }
 
+// Reconstrói as opções de um dropdown de checkboxes.
 function setDropdownOptions(menuId, valores, labelFn = valor => valor) {
   const menu = document.getElementById(menuId);
   if (!menu) return;
@@ -140,6 +157,7 @@ function setDropdownOptions(menuId, valores, labelFn = valor => valor) {
   `).join("");
 }
 
+// Restaura no DOM quais opções de um dropdown estão selecionadas.
 function marcarDropdown(menuId, valores) {
   const selecionados = new Set(valores);
   document.querySelectorAll(`#${menuId} input[type='checkbox']`).forEach(input => {
@@ -147,16 +165,19 @@ function marcarDropdown(menuId, valores) {
   });
 }
 
+// Lê do dropdown os valores atualmente marcados.
 function selecionadosDropdown(menuId) {
   return Array.from(document.querySelectorAll(`#${menuId} input:checked`)).map(input => input.value);
 }
 
+// Resume a quantidade de opções escolhidas no botão que abre o dropdown.
 function atualizarLabelDropdown(btnId, valores, labelVazio) {
   const btn = document.getElementById(btnId);
   if (!btn) return;
   btn.textContent = valores.length ? `${valores.length} selecionado${valores.length > 1 ? "s" : ""}` : labelVazio;
 }
 
+// Filtra visualmente as opções de um dropdown conforme o texto digitado.
 function conectarBuscaDropdown(inputId, menuId) {
   const input = document.getElementById(inputId);
   if (!input) return;
@@ -168,23 +189,27 @@ function conectarBuscaDropdown(inputId, menuId) {
   });
 }
 
+// Resolve os metadados completos dos produtos selecionados pelo usuário.
 function produtosSelecionados() {
   return filtrosAtivos.produtos.length
     ? produtosEucalipto.filter(produto => filtrosAtivos.produtos.includes(produto.campo))
     : produtosEucalipto;
 }
 
+// Mantém somente registros cujo ano pertence ao período ativo.
 function filtrarPeriodo(data) {
   const inicio = Number(filtrosAtivos.anoInicio);
   const fim = Number(filtrosAtivos.anoFim);
   return data.filter(item => item.ano >= inicio && item.ano <= fim).map(item => ({ ...item, ano: String(item.ano) }));
 }
 
+// Obtém o último ano do intervalo para cálculos de fotografia atual.
 function anoFinalSelecionado() {
   const anos = filtrarPeriodo(dadosParticipacaoValor).map(item => Number(item.ano));
   return anos.length ? Math.max(...anos) : Number(filtrosAtivos.anoFim);
 }
 
+// Alterna entre o gráfico e sua mensagem de ausência de dados.
 function alternarEstadoVazio(containerId, vazio) {
   const chart = document.getElementById(containerId);
   const empty = document.getElementById(`empty${containerId.replace(/^chart/, "")}`);
@@ -193,6 +218,7 @@ function alternarEstadoVazio(containerId, vazio) {
   chart?.closest("[data-category]")?.classList.toggle("is-chart-empty", vazio);
 }
 
+// Cria um gráfico de linhas reutilizável para os diferentes produtos.
 function criarGraficoLinhasProdutos(containerId, dataSource, unidadePadrao) {
   if (!existe(containerId)) return;
   const { root, chart } = inicializarXY(containerId, { layoutVertical: true });
@@ -220,6 +246,7 @@ function criarGraficoLinhasProdutos(containerId, dataSource, unidadePadrao) {
   criarLegenda(chart, root).data.setAll(chart.series.values);
 
   graficos[containerId] = {
+    // Atualiza o período e alterna os produtos selecionados.
     update(data, produtos) {
       const ativos = new Set(produtos.map(produto => produto.campo));
       eixoX.data.setAll(data);
@@ -237,6 +264,7 @@ function criarGraficoLinhasProdutos(containerId, dataSource, unidadePadrao) {
   chart.appear(800, 80);
 }
 
+// Cria as séries do valor de produção e registra sua função de atualização.
 function criarGraficoValorProducao() {
   const containerId = "chartValorProducaoEucalipto";
   const { root, chart } = inicializarXY(containerId, { layoutVertical: true });
@@ -263,6 +291,7 @@ function criarGraficoValorProducao() {
   criarLegenda(chart, root).data.setAll(chart.series.values);
 
   graficos[containerId] = {
+    // Atualiza as colunas empilhadas e os produtos visíveis.
     update(data, produtos) {
       const ativos = new Set(produtos.map(produto => produto.campo));
       eixoX.data.setAll(data);
@@ -280,6 +309,7 @@ function criarGraficoValorProducao() {
   chart.appear(800, 80);
 }
 
+// Cria o ranking horizontal de municípios por quantidade produzida.
 function criarGraficoRankingProducao() {
   const containerId = "chartRankingProducaoEucalipto";
   const { root, chart } = inicializarXY(containerId);
@@ -301,6 +331,7 @@ function criarGraficoRankingProducao() {
   serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65) });
 
   graficos[containerId] = {
+    // Atualiza categorias, colunas e estado vazio do ranking.
     update(data) {
       const dados = [...data].reverse();
       eixoY.data.setAll(dados);
@@ -312,6 +343,7 @@ function criarGraficoRankingProducao() {
   chart.appear(800, 80);
 }
 
+// Cria a composição percentual do valor no ano final selecionado.
 function criarGraficoParticipacaoValor() {
   const containerId = "chartParticipacaoValorEucalipto";
   const { root, chart } = inicializarXY(containerId);
@@ -333,6 +365,7 @@ function criarGraficoParticipacaoValor() {
   serie.columns.template.adapters.add("stroke", (stroke, target) => am5.color(target.dataItem?.dataContext?.cor || P[0]));
 
   graficos[containerId] = {
+    // Atualiza percentuais e estado vazio da participação.
     update(data) {
       const dados = [...data].reverse();
       eixoY.data.setAll(dados);
@@ -344,6 +377,7 @@ function criarGraficoParticipacaoValor() {
   chart.appear(800, 80);
 }
 
+// Aplica UF, município, faixa e limite de posições ao ranking.
 function dadosRankingFiltrados() {
   const produtoRankingSelecionado = !filtrosAtivos.produtos.length || filtrosAtivos.produtos.includes("papelCelulose");
   if (!produtoRankingSelecionado) return [];
@@ -354,6 +388,7 @@ function dadosRankingFiltrados() {
     .slice(0, filtrosAtivos.topRanking);
 }
 
+// Prepara as fatias de participação dos produtos no último ano do período.
 function dadosParticipacaoFiltrados() {
   const ano = anoFinalSelecionado();
   const itemAno = dadosParticipacaoValor.find(item => item.ano === ano);
@@ -369,6 +404,7 @@ function dadosParticipacaoFiltrados() {
     .filter(item => item.percentualParticipacaoValor !== null && item.percentualParticipacaoValor !== undefined);
 }
 
+// Recalcula cartões de destaque usando somente conjuntos recebidos com sucesso.
 function atualizarKpis() {
   const ano = anoFinalSelecionado();
   const produtos = produtosSelecionados();
@@ -403,7 +439,10 @@ function atualizarKpis() {
   }
 }
 
+// Atualiza séries, KPIs, chips e visibilidade a partir do estado corrente.
 function atualizarGraficos() {
+  // Ponto único de renderização após qualquer filtro: primeiro atualiza as
+  // séries e depois os elementos derivados (KPIs, chips e visibilidade).
   const produtos = produtosSelecionados();
   graficos.chartQuantidadeProduzidaEucalipto?.update(filtrarPeriodo(dadosQuantidadeProduzida), produtos);
   graficos.chartRankingProducaoEucalipto?.update(dadosRankingFiltrados());
@@ -414,6 +453,7 @@ function atualizarGraficos() {
   atualizarVisibilidadeCards();
 }
 
+// Oculta cards que não pertencem ao indicador selecionado.
 function atualizarVisibilidadeCards() {
   document.querySelectorAll("[data-category]").forEach(card => {
     const categoriaOk = filtrosAtivos.indicador === "all" || card.dataset.category === filtrosAtivos.indicador;
@@ -421,6 +461,7 @@ function atualizarVisibilidadeCards() {
   });
 }
 
+// Converte o estado atual em chips exibidos acima dos resultados.
 function atualizarResumoFiltros() {
   const target = document.getElementById("filtrosAtivosEucalipto");
   if (!target) return;
@@ -436,7 +477,10 @@ function atualizarResumoFiltros() {
   target.innerHTML = chips.map(texto => `<span class="filter-chip">${texto}</span>`).join("");
 }
 
+// Copia controles do DOM para o estado e inicia uma nova renderização.
 function lerFiltrosFormulario() {
+  // Normaliza o intervalo antes de renderizar. Isso permite que o usuário
+  // escolha as datas em qualquer ordem sem deixar o dashboard inconsistente.
   filtrosAtivos.anoInicio = document.getElementById("filtroAnoInicioEucalipto")?.value || filtrosAtivos.anoInicio;
   filtrosAtivos.anoFim = document.getElementById("filtroAnoFimEucalipto")?.value || filtrosAtivos.anoFim;
   if (Number(filtrosAtivos.anoInicio) > Number(filtrosAtivos.anoFim)) {
@@ -455,13 +499,17 @@ function lerFiltrosFormulario() {
   atualizarGraficos();
 }
 
+// Atualiza os rótulos dos três dropdowns após qualquer mudança.
 function atualizarLabelsDropdowns() {
   atualizarLabelDropdown("filtroProdutoEucaliptoBtn", filtrosAtivos.produtos, "Todos");
   atualizarLabelDropdown("filtroUfEucaliptoBtn", filtrosAtivos.ufs, "Todas");
   atualizarLabelDropdown("filtroMunicipioEucaliptoBtn", filtrosAtivos.municipios, "Todos");
 }
 
+// Restringe municípios às UFs selecionadas e remove escolhas inválidas.
 function atualizarMunicipiosDisponiveis() {
+  // Município depende da UF: opções e seleções que deixaram de ser válidas são
+  // removidas sempre que o filtro de estado muda.
   const municipiosDisponiveis = dadosRankingProducao
     .filter(item => !filtrosAtivos.ufs.length || filtrosAtivos.ufs.includes(item.uf))
     .map(item => item.municipio)
@@ -471,6 +519,7 @@ function atualizarMunicipiosDisponiveis() {
   marcarDropdown("filtroMunicipioEucaliptoMenu", filtrosAtivos.municipios);
 }
 
+// Restaura todos os filtros aos valores derivados da carga atual.
 function limparFiltros() {
   Object.assign(filtrosAtivos, {
     indicador: "all",
@@ -495,6 +544,7 @@ function limparFiltros() {
   atualizarGraficos();
 }
 
+// Popula os controles e registra seus eventos uma única vez.
 function inicializarFiltros() {
   setSelectOptions("filtroAnoInicioEucalipto", anosDisponiveis);
   setSelectOptions("filtroAnoFimEucalipto", anosDisponiveis);
@@ -519,6 +569,7 @@ function inicializarFiltros() {
   atualizarLabelsDropdowns();
 }
 
+// Cria cada gráfico e armazena controladores de atualização em `graficos`.
 function inicializarGraficos() {
   criarGraficoLinhasProdutos("chartQuantidadeProduzidaEucalipto", dadosQuantidadeProduzida, "un.");
   criarGraficoRankingProducao();
@@ -526,7 +577,10 @@ function inicializarGraficos() {
   criarGraficoParticipacaoValor();
 }
 
+// Prepara filtros, instancia gráficos e executa a primeira atualização.
 function inicializarDashboardEucalipto() {
+  // A ordem é importante: os gráficos precisam dos controles populados e só
+  // depois recebem a primeira atualização completa.
   inicializarFiltros();
   inicializarGraficos();
   atualizarGraficos();
@@ -547,7 +601,9 @@ const ALVOS_API_EUCALIPTO = Object.freeze({
 });
 const estadoApiEucalipto = { quantidade: false, ranking: false, valor: false, participacao: false };
 
+// Busca e valida um conjunto da API de eucalipto com limite de espera.
 async function buscarEndpointEucalipto(nome) {
+  // Cada recurso possui timeout próprio para que uma API lenta não trave a tela.
   if (window.simularErroApi) throw new Error("Falha simulada para teste da interface.");
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 15000);
@@ -565,6 +621,7 @@ async function buscarEndpointEucalipto(nome) {
   }
 }
 
+// Coloca o KPI relacionado a um endpoint em loading ou indisponível.
 function definirKpiEucalipto(chave, estado) {
   const ids = {
     quantidade: ["kpiQuantidadeLider", "kpiQuantidadeLiderBadge"],
@@ -579,6 +636,7 @@ function definirKpiEucalipto(chave, estado) {
   });
 }
 
+// Atualiza subtítulos e acessibilidade com o intervalo retornado pela API.
 function atualizarTextosPeriodo() {
   if (!anosDisponiveis.length) return;
   const periodo = `${anosDisponiveis[0]}–${anosDisponiveis.at(-1)}`;
@@ -594,7 +652,10 @@ function atualizarTextosPeriodo() {
   if (subRanking && anoRanking) subRanking.textContent = `Tabela 1 — madeira para papel e celulose, municípios em ${anoRanking}`;
 }
 
+// Carrega endpoints independentes e aplica cada resposta ao seu grupo de cards.
 async function carregarDadosEucalipto() {
+  // As respostas são tratadas separadamente; um endpoint com erro não impede
+  // que os demais gráficos sejam atualizados com dados válidos.
   Object.entries(ALVOS_API_EUCALIPTO).forEach(([nome, alvos]) => {
     window.dashboardDataUi.definirEstado(alvos, "loading");
     definirKpiEucalipto(nome, "loading");

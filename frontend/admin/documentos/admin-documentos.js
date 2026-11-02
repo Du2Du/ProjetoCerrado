@@ -10,6 +10,14 @@ import {
   showToast
 } from "../../components/documentos-ui.js";
 
+/**
+ * Painel administrativo de documentos.
+ *
+ * Fluxo: valida sessão -> lista registros -> abre modal de criação/edição ->
+ * valida arquivos e campos -> persiste pelo serviço -> recarrega a listagem.
+ * Exclusão usa um segundo modal e respostas 401 acionam retorno ao login.
+ */
+
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_PDF_SIZE = 20 * 1024 * 1024;
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -67,6 +75,7 @@ const state = {
 };
 
 const documentModal = createModalController(elements.documentModal, {
+  // Impede fechamento durante envio e pede confirmação quando existem mudanças.
   onRequestClose: () => {
     if (state.submitting) return false;
     if (state.formDirty && !window.confirm("Descartar as alterações não salvas?")) return false;
@@ -80,6 +89,7 @@ const deleteModal = createModalController(elements.deleteModal, {
 
 let redirectingToLogin = false;
 
+// Substitui imagens quebradas pela capa padrão e evita ciclos de fallback.
 function applyCoverFallback(image) {
   image.addEventListener("error", () => {
     if (image.dataset.fallbackApplied) return;
@@ -88,6 +98,7 @@ function applyCoverFallback(image) {
   });
 }
 
+// Traduz falhas da API conforme status, contrato e operação solicitada.
 function operationErrorMessage(error, operation) {
   if (error.details?.code === "csrf_token_missing") {
     return "A API não forneceu o token CSRF necessário. Atualize a página e tente novamente.";
@@ -100,7 +111,9 @@ function operationErrorMessage(error, operation) {
   return `Não foi possível ${operation}. Tente novamente.`;
 }
 
+// Retorna ao login uma única vez, preservando a rota administrativa atual.
 function redirectToLogin() {
+  // Preserva a rota atual para retornar ao mesmo ponto após nova autenticação.
   if (redirectingToLogin) return;
   redirectingToLogin = true;
   const requestedRoute = `${window.location.pathname}${window.location.search}${window.location.hash}`;
@@ -108,7 +121,10 @@ function redirectToLogin() {
   window.location.replace(`../login/?redirect=${redirect}`);
 }
 
+// Confirma a sessão, exibe o usuário e obtém o CSRF antes de liberar o painel.
 async function ensureSession() {
+  // Nenhuma operação administrativa começa antes de confirmar a sessão e obter
+  // o token CSRF eventualmente devolvido por `/api/auth/me`.
   try {
     const session = await authService.me();
     elements.userName.textContent = `Olá, ${session.user.name}`;
@@ -125,6 +141,7 @@ async function ensureSession() {
   }
 }
 
+// Alterna a listagem entre loading, vazio, erro e tabela pronta.
 function setListView(view) {
   elements.loading.hidden = view !== "loading";
   elements.empty.hidden = view !== "empty";
@@ -134,6 +151,7 @@ function setListView(view) {
   if (view !== "ready") elements.pagination.replaceChildren();
 }
 
+// Cria um botão de ação de tabela com rótulo acessível e callback próprio.
 function actionButton(label, symbol, className, handler) {
   const button = document.createElement("button");
   button.type = "button";
@@ -145,6 +163,7 @@ function actionButton(label, symbol, className, handler) {
   return button;
 }
 
+// Constrói uma linha da tabela e conecta suas ações de editar e excluir.
 function createTableRow(documentData) {
   const row = document.createElement("tr");
   const coverCell = document.createElement("td");
@@ -175,7 +194,10 @@ function createTableRow(documentData) {
   return row;
 }
 
+// Busca a página corrente, reconstrói tabela/paginação e trata estados vazios.
 async function loadDocuments({ focusTable = false } = {}) {
+  // Mantém estado, tabela, paginação e mensagens sincronizados a cada busca ou
+  // mudança de página.
   setListView("loading");
   elements.summary.textContent = "";
   try {
@@ -209,6 +231,7 @@ async function loadDocuments({ focusTable = false } = {}) {
   }
 }
 
+// Remove mensagens e atributos de erro antes de uma nova validação.
 function clearErrors() {
   [elements.title, elements.description, elements.cover, elements.pdf].forEach((field) => {
     field.removeAttribute("aria-invalid");
@@ -217,6 +240,7 @@ function clearErrors() {
   elements.formFeedback.textContent = "";
 }
 
+// Limpa campos, previews e estado interno ao trocar de operação.
 function resetForm() {
   elements.form.reset();
   clearErrors();
@@ -228,7 +252,10 @@ function resetForm() {
   state.formDirty = false;
 }
 
+// Configura o formulário para cadastro, exigindo imagem e PDF.
 function openCreate() {
+  // Na criação os dois arquivos são obrigatórios; na edição são substituições
+  // opcionais, por isso os atributos `required` mudam conforme o modo.
   resetForm();
   state.editing = null;
   elements.modalTitle.textContent = "Adicionar documento";
@@ -241,6 +268,7 @@ function openCreate() {
   documentModal.open(elements.add);
 }
 
+// Preenche dados atuais e torna a substituição dos arquivos opcional.
 function openEdit(documentData) {
   resetForm();
   state.editing = documentData;
@@ -263,12 +291,16 @@ function openEdit(documentData) {
   documentModal.open();
 }
 
+// Associa uma mensagem ao campo e marca seu estado para tecnologias assistivas.
 function setFieldError(field, message) {
   field.setAttribute("aria-invalid", "true");
   document.querySelector(`#${field.id}-error`).textContent = message;
 }
 
+// Valida texto, obrigatoriedade, tipo e tamanho dos arquivos antes do envio.
 function validateForm() {
+  // Valida antes do upload para dar retorno imediato e evitar transferir arquivos
+  // maiores ou de tipos que o backend recusaria.
   clearErrors();
   const coverFile = elements.cover.files[0];
   const pdfFile = elements.pdf.files[0];
@@ -305,6 +337,7 @@ function validateForm() {
   return valid;
 }
 
+// Lê um arquivo local para uso temporário no preview do navegador.
 function readAsDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -314,7 +347,10 @@ function readAsDataUrl(file) {
   });
 }
 
+// Valida a imagem escolhida e atualiza sua miniatura no formulário.
 function previewCover() {
+  // FileReader é usado somente para pré-visualização; o File original continua
+  // no input e será enviado pelo `documentosService`.
   const file = elements.cover.files[0];
   state.formDirty = true;
   if (!file) {
@@ -335,6 +371,7 @@ function previewCover() {
   });
 }
 
+// Valida o PDF escolhido e apresenta seu nome antes do envio.
 function previewPdf() {
   const file = elements.pdf.files[0];
   state.formDirty = true;
@@ -349,7 +386,10 @@ function previewPdf() {
   }
 }
 
+// Decide entre criação e edição, envia os dados e recarrega a listagem.
 async function saveDocument(event) {
+  // A presença de `state.editing` escolhe entre criar e atualizar, mantendo um
+  // único formulário e o mesmo tratamento de loading/erro para os dois fluxos.
   event.preventDefault();
   if (state.submitting) return;
   if (!validateForm()) {
@@ -386,6 +426,7 @@ async function saveDocument(event) {
   }
 }
 
+// Prepara o modal de confirmação com o registro que poderá ser excluído.
 function openDelete(documentData) {
   state.deleting = documentData;
   elements.deleteTitle.textContent = `“${documentData.title}”`;
@@ -393,7 +434,10 @@ function openDelete(documentData) {
   deleteModal.open();
 }
 
+// Confirma a exclusão no serviço e atualiza a página corrente da tabela.
 async function deleteDocument() {
+  // Só fecha o modal depois da confirmação do serviço; em falha, o registro e a
+  // mensagem permanecem visíveis para permitir nova tentativa.
   if (!state.deleting) return;
   setButtonLoading(elements.confirmDelete, true, "Excluindo…");
   try {
@@ -448,7 +492,9 @@ elements.logout.addEventListener("click", async () => {
 window.addEventListener(AUTH_UNAUTHORIZED_EVENT, redirectToLogin);
 applyCoverFallback(elements.coverPreviewImage);
 
+// Libera a listagem somente após a confirmação de uma sessão válida.
 async function initialize() {
+  // A listagem é carregada apenas quando a verificação de sessão termina com êxito.
   setListView("loading");
   if (await ensureSession()) await loadDocuments();
 }

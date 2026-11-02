@@ -1,5 +1,12 @@
 const P = ["#2d5c24","#c8943a","#a0622b","#4a7c3f","#6fa65e","#e8a84c","#7fb069","#5c4033","#1a4a18","#d4a843"];
 
+/**
+ * Dashboard da seringueira.
+ *
+ * Os endpoints alimentam coleções separadas por indicador. Depois da carga,
+ * filtros e gráficos compartilham `estadoFiltros`; `aplicarFiltros` atualiza as
+ * séries já criadas em vez de reconstruir toda a página a cada interação.
+ */
 let anosSeringueira = [];
 let ufsSeringueira  = [];
 const coresUf = {
@@ -13,6 +20,7 @@ const rootsSeringueira = [];
 // ── ESTADO CENTRAL ───────────────────────────────────────────────────
 const estadoFiltros = { anoInicio: null, anoFim: null, ufs: new Set(), produto: new Set() };
 const graficosUF    = {};  // id → { eixoX, seriesMap:{uf→serie}, dados, campoValor }
+// Guarda referências dos gráficos para atualizar dados sem recriar roots do amCharts.
 const graficosFixos = {};  // id → { eixoX, seriesList, getDados } ou { isEstab, seriesMap }
 
 // ── DADOS ────────────────────────────────────────────────────────────
@@ -42,15 +50,18 @@ let periodoPadrao = { inicio: null, fim: null };
 
 class ErroDadosVazios extends Error {}
 
+// Remove duplicidades e ordena anos recebidos de diferentes endpoints.
 function ordenarAnos(anos) {
   return Array.from(new Set(anos.map(Number).filter(Number.isInteger))).sort((a, b) => a - b);
 }
 
+// Resume uma lista de anos como intervalo legível.
 function periodoTexto(anos) {
   if (!anos.length) return "";
   return anos.length === 1 ? String(anos[0]) : `${anos[0]}–${anos.at(-1)}`;
 }
 
+// Encontra o card externo responsável pelo estado de um componente.
 function containerVisualizacao(id) {
   const elemento = document.getElementById(id);
   if (!elemento) return null;
@@ -58,6 +69,7 @@ function containerVisualizacao(id) {
   return elemento.closest(".chart-card, .table-card");
 }
 
+// Alterna componentes entre pronto, carregando, vazio e erro.
 function definirEstadoVisualizacao(ids, estado, mensagem = "") {
   ids.forEach(id => {
     const container = containerVisualizacao(id);
@@ -91,7 +103,10 @@ function definirEstadoVisualizacao(ids, estado, mensagem = "") {
   });
 }
 
+// Busca um endpoint uma única vez, valida a resposta e reutiliza a Promise.
 async function buscarEndpointSeringueira(nome) {
+  // Timeout e validação evitam que respostas pendentes ou vazias sejam tratadas
+  // como dados válidos pelo restante do dashboard.
   if (requisicoesSeringueira.has(nome)) return requisicoesSeringueira.get(nome);
   const requisicao = (async () => {
     if (window.simularErroApi) throw new Error("Falha simulada para teste da interface.");
@@ -114,6 +129,7 @@ async function buscarEndpointSeringueira(nome) {
   return requisicao;
 }
 
+// Combina os endpoints da PAM em uma única linha de indicadores por ano.
 function montarIndicadores() {
   const somenteCo = dados => new Map(dados.filter(item => item.uf === "Centro-Oeste").map(item => [item.ano, item]));
   const producao = somenteCo(dadosProducao);
@@ -139,6 +155,7 @@ function montarIndicadores() {
   return indicadores;
 }
 
+// Atualiza subtítulo e descrição acessível de um card.
 function atualizarTextoVisualizacao(id, { subtitulo, ariaLabel } = {}) {
   const container = containerVisualizacao(id);
   if (!container) return;
@@ -146,6 +163,7 @@ function atualizarTextoVisualizacao(id, { subtitulo, ariaLabel } = {}) {
   if (ariaLabel) container.setAttribute("aria-label", ariaLabel);
 }
 
+// Identifica visualmente componentes abastecidos pela API ativa.
 function marcarFonteApi(ids) {
   ids.forEach(id => {
     const container = containerVisualizacao(id);
@@ -157,12 +175,14 @@ function marcarFonteApi(ids) {
   });
 }
 
+// Registra a causa técnica e apresenta erro nos cards afetados.
 function registrarFalhaApi(alvos, erro) {
   const semDados = erro instanceof ErroDadosVazios;
   definirEstadoVisualizacao(alvos, semDados ? "empty" : "error", semDados ? erro.message : "Não foi possível carregar os dados do Servidor.");
   console.error("Falha ao carregar dados de Seringueira:", erro);
 }
 
+// Deriva anos, UFs e período padrão dos conjuntos carregados com sucesso.
 function atualizarPeriodoDinamico() {
   anosSeringueira = ordenarAnos([
     ...dadosProducao.map(item => item.ano),
@@ -180,6 +200,7 @@ function atualizarPeriodoDinamico() {
   }
 }
 
+// Formata números de KPI no padrão brasileiro.
 function formatarNumeroKpi(valor, casas = 1) {
   return new Intl.NumberFormat("pt-BR", {
     minimumFractionDigits: casas,
@@ -187,6 +208,7 @@ function formatarNumeroKpi(valor, casas = 1) {
   }).format(valor);
 }
 
+// Calcula a variação da série entre o primeiro e o último ano disponível.
 function variacaoKpiSeringueira(serie, campo) {
   const ordenada = [...serie].sort((a, b) => a.ano - b.ano);
   const inicial = ordenada[0];
@@ -201,6 +223,7 @@ function variacaoKpiSeringueira(serie, campo) {
   };
 }
 
+// Preenche um KPI com o último valor da série e sua tendência histórica.
 function atualizarCardSerieSeringueira({ id, label, dados, campo, divisor = 1, casas = 1, prefixo = "", unidade }) {
   const serie = dados.filter(item => item.uf === "Centro-Oeste" && Number.isFinite(item[campo]));
   const atual = [...serie].sort((a, b) => a.ano - b.ano).at(-1);
@@ -216,6 +239,7 @@ function atualizarCardSerieSeringueira({ id, label, dados, campo, divisor = 1, c
   });
 }
 
+// Atualiza todos os KPIs após a carga das fontes.
 function atualizarCardsSeringueira() {
   atualizarCardSerieSeringueira({
     id: "kpiSeringueiraProducao", label: "Produção Centro-Oeste", dados: dadosProducao,
@@ -235,7 +259,10 @@ function atualizarCardsSeringueira() {
   });
 }
 
+// Carrega PAM e Censo em paralelo e trata seus grupos visuais separadamente.
 async function carregarDadosApiSeringueira() {
+  // `Promise.allSettled` permite sucesso parcial: cada resposta atualiza suas
+  // coleções; cada falha afeta apenas os cards associados ao endpoint.
   Object.values(ALVOS_API).flat().forEach(id => definirEstadoVisualizacao([id], "loading"));
   const nomes = ENDPOINTS_SERINGUEIRA;
   const resultados = await Promise.allSettled(nomes.map(buscarEndpointSeringueira));
@@ -294,10 +321,12 @@ async function carregarDadosApiSeringueira() {
   atualizarCardsSeringueira();
 }
 
+// Retorna somente anos pertencentes ao intervalo selecionado.
 function anosVisiveis() {
   return anosSeringueira.filter(a => a >= estadoFiltros.anoInicio && a <= estadoFiltros.anoFim);
 }
 
+// Transpõe linhas da API para uma linha anual com uma coluna por UF.
 function buildDadosUF(dados, campoValor) {
   return anosVisiveis().map(ano => {
     const item = { ano: String(ano) };
@@ -310,14 +339,17 @@ function buildDadosUF(dados, campoValor) {
 }
 
 // ── AMCHARTS HELPERS ─────────────────────────────────────────────────
+// Padroniza os rótulos dos eixos do amCharts.
 function configurarEixo(eixo) {
   eixo.get("renderer").labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif", fill: am5.color("#5a5a5a") });
 }
+// Adiciona uma legenda comum ao gráfico informado.
 function criarLegenda(chart, root) {
   const l = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 8 }));
   l.labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif" });
   return l;
 }
+// Cria a estrutura base de gráfico XY e guarda seu root para redimensionamento.
 function inicializarXY(containerId, opcoes = {}) {
   if (!document.getElementById(containerId)) return null;
   const root = am5.Root.new(containerId);
@@ -332,6 +364,7 @@ function inicializarXY(containerId, opcoes = {}) {
 }
 
 // ── CRIADORES DE GRÁFICO ─────────────────────────────────────────────
+// Cria uma linha por UF e registra referências para atualizações incrementais.
 function criarGraficoLinhasUF(containerId, dados, campoValor, sufixoTooltip) {
   const ctx = inicializarXY(containerId, { layoutVertical: true });
   if (!ctx) return;
@@ -368,6 +401,7 @@ function criarGraficoLinhasUF(containerId, dados, campoValor, sufixoTooltip) {
   graficosUF[containerId] = { eixoX, seriesMap, dados, campoValor };
 }
 
+// Consolida estabelecimentos por condição do produtor e tipo de látex.
 function criarGraficoEstabelecimentos() {
   const ctx = inicializarXY("chartEstabelecimentosSeringueira", { layoutVertical: true });
   if (!ctx) return;
@@ -408,6 +442,7 @@ function criarGraficoEstabelecimentos() {
   graficosFixos["chartEstabelecimentosSeringueira"] = { isEstab: true, seriesMap };
 }
 
+// Monta as séries anuais consolidadas de produção, área e produtividade.
 function criarGraficoIndicadores() {
   const ctx = inicializarXY("chartIndicadoresBorracha", { layoutVertical: true });
   if (!ctx) return;
@@ -445,6 +480,7 @@ function criarGraficoIndicadores() {
 }
 
 // ── APLICAR FILTROS ──────────────────────────────────────────────────
+// Atualiza dados e visibilidade das séries estaduais segundo os filtros.
 function atualizarGraficosUF() {
   Object.values(graficosUF).forEach(g => {
     const novos = buildDadosUF(g.dados, g.campoValor);
@@ -456,6 +492,7 @@ function atualizarGraficosUF() {
   });
 }
 
+// Atualiza os gráficos especiais que não seguem o formato comum por UF.
 function atualizarGraficosFixos() {
   Object.entries(graficosFixos).forEach(([, g]) => {
     if (g.isEstab) {
@@ -470,13 +507,17 @@ function atualizarGraficosFixos() {
   });
 }
 
+// Atualiza gráficos por UF, gráficos especiais e chips usando o mesmo estado.
 function aplicarFiltros() {
+  // Recalcula o período visível e repassa os dados filtrados a todos os gráficos
+  // registrados, mantendo chips e KPIs alinhados com a mesma seleção.
   atualizarGraficosUF();
   atualizarGraficosFixos();
   renderizarChips();
 }
 
 // ── CHIPS ────────────────────────────────────────────────────────────
+// Materializa período, UFs e produtos como chips removíveis.
 function renderizarChips() {
   const container = document.getElementById("seriChips");
   if (!container) return;
@@ -522,12 +563,14 @@ function renderizarChips() {
 }
 
 // ── INIT FILTROS UI ──────────────────────────────────────────────────
+// Resume uma seleção múltipla no botão do dropdown.
 function labelDropdown(btnId, valores, vazio) {
   const btn = document.getElementById(btnId);
   if (!btn) return;
   btn.textContent = valores.length ? `${valores.length} selecionado${valores.length > 1 ? "s" : ""}` : vazio;
 }
 
+// Reconstrói as opções marcáveis de um dropdown.
 function montarDropdownCheckbox(menuId, opcoes) {
   const menu = document.getElementById(menuId);
   if (!menu) return;
@@ -538,6 +581,7 @@ function montarDropdownCheckbox(menuId, opcoes) {
     </label>`).join("");
 }
 
+// Filtra as opções do dropdown enquanto o usuário digita.
 function conectarBusca(inputId, menuId) {
   const input = document.getElementById(inputId);
   const menu  = document.getElementById(menuId);
@@ -550,6 +594,7 @@ function conectarBusca(inputId, menuId) {
   });
 }
 
+// Preenche controles e liga suas mudanças ao estado central de filtros.
 function inicializarFiltrosUI() {
   // Período
   const selectInicio = document.getElementById("seriAnoInicio");
@@ -613,6 +658,8 @@ function inicializarFiltrosUI() {
 
 // ── MAIN ─────────────────────────────────────────────────────────────
 async function inicializarDashboard() {
+  // Carregar antes de criar os gráficos garante que eixos e séries nasçam com
+  // anos e UFs realmente disponíveis na API.
   await carregarDadosApiSeringueira();
   criarGraficoLinhasUF("chartProducaoSeringueira",   dadosProducao,     "quantidadeProduzidaToneladas",    "t");
   criarGraficoLinhasUF("chartAreaColhidaSeringueira",dadosAreaColhida,  "areaColhidaHectares",             "ha");

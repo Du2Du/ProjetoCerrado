@@ -1,3 +1,10 @@
+/**
+ * Cliente HTTP comum do frontend.
+ *
+ * Responsabilidades: serializar corpos JSON, preservar cookies de sessão,
+ * anexar CSRF em mutações administrativas, uniformizar erros e avisar a tela
+ * administrativa quando a sessão expirar.
+ */
 const API_CONFIG = Object.freeze({
   baseUrl: "",
   useMocks: false,
@@ -10,6 +17,7 @@ export const AUTH_UNAUTHORIZED_EVENT = "api:unauthorized";
 let csrfToken = null;
 
 export class ApiError extends Error {
+  // Preserva status e detalhes da API junto da mensagem padrão de `Error`.
   constructor(message, status = 0, details = null) {
     super(message);
     this.name = "ApiError";
@@ -30,17 +38,22 @@ export function hasCsrfToken() {
   return csrfToken !== null;
 }
 
+// Identifica operações administrativas que obrigatoriamente exigem CSRF.
 function isAdministrativeMutation(path, method) {
   return ["POST", "PUT", "PATCH", "DELETE"].includes(method)
     && path.startsWith("/api/admin/");
 }
 
+// Publica um evento global para a tela decidir como tratar uma sessão expirada.
 function notifyUnauthorized(path) {
   if (typeof window === "undefined" || typeof window.dispatchEvent !== "function") return;
   window.dispatchEvent(new CustomEvent(AUTH_UNAUTHORIZED_EVENT, { detail: { path } }));
 }
 
+// Converte o corpo para JSON, texto ou nulo conforme a resposta recebida.
 async function readPayload(response) {
+  // A resposta é lida uma única vez como texto; depois é convertida conforme o
+  // Content-Type. Isso também permite lidar com respostas vazias e texto puro.
   const text = await response.text();
   if (!text) return null;
 
@@ -57,6 +70,8 @@ async function readPayload(response) {
 }
 
 export async function apiRequest(path, options = {}) {
+  // 1) normaliza método/cabeçalhos; 2) aplica CSRF quando necessário; 3) faz a
+  // requisição; 4) interpreta a resposta; 5) converte falhas em `ApiError`.
   const {
     method: requestedMethod = "GET",
     body,
@@ -108,11 +123,14 @@ export async function apiRequest(path, options = {}) {
   }
 
   const responseCsrfToken = response.headers.get("x-csrf-token");
+  // Algumas rotas renovam o token. Só guardamos o valor vindo de resposta válida.
   if (response.ok && responseCsrfToken) setCsrfToken(responseCsrfToken);
 
   const payload = await readPayload(response);
 
   if (!response.ok) {
+    // O evento desacopla o cliente HTTP da navegação: a página administrativa
+    // decide como e para onde redirecionar quando recebe um 401.
     if (response.status === 401 && notifyOnUnauthorized) notifyUnauthorized(path);
     const responseMessage = typeof payload === "object" && payload !== null
       ? payload.message || payload.error

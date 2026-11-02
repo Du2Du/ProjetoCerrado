@@ -1,3 +1,8 @@
+/**
+ * Comportamentos compartilhados pelos dashboards públicos.
+ * Centraliza estados de carregamento/erro, KPIs, filtros recolhíveis e abas para
+ * que cada página de cadeia produtiva cuide apenas de seus próprios dados.
+ */
 function atualizarKpiComApi(id, { label, value, unit = "", badge = "", tone = "neutral", state = "ready" } = {}) {
     const card = document.getElementById(id);
     if (!card) return;
@@ -30,6 +35,7 @@ function atualizarKpiComApi(id, { label, value, unit = "", badge = "", tone = "n
 window.atualizarKpiComApi = atualizarKpiComApi;
 window.simularErroApi = new URLSearchParams(window.location.search).get("simularErroApi") === "1";
 
+// Resolve o card visual que deve receber loading, vazio ou erro.
 function containerDeDados(id) {
     const elemento = document.getElementById(id);
     if (!elemento) return null;
@@ -37,7 +43,10 @@ function containerDeDados(id) {
     return elemento.closest(".chart-card, .table-card, .kpi-card");
 }
 
+// Substitui o estado visual anterior dos componentes indicados.
 function definirEstadoDeDados(ids, estado, mensagem = "") {
+    // Remove o estado anterior antes de aplicar o próximo; isso impede sobrepor
+    // loaders e mensagens quando uma requisição é refeita.
     ids.forEach(id => {
         const container = containerDeDados(id);
         if (!container) return;
@@ -70,6 +79,7 @@ function definirEstadoDeDados(ids, estado, mensagem = "") {
     });
 }
 
+// Insere a fonte ao lado do subtítulo sem duplicar a nota.
 function marcarFonteDeDados(ids, fonte) {
     ids.forEach(id => {
         const container = containerDeDados(id);
@@ -86,7 +96,7 @@ window.dashboardDataUi = Object.freeze({
     marcarFonte: marcarFonteDeDados
 });
 
-// Tab system
+// Inicializa componentes genéricos somente depois que todo o HTML está disponível.
 document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".filter-bar").forEach((bar, index) => {
         if (bar.dataset.collapsibleReady === "true") return;

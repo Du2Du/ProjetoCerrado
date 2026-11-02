@@ -1,6 +1,12 @@
 import { documentosService } from "../services/documentos-service.js";
 import { debounce, renderPagination, setButtonLoading } from "../components/documentos-ui.js";
 
+/**
+ * Página pública da biblioteca.
+ * O estado guarda busca/página; `loadDocuments` consulta o serviço e escolhe um
+ * dos quatro estados visuais: carregando, vazio, erro ou lista pronta.
+ */
+
 const FALLBACK_COVER_URL = "/public/img/logo.avif";
 
 const elements = {
@@ -19,6 +25,7 @@ const elements = {
 
 const state = { search: "", page: 1, limit: 12 };
 
+// Substitui uma capa indisponível pela imagem padrão, evitando repetição do erro.
 function applyCoverFallback(image) {
   image.addEventListener("error", () => {
     if (image.dataset.fallbackApplied) return;
@@ -27,6 +34,7 @@ function applyCoverFallback(image) {
   });
 }
 
+// Traduz status técnicos da listagem para mensagens adequadas ao público.
 function publicErrorMessage(error) {
   if (error.status === 0) return "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.";
   if (error.status === 403) return "O acesso à biblioteca foi negado pelo servidor.";
@@ -34,6 +42,7 @@ function publicErrorMessage(error) {
   return "Não foi possível carregar os documentos. Tente novamente.";
 }
 
+// Traduz falhas específicas do download para a mensagem exibida no cartão.
 function downloadErrorMessage(error) {
   if (error.status === 0) return "Falha de conexão. Tente novamente.";
   if (error.status === 404) return "O arquivo não está mais disponível.";
@@ -41,6 +50,7 @@ function downloadErrorMessage(error) {
   return "Não foi possível baixar o PDF.";
 }
 
+// Gera um nome de arquivo seguro e legível a partir do título do documento.
 function downloadFileName(documentData) {
   const slug = documentData.title
     .normalize("NFD")
@@ -51,7 +61,10 @@ function downloadFileName(documentData) {
   return `${slug || "documento"}.pdf`;
 }
 
+// Obtém o PDF, dispara o download local e controla loading e retorno de erro.
 async function downloadDocument(documentData, button, feedback) {
+  // Cria uma URL temporária para o Blob e dispara o download sem navegar para
+  // fora da página. A URL é revogada logo depois para liberar memória.
   feedback.textContent = "";
   setButtonLoading(button, true, "Baixando…");
   try {
@@ -71,7 +84,9 @@ async function downloadDocument(documentData, button, feedback) {
   }
 }
 
+// Exibe exatamente um estado da página: loading, vazio, erro ou resultados.
 function setView(view) {
+  // Garante que apenas um estado da listagem fique visível por vez.
   elements.loading.hidden = view !== "loading";
   elements.empty.hidden = view !== "empty";
   elements.error.hidden = view !== "error";
@@ -80,7 +95,10 @@ function setView(view) {
   if (view !== "ready") elements.pagination.replaceChildren();
 }
 
+// Constrói um cartão acessível usando somente APIs seguras do DOM.
 function createDocumentCard(documentData) {
+  // Usa APIs do DOM e `textContent` para que dados vindos da API não sejam
+  // interpretados como HTML.
   const article = document.createElement("article");
   article.className = "document-card";
 
@@ -117,7 +135,10 @@ function createDocumentCard(documentData) {
   return article;
 }
 
+// Executa busca, renderização, paginação e tratamento de estados da listagem.
 async function loadDocuments({ focusResults = false } = {}) {
+  // Esta função é o ciclo completo da tela: mostra loading, busca, renderiza,
+  // configura paginação e converte exceções em uma mensagem pública segura.
   setView("loading");
   elements.summary.textContent = "";
   try {
@@ -152,6 +173,7 @@ async function loadDocuments({ focusResults = false } = {}) {
 }
 
 elements.search.addEventListener("input", debounce(() => {
+  // Busca somente após uma pausa na digitação e sempre recomeça pela página 1.
   state.search = elements.search.value.trim();
   state.page = 1;
   loadDocuments();

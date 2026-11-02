@@ -1,3 +1,12 @@
+/**
+ * Dashboard da pecuária de corte.
+ *
+ * Fluxo principal:
+ * 1. `carregarDadosCorte` busca rebanho e abate em paralelo.
+ * 2. As respostas são normalizadas e armazenadas em `DADOS_CORTE`.
+ * 3. Após as requisições, `inicializarGraficosCorte` configura filtros e gráficos.
+ * 4. Cada interação altera `filtrosCorte` e chama `atualizarDashboardCorte`.
+ */
 const PALETA_CORTE = ["#8b3a1a", "#c8943a", "#4a7c3f", "#6fa65e", "#2d5c24", "#d4843a", "#a0622b", "#e8a84c", "#5c4033", "#3a6b4a"];
 
 const DADOS_CORTE = {
@@ -7,6 +16,7 @@ const DADOS_CORTE = {
 
 const rootsGraficosCorte = new Map();
 
+// Fonte única dos filtros. A interface é sempre redesenhada a partir deste objeto.
 const filtrosCorte = {
   indicador: "all",
   anoInicio: null,
@@ -31,14 +41,23 @@ const indicadorParaAbaCorte = {
   pastagens: "ct-pastagens"
 };
 
+// Atalho de consulta ao DOM usado para manter as funções de renderização compactas.
 function porId(id) { return document.getElementById(id); }
+// Converte valores absolutos de cabeças para a unidade exibida nos gráficos.
 function formatarMilhoes(valor) { return Math.round((valor / 1000000) * 100) / 100; }
+// Produz o texto padronizado do intervalo selecionado.
 function periodoLabel() { return `${filtrosCorte.anoInicio}-${filtrosCorte.anoFim}`; }
+// Informa se um ano pertence ao intervalo atualmente selecionado.
 function dentroPeriodo(ano) { return Number(ano) >= filtrosCorte.anoInicio && Number(ano) <= filtrosCorte.anoFim; }
+// Normaliza nomes completos e siglas para a mesma chave de filtro.
 function canonUf(uf) { return ufCanonicaCorte[uf] || uf; }
+// Atualiza um texto somente quando o elemento existe na página atual.
 function atualizarTexto(id, texto) { const el = porId(id); if (el) el.textContent = texto; }
 
+// Libera o gráfico anterior e cria uma nova raiz no container informado.
 function criarRoot(id) {
+  // Um root do amCharts só pode ocupar o container uma vez; descarte o anterior
+  // antes de recriar o gráfico para evitar referências e eventos duplicados.
   limparGrafico(id);
   const root = am5.Root.new(id);
   root.setThemes([am5themes_Animated.new(root)]);
@@ -46,6 +65,7 @@ function criarRoot(id) {
   return root;
 }
 
+// Descarta recursos e conteúdo DOM associados a um gráfico existente.
 function limparGrafico(id) {
   const root = rootsGraficosCorte.get(id);
   if (root) root.dispose();
@@ -54,6 +74,7 @@ function limparGrafico(id) {
   if (el) el.innerHTML = "";
 }
 
+// Substitui um gráfico sem conteúdo por uma mensagem de estado vazio.
 function mostrarSemDadosChart(id, mensagem = "Sem dados para os filtros selecionados.") {
   limparGrafico(id);
   const el = porId(id);
@@ -61,20 +82,24 @@ function mostrarSemDadosChart(id, mensagem = "Sem dados para os filtros selecion
   el.innerHTML = `<div class="filter-empty d-block h-100 d-flex align-items-center justify-content-center text-center">${mensagem}</div>`;
 }
 
+// Aplica tipografia e cor comuns aos eixos do dashboard.
 function configurarEixo(axis) {
   axis.get("renderer").labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif", fill: am5.color("#5a5a5a") });
 }
 
+// Cria uma legenda centralizada e devolve sua referência para receber as séries.
 function criarLegenda(chart, root) {
   const legend = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 8 }));
   legend.labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif" });
   return legend;
 }
 
+// Descobre dinamicamente os anos armazenados como propriedades dos registros.
 function anosDeObjetoSerie(dados) {
   return [...new Set(dados.flatMap(item => Object.keys(item).filter(chave => /^\d{4}$/.test(chave)).map(Number)))].sort((a, b) => a - b);
 }
 
+// Une os anos existentes nas duas fontes para preencher os selects de período.
 function anosDisponiveisCorte() {
   const anos = new Set();
   anosDeObjetoSerie(DADOS_CORTE.rebanhoCorte).forEach(ano => anos.add(ano));
@@ -82,6 +107,7 @@ function anosDisponiveisCorte() {
   return [...anos].sort((a, b) => a - b);
 }
 
+// Transpõe registros por UF para linhas anuais consumidas pelo amCharts.
 function dadosSeriePorAno(dados, campoNome, anos, transformador = valor => valor) {
   return anos.map(ano => {
     const linha = { ano: String(ano) };
@@ -90,6 +116,7 @@ function dadosSeriePorAno(dados, campoNome, anos, transformador = valor => valor
   });
 }
 
+// Monta um gráfico de linhas genérico e ignora séries totalmente vazias.
 function criarLinhas(id, dados, campoCategoria, series, sufixo = "") {
   const seriesValidas = series.filter(nome => dados.some(item => item[nome] !== null && item[nome] !== undefined));
   if (!dados.length || !seriesValidas.length) return mostrarSemDadosChart(id);
@@ -108,6 +135,7 @@ function criarLinhas(id, dados, campoCategoria, series, sufixo = "") {
   chart.appear(600, 60);
 }
 
+// Monta o gráfico de participação usando somente fatias com valor positivo.
 function criarPizza(id, dados, categoria, valor) {
   const filtrados = dados.filter(item => Number(item[valor]) > 0);
   if (!filtrados.length) return mostrarSemDadosChart(id);
@@ -123,7 +151,10 @@ function criarPizza(id, dados, categoria, valor) {
   chart.appear(600, 60);
 }
 
+// Renderiza evolução do rebanho e participação estadual para o período ativo.
 function criarGraficoRebanho() {
+  // Converte a resposta "larga" (um campo para cada ano) no formato esperado
+  // pelas séries do amCharts e usa o último ano na pizza de participação.
   const anos = anosDeObjetoSerie(DADOS_CORTE.rebanhoCorte).filter(dentroPeriodo);
   const dadosBase = filtrosCorte.ufs.size ? DADOS_CORTE.rebanhoCorte.filter(item => filtrosCorte.ufs.has(canonUf(item.uf))) : DADOS_CORTE.rebanhoCorte;
   const estados = dadosBase.map(item => item.uf);
@@ -141,7 +172,10 @@ function criarGraficoRebanho() {
   criarPizza("chartRebanhoPartic", dadosBase.filter(item => item.uf !== "Brasil" && item[String(anoFinal)]).map(item => ({ uf: item.uf, quantidadeCabecas: item[String(anoFinal)] })), "uf", "quantidadeCabecas");
 }
 
+// Agrega os registros trimestrais de abate segundo a métrica selecionada.
 function criarGraficoAbate() {
+  // Quando todos os trimestres estão selecionados, anos incompletos são omitidos
+  // para que a comparação anual não misture totais parciais com totais fechados.
   const ufsPadrao = ["Brasil", "Goiás", "Mato Grosso", "Mato Grosso do Sul"];
   const ufs = filtrosCorte.ufs.size ? ufsPadrao.filter(uf => filtrosCorte.ufs.has(canonUf(uf))) : ufsPadrao;
   const registrosFiltrados = DADOS_CORTE.abateBovinos.filter(item => dentroPeriodo(item.ano) && ufs.includes(item.uf) && (filtrosCorte.trimestre === "all" || item.trimestre === filtrosCorte.trimestre));
@@ -164,6 +198,7 @@ function criarGraficoAbate() {
   criarLinhas("chartAbateBovinos", acumulado, "ano", ufs, sufixo);
 }
 
+// Lista as UFs presentes em qualquer fonte, já no formato usado pelos filtros.
 function valoresUfsCorte() {
   const ufs = new Set();
   DADOS_CORTE.rebanhoCorte.forEach(item => ufs.add(canonUf(item.uf)));
@@ -171,12 +206,14 @@ function valoresUfsCorte() {
   return [...ufs].sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
+// Resume uma seleção múltipla no texto curto exibido pelo botão do dropdown.
 function labelSelecao(set, total, todosLabel) {
   if (!set.size || set.size === total) return todosLabel;
   if (set.size === 1) return [...set][0];
   return `${set.size} selecionados`;
 }
 
+// Reconstrói um dropdown pesquisável e conecta cada checkbox ao estado central.
 function renderizarMultiselect({ menuId, buscaId, botaoId, valores, selecionados, todosLabel, label = v => v, onChange }) {
   const menu = porId(menuId);
   const busca = porId(buscaId);
@@ -200,6 +237,7 @@ function renderizarMultiselect({ menuId, buscaId, botaoId, valores, selecionados
   });
 }
 
+// Configura o multiselect de UF com os valores derivados das respostas da API.
 function renderizarFiltrosMultiselect() {
   renderizarMultiselect({
     menuId: "filtroUfCorteMenu",
@@ -211,6 +249,7 @@ function renderizarFiltrosMultiselect() {
   });
 }
 
+// Preenche os dois selects de ano e define o maior intervalo disponível.
 function popularSelectAnos() {
   const anos = anosDisponiveisCorte();
   filtrosCorte.anoInicio = anos[0];
@@ -224,6 +263,7 @@ function popularSelectAnos() {
   porId("filtroAnoFimCorte").value = filtrosCorte.anoFim;
 }
 
+// Materializa os filtros ativos em chips de leitura rápida.
 function atualizarChipsFiltros() {
   const el = porId("filtrosAtivosCorte");
   if (!el) return;
@@ -235,6 +275,7 @@ function atualizarChipsFiltros() {
   el.innerHTML = chips.map(chip => `<span class="filter-chip">${chip}</span>`).join("");
 }
 
+// Exibe somente os cards compatíveis com o indicador selecionado.
 function atualizarVisibilidadeIndicador() {
   document.querySelectorAll('[data-filter-group="indicador"] .filter-btn').forEach(btn => btn.classList.toggle("active", btn.dataset.filter === filtrosCorte.indicador));
   document.querySelectorAll("[data-category]").forEach(el => {
@@ -242,11 +283,13 @@ function atualizarVisibilidadeIndicador() {
   });
 }
 
+// Reaproveita o sistema de abas compartilhado disparando o botão correspondente.
 function switchTabCorte(id) {
   const btn = document.querySelector(`[data-tab="${id}"]`);
   if (btn) btn.click();
 }
 
+// Redesenha apenas os gráficos pertencentes à aba que está visível.
 function renderizarAbaAtivaCorte() {
   const activeTab = document.querySelector("[data-tab-content].active");
   const tabId = activeTab?.id || "ct-rebanho";
@@ -256,7 +299,10 @@ function renderizarAbaAtivaCorte() {
   }
 }
 
+// Sincroniza período, gráficos visíveis, multiselects e resumo dos filtros.
 function atualizarDashboardCorte() {
+  // Centraliza toda atualização visual: corrige o período, redesenha a aba
+  // visível e sincroniza os controles e o resumo dos filtros.
   if (filtrosCorte.anoInicio > filtrosCorte.anoFim) {
     [filtrosCorte.anoInicio, filtrosCorte.anoFim] = [filtrosCorte.anoFim, filtrosCorte.anoInicio];
     porId("filtroAnoInicioCorte").value = filtrosCorte.anoInicio;
@@ -268,6 +314,7 @@ function atualizarDashboardCorte() {
   atualizarVisibilidadeIndicador();
 }
 
+// Restaura o estado inicial dos filtros e solicita uma renderização completa.
 function limparFiltrosCorte() {
   const anos = anosDisponiveisCorte();
   filtrosCorte.indicador = "all";
@@ -285,6 +332,7 @@ function limparFiltrosCorte() {
   atualizarDashboardCorte();
 }
 
+// Conecta controles de filtro às respectivas propriedades de `filtrosCorte`.
 function configurarEventosFiltrosCorte() {
   document.querySelectorAll('[data-filter-group="indicador"] .filter-btn').forEach(btn => {
     btn.addEventListener("click", () => {
@@ -301,6 +349,7 @@ function configurarEventosFiltrosCorte() {
   porId("buscaUfCorte")?.addEventListener("input", renderizarFiltrosMultiselect);
 }
 
+// Prepara filtros e dispara a primeira renderização após a carga dos dados.
 function inicializarGraficosCorte() {
   popularSelectAnos();
   configurarEventosFiltrosCorte();
@@ -325,7 +374,9 @@ const ALVOS_API_CORTE = Object.freeze({
   rebanho: ["chartRebanhoCorte", "chartRebanhoPartic", "tabelaRebanhoCorte"],
   abate: ["chartAbateBovinos", "tabelaAbateCorte"]
 });
+// Busca e valida um conjunto da API de corte com limite de espera.
 async function buscarEndpointCorte(nome) {
+  // O timeout impede que o dashboard permaneça indefinidamente em "Carregando".
   if (window.simularErroApi) throw new Error("Falha simulada para teste da interface.");
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 15000);
@@ -343,7 +394,10 @@ async function buscarEndpointCorte(nome) {
   }
 }
 
+// Converte linhas por UF/ano para objetos com os anos como propriedades.
 function montarRebanhoLargo(linhas) {
+  // A API entrega uma linha por UF/ano; os gráficos trabalham com uma linha por
+  // UF e os anos como propriedades (`{ uf, 2020, 2021, ... }`).
   return UFS_REBANHO_CORTE.map(uf => {
     const item = { uf };
     linhas.filter(linha => linha.uf === uf).forEach(linha => {
@@ -353,6 +407,7 @@ function montarRebanhoLargo(linhas) {
   }).filter(item => Object.keys(item).length > 1);
 }
 
+// Confirma que todas as UFs possuem os quatro trimestres de determinado ano.
 function anoAbateCompleto(ano, ufs) {
   return ufs.every(uf => new Set(
     DADOS_CORTE.abateBovinos
@@ -364,6 +419,7 @@ function anoAbateCompleto(ano, ufs) {
 const numeroMiCorte = valor => (Number(valor) / 1_000_000).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const percentualCorte = valor => `${valor >= 0 ? "+" : ""}${valor.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
 
+// Encaminha valores de corte ao componente compartilhado de KPI.
 function preencherKpiCorte(id, rotulo, valor, badge, tone = "neutral") {
   window.atualizarKpiComApi(id, {
     label: rotulo,
@@ -374,6 +430,7 @@ function preencherKpiCorte(id, rotulo, valor, badge, tone = "neutral") {
   });
 }
 
+// Calcula variações, preenche KPIs e reconstrói a tabela de rebanho.
 function atualizarRebanhoCorte() {
   const rebanho = DADOS_CORTE.rebanhoCorte;
   const anos = anosDeObjetoSerie(rebanho);
@@ -404,6 +461,7 @@ function atualizarRebanhoCorte() {
   }
 }
 
+// Consolida o abate anual para preencher KPIs e a tabela comparativa.
 function atualizarAbateCorte() {
   const ufs = ["Brasil", "Goiás", "Mato Grosso", "Mato Grosso do Sul"];
   const anos = [...new Set(DADOS_CORTE.abateBovinos.map(item => item.ano))]
@@ -431,7 +489,10 @@ function atualizarAbateCorte() {
   }
 }
 
+// Carrega as fontes em paralelo e atualiza cada grupo visual de forma independente.
 async function carregarDadosCorte() {
+  // `allSettled` mantém os blocos independentes: se um endpoint falhar, os dados
+  // do outro continuam disponíveis e apenas os seus próprios alvos exibem erro.
   Object.values(ALVOS_API_CORTE).flat().forEach(id => window.dashboardDataUi.definirEstado([id], "loading"));
   ["kpiCorteRebanhoBrasil", "kpiCorteRebanhoGoias", "kpiCorteAbateBrasil", "kpiCorteAbateGoias"].forEach(id => {
     document.getElementById(id)?.setAttribute("aria-busy", "true");
@@ -462,4 +523,6 @@ async function carregarDadosCorte() {
   });
 }
 
+// Os gráficos só são criados depois da primeira tentativa de carga, inclusive
+// quando há falha, para que os estados vazios/erro possam ser renderizados.
 carregarDadosCorte().finally(() => am5.ready(inicializarGraficosCorte));

@@ -1,6 +1,10 @@
 /**
  * Diagnóstico - Projeto Cerrado
- * Lógica para formulário de diagnóstico e geração de relatórios
+ * Lógica para formulário de diagnóstico e geração de relatórios.
+ *
+ * Fluxo principal: inicializa mapa/eventos -> valida formulário e localização ->
+ * consulta `/recommendations` -> monta relatório e gráficos -> permite impressão
+ * ou conversão do relatório completo para PDF.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -55,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
         newDiagnosisBtn: document.getElementById('new-diagnosis-btn')
     };
 
+    // Cria uma notificação temporária acessível e permite encerramento manual.
     function showToast(message, { title = 'Atenção', type = 'error', duration = 6000 } = {}) {
         if (!elements.toastRegion) return;
 
@@ -102,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setupEventListeners();
     }
 
+    // Inicia o Leaflet no centro do Brasil e habilita seleção por clique.
     function initMap() {
         state.map = L.map('map').setView([-15.7801, -47.9292], 5); // Brasil
 
@@ -112,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
         state.map.on('click', onMapClick);
     }
 
+    // Conecta busca, validação, envio e ações disponíveis no relatório.
     function setupEventListeners() {
         elements.searchBtn.addEventListener('click', searchAddress);
         elements.addressInput.addEventListener('keyup', (e) => {
@@ -157,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setMarker(lat, lng);
     }
 
+    // Cria ou move o marcador e persiste suas coordenadas no estado.
     function setMarker(lat, lng) {
         if (state.marker) {
             state.marker.setLatLng([lat, lng]);
@@ -168,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('map-error').textContent = '';
     }
 
+    // Geocodifica o endereço pelo Nominatim e posiciona mapa e marcador.
     async function searchAddress() {
         const address = elements.addressInput.value;
         if (!address) return;
@@ -223,6 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return !error;
     }
 
+    // Reúne a validação dos campos e exige uma localização no mapa.
     function validateForm() {
         const isCultureValid = validateField('culture');
         const isStageValid = validateField('production_stage');
@@ -238,7 +248,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return isCultureValid && isStageValid && isProblemValid && isMapValid;
     }
 
+    // Envia o diagnóstico validado e encaminha a resposta para o relatório.
     async function handleFormSubmit(e) {
+        // A API só é chamada depois da validação conjunta dos campos e do ponto
+        // selecionado no mapa. O loader é encerrado no `finally` em ambos os casos.
         e.preventDefault();
 
         if (!validateForm()) {
@@ -269,7 +282,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Normaliza respostas textuais legadas para um objeto JavaScript válido.
     function parseRecommendations(data) {
+        // Algumas respostas legadas chegam como texto e contêm `NaN`, que não é
+        // JSON válido; nesses casos o valor é convertido para `null` antes do parse.
         if (typeof data === 'string') {
             const sanitized = data.replace(/:NaN/g, ":null");
             return JSON.parse(sanitized);
@@ -279,6 +295,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── EXIBIÇÃO DO RELATÓRIO ─────────────────────────────
     function displayReport(data, formData) {
+        // Troca a etapa visível e distribui a mesma resposta entre texto, cards
+        // climáticos e gráficos, mantendo o relatório como uma unidade imprimível.
         elements.formSection.style.display = 'none';
         elements.reportSection.style.display = 'block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -338,6 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
+    // Converte o objeto climático em pequenos cartões de indicadores atuais.
     function displayClimateData(climate) {
         const items = [
             { label: 'Precipitação', value: `${climate.current_precipitation} mm`, icon: 'fa-droplet' },
@@ -444,6 +463,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── PDF E AUXILIARES ──────────────────────────────────
     async function downloadPDF() {
+        // Primeiro captura todo o relatório como uma imagem alta. Em seguida,
+        // reposiciona essa imagem em páginas A4 sucessivas até cobrir sua altura.
         const { jsPDF } = window.jspdf;
         const report = document.getElementById('printable-report');
 
@@ -487,10 +508,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Mostra ou esconde o bloqueio visual durante operações assíncronas.
     function showLoader(show) {
         elements.loader.style.display = show ? 'flex' : 'none';
     }
 
+    // Traduz o valor técnico do select para o rótulo exibido no relatório.
     function formatCultureLabel(value) {
         const labels = {
             'bovinocultura_corte': 'Bovinocultura de Corte',

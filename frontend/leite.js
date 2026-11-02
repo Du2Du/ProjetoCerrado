@@ -1,5 +1,13 @@
 const P = ["#4a7c3f", "#c8943a", "#a0622b", "#6fa65e", "#2d5c24", "#e8a84c", "#7fb069", "#5c4033", "#3a6b4a", "#d4a843"];
 
+/**
+ * Dashboard da pecuária de leite.
+ *
+ * A inicialização carrega os endpoints, converte as respostas para as estruturas
+ * usadas pelos gráficos, deriva opções de filtro e então cria a interface. Toda
+ * mudança posterior passa por `aplicarFiltros`, que mantém gráficos, tabelas,
+ * KPIs e resumo visual sincronizados.
+ */
 const DADOS_LEITE = {
   producaoBilhoes: [],
   participacaoRegiao: [],
@@ -40,6 +48,9 @@ const estadoFiltros = {
 const graficos = {};
 
 const metadadosApi = {};
+
+// `metadadosApi` registra a origem/estado de cada conjunto para que falhas
+// parciais possam ser mostradas sem inutilizar o restante do dashboard.
 const API_LEITE = "https://api.projetocerradoifg.org/webhook/leite";
 const ENDPOINTS_LEITE = Object.freeze({
   producao: "producao-uf",
@@ -61,16 +72,19 @@ const ALVOS_API = Object.freeze({
 
 class ErroDadosVazios extends Error {}
 
+// Remove duplicidades e devolve anos como strings em ordem crescente.
 function ordenarAnos(anos) {
   return Array.from(new Set(anos.map(String).filter(ano => /^\d{4}$/.test(ano))))
     .sort((a, b) => Number(a) - Number(b));
 }
 
+// Resume uma coleção de anos como intervalo ou mensagem de indisponibilidade.
 function periodoTexto(anos) {
   if (!anos.length) return "";
   return anos.length === 1 ? anos[0] : `${anos[0]}–${anos.at(-1)}`;
 }
 
+// Localiza o card visual associado a um id de gráfico, tabela ou KPI.
 function containerVisualizacao(id) {
   const elemento = document.getElementById(id);
   if (!elemento) return null;
@@ -78,6 +92,7 @@ function containerVisualizacao(id) {
   return elemento.closest(".chart-card, .table-card");
 }
 
+// Aplica loading, erro ou vazio aos componentes relacionados a uma fonte.
 function definirEstadoVisualizacao(ids, estado, mensagem = "") {
   ids.forEach(id => {
     const container = containerVisualizacao(id);
@@ -117,6 +132,7 @@ function definirEstadoVisualizacao(ids, estado, mensagem = "") {
   });
 }
 
+// Atualiza título, subtítulo e descrição acessível sem exigir todos os campos.
 function atualizarTextoVisualizacao(id, { titulo, subtitulo, ariaLabel } = {}) {
   const container = containerVisualizacao(id);
   if (!container) return;
@@ -129,6 +145,7 @@ function atualizarTextoVisualizacao(id, { titulo, subtitulo, ariaLabel } = {}) {
   }
 }
 
+// Acrescenta a identificação da API apenas uma vez em cada componente.
 function marcarFonteApi(ids) {
   ids.forEach(id => {
     const container = containerVisualizacao(id);
@@ -140,6 +157,7 @@ function marcarFonteApi(ids) {
   });
 }
 
+// Registra uma falha e converte os alvos correspondentes para o estado de erro.
 function registrarFalhaApi(alvos, erro) {
   const semDados = erro instanceof ErroDadosVazios;
   definirEstadoVisualizacao(
@@ -150,6 +168,7 @@ function registrarFalhaApi(alvos, erro) {
   console.error("Falha ao carregar dados de Leite:", erro);
 }
 
+// Recalcula anos, séries, municípios e produtos após receber novos conjuntos.
 function atualizarColecoesDinamicas() {
   const anosApi = ordenarAnos(DADOS_LEITE.producaoBilhoes.map(item => item.Ano));
   const anosLocais = ordenarAnos([
@@ -172,7 +191,10 @@ function atualizarColecoesDinamicas() {
   }
 }
 
+// Busca e valida um conjunto da API de leite com limite de espera.
 async function buscarEndpointLeite(nome) {
+  // Aborta requisições demoradas e valida o contrato mínimo antes de entregar
+  // os dados às funções de transformação.
   if (window.simularErroApi) throw new Error("Falha simulada para teste da interface.");
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 15000);
@@ -190,7 +212,10 @@ async function buscarEndpointLeite(nome) {
   }
 }
 
+// Transpõe registros da API para uma linha anual com uma coluna por série.
 function pivotarLeitePorAno(linhas, campoNome, campoValor, campoAno = "ano", transformarNome = nome => nome) {
+  // Transforma linhas da API em uma matriz por ano, formato compartilhado pelas
+  // séries de linha e barras do amCharts.
   return ordenarAnos(linhas.map(item => item.ano)).map(ano => {
     const linhaAno = { [campoAno]: Number(ano) };
     linhas.filter(item => String(item.ano) === ano).forEach(item => {
@@ -200,6 +225,7 @@ function pivotarLeitePorAno(linhas, campoNome, campoValor, campoAno = "ano", tra
   });
 }
 
+// Agrupa registros por nome e preserva o valor informado em `nomeSaida`.
 function pivotarLeitePorNome(linhas, campoNome, campoValor, nomeSaida) {
   return Array.from(new Set(linhas.map(item => item[campoNome]))).map(nome => {
     const linhaNome = { [nomeSaida]: nome };
@@ -210,6 +236,7 @@ function pivotarLeitePorNome(linhas, campoNome, campoValor, nomeSaida) {
   });
 }
 
+// Preenche a tabela municipal respeitando período, municípios e produtos ativos.
 function renderizarTabelaProdutividadeMunicipios() {
   const tabela = document.querySelector("#tabelaProdutividadeMunicipios table");
   if (!tabela || ANOS_PRODUTIVIDADE_MUNICIPIOS.length < 2) return;
@@ -228,7 +255,10 @@ function renderizarTabelaProdutividadeMunicipios() {
   document.querySelector("#tabelaProdutividadeMunicipios .chart-card__sub").textContent = `Litros / vaca / ano — ${anoInicial} & ${anoFinal}`;
 }
 
+// Carrega todas as fontes, normaliza sucessos e isola falhas por componente.
 async function carregarDadosNovaApiLeite() {
+  // Os endpoints são independentes. O resultado de cada um atualiza somente os
+  // conjuntos e componentes relacionados àquela resposta.
   Object.values(ALVOS_API).flat().forEach(id => definirEstadoVisualizacao([id], "loading"));
   [
     "kpiLeiteBrasil", "kpiLeiteGoias", "kpiLeiteRegiao", "kpiLeiteProdutividade",
@@ -368,6 +398,7 @@ async function carregarDadosNovaApiLeite() {
   atualizarCardsSecundariosLeite();
 }
 
+// Formata valores numéricos usados nos KPIs segundo a localidade brasileira.
 function formatarNumeroKpi(valor, casas = 1) {
   return new Intl.NumberFormat("pt-BR", {
     minimumFractionDigits: casas,
@@ -375,6 +406,7 @@ function formatarNumeroKpi(valor, casas = 1) {
   }).format(valor);
 }
 
+// Calcula e descreve a variação percentual entre a primeira e a última medição.
 function variacaoKpi(atual, inicial, anoInicial) {
   if (!Number.isFinite(atual) || !Number.isFinite(inicial) || inicial === 0) {
     return { badge: "Série disponível no SIDRA", tone: "neutral" };
@@ -388,6 +420,7 @@ function variacaoKpi(atual, inicial, anoInicial) {
   };
 }
 
+// Atualiza os KPIs principais de produção, participação e produtividade.
 function atualizarCardsLeite() {
   const serie = [...DADOS_LEITE.producaoBilhoes].sort((a, b) => Number(a.Ano) - Number(b.Ano));
   const inicial = serie[0];
@@ -446,6 +479,7 @@ function atualizarCardsLeite() {
   }
 }
 
+// Atualiza os KPIs complementares ligados a vacas, mesorregiões e produtos.
 function atualizarCardsSecundariosLeite() {
   const anosMeso = ordenarAnos(DADOS_LEITE.producaoMeso.map(item => item.ano));
   const mesoInicial = DADOS_LEITE.producaoMeso.find(item => String(item.ano) === anosMeso[0]);
@@ -516,12 +550,14 @@ function atualizarCardsSecundariosLeite() {
   }
 }
 
+// Escolhe a classe visual positiva, negativa ou neutra para um percentual.
 function classePercentual(percentual) {
   if (percentual >= 25) return "kpi-badge--up";
   if (percentual >= 10) return "kpi-badge--neutral";
   return "kpi-badge--down";
 }
 
+// Reconstrói a tabela regional e calcula sua variação no período exibido.
 function renderizarTabelaRegioes(dados) {
   const tbody = document.getElementById("tabelaRegioesBody");
   if (!tbody) return;
@@ -567,35 +603,43 @@ function renderizarTabelaRegioes(dados) {
   percentual.innerHTML = `<strong>${formatoPercentual.format(totalPercentual)}%</strong>`;
 }
 
+// Verifica a presença de containers opcionais usados em páginas diferentes.
 function existe(id) { return !!document.getElementById(id); }
+// Padroniza tipografia e cor de um eixo do amCharts.
 function eixo(axis) {
   axis.get("renderer").labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif", fill: am5.color("#5a5a5a") });
 }
+// Cria a raiz de gráfico que hospedará eixos e séries.
 function criarRoot(id) {
   const root = am5.Root.new(id);
   root.setThemes([am5themes_Animated.new(root)]);
   return root;
 }
+// Adiciona uma legenda centralizada ao gráfico informado.
 function criarLegenda(chart, root) {
   const l = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 8 }));
   l.labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif" });
   return l;
 }
+// Resolve o card externo que controla a visibilidade do gráfico.
 function cardDoGrafico(id) {
   return document.getElementById(id)?.closest("[class*='col-']");
 }
+// Oculta o card sem dados, preservando mensagens explícitas de erro ou vazio.
 function alternarCard(id, visivel) {
   const coluna = cardDoGrafico(id);
   const container = containerVisualizacao(id);
   const preservaEstado = container?.classList.contains("data-card--error") || container?.classList.contains("data-card--empty");
   coluna?.classList.toggle("is-chart-empty", !visivel && !preservaEstado);
 }
+// Preenche um select e tenta preservar opções que já estavam marcadas.
 function setSelectOptions(id, valores) {
   const select = document.getElementById(id);
   if (!select) return;
   const selecionadosAtuais = new Set(Array.from(select.selectedOptions || []).map(o => o.value));
   select.innerHTML = valores.map(v => `<option value="${v}"${selecionadosAtuais.has(v) ? " selected" : ""}>${v}</option>`).join("");
 }
+// Reconstrói as opções marcáveis de um dropdown.
 function setDropdownOptions(menuId, valores) {
   const menu = document.getElementById(menuId);
   if (!menu) return;
@@ -606,14 +650,17 @@ function setDropdownOptions(menuId, valores) {
     </label>
   `).join("");
 }
+// Lê os valores selecionados em um dropdown de checkboxes.
 function selecionadosDropdown(menuId) {
   return Array.from(document.querySelectorAll(`#${menuId} input:checked`)).map(input => input.value);
 }
+// Resume a seleção no texto do botão que abre o dropdown.
 function atualizarLabelDropdown(btnId, valores, labelVazio) {
   const btn = document.getElementById(btnId);
   if (!btn) return;
   btn.textContent = valores.length ? `${valores.length} selecionado${valores.length > 1 ? "s" : ""}` : labelVazio;
 }
+// Implementa pesquisa local entre as opções do dropdown.
 function conectarBuscaDropdown(inputId, menuId) {
   const input = document.getElementById(inputId);
   if (!input) return;
@@ -624,25 +671,31 @@ function conectarBuscaDropdown(inputId, menuId) {
     });
   });
 }
+// Recorta uma lista de anos segundo o período mantido no estado.
 function anosNoPeriodo(anos) {
   const inicio = Number(estadoFiltros.anoInicio);
   const fim = Number(estadoFiltros.anoFim);
   return anos.filter(ano => Number(ano) >= inicio && Number(ano) <= fim);
 }
+// Filtra registros usando um campo de ano configurável.
 function filtrarLinhasPorAno(data, campo = "ano") {
   const inicio = Number(estadoFiltros.anoInicio);
   const fim = Number(estadoFiltros.anoFim);
   return data.filter(d => Number(d[campo]) >= inicio && Number(d[campo]) <= fim);
 }
+// Retorna todas as séries quando o filtro está vazio ou somente as escolhidas.
 function seriesSelecionadas(todas, filtro) {
   return filtro.length ? todas.filter(v => filtro.includes(v)) : todas;
 }
+// Aplica um filtro opcional a qualquer campo categórico.
 function filtrarPorCampo(data, campo, filtro) {
   return filtro.length ? data.filter(d => filtro.includes(d[campo])) : data;
 }
+// Verifica se uma série corresponde aos produtos atualmente selecionados.
 function temIntersecaoProduto(nome) {
   return !estadoFiltros.produtos.length || estadoFiltros.produtos.includes(nome);
 }
+// Transpõe séries para linhas anuais prontas para os gráficos de evolução.
 function dadosPorAno(data, campoNome, anos, series) {
   return anos.map(ano => {
     const row = { ano };
@@ -653,6 +706,7 @@ function dadosPorAno(data, campoNome, anos, series) {
     return row;
   });
 }
+// Remapeia campos anuais para nomes comparativos como "Início" e "Fim".
 function dadosAgrupadosPorAnos(data, categoria, anos, series) {
   return data.map(item => {
     const row = { [categoria]: item[categoria] };
@@ -660,6 +714,7 @@ function dadosAgrupadosPorAnos(data, categoria, anos, series) {
     return row;
   });
 }
+// Monta duas referências usando os extremos do período selecionado.
 function serieComparativa(anos, nomeInicio = "Início", nomeFim = "Fim") {
   if (!anos.length) return [];
   return [
@@ -668,6 +723,7 @@ function serieComparativa(anos, nomeInicio = "Início", nomeFim = "Fim") {
   ];
 }
 
+// Cria um gráfico de linhas reutilizável e registra seu método de atualização.
 function graficoLinhas(id, categoria, series, sufixo = "") {
   if (!existe(id)) return;
   const root = criarRoot(id);
@@ -688,6 +744,7 @@ function graficoLinhas(id, categoria, series, sufixo = "") {
   });
   criarLegenda(chart, root).data.setAll(chart.series.values);
   graficos[id] = {
+    // Substitui dados e alterna apenas as séries selecionadas no filtro.
     update(data, seriesAtivas = series) {
       const ativos = new Set(seriesAtivas);
       xA.data.setAll(data);
@@ -702,6 +759,7 @@ function graficoLinhas(id, categoria, series, sufixo = "") {
   };
   chart.appear(800, 80);
 }
+// Cria barras verticais ou horizontais para uma única medida.
 function graficoBarras(id, categoria, valor, horizontal = false, sufixo = "") {
   if (!existe(id)) return;
   const root = criarRoot(id);
@@ -723,6 +781,7 @@ function graficoBarras(id, categoria, valor, horizontal = false, sufixo = "") {
   s.columns.template.adapters.add("fill", (_fill, target) => am5.color(P[(target.dataItem?.get("index") || 0) % P.length]));
   s.columns.template.adapters.add("stroke", (_stroke, target) => am5.color(P[(target.dataItem?.get("index") || 0) % P.length]));
   graficos[id] = {
+    // Atualiza categorias, colunas e estado vazio do gráfico.
     update(data) {
       cA.data.setAll(data);
       s.data.setAll(data);
@@ -731,6 +790,7 @@ function graficoBarras(id, categoria, valor, horizontal = false, sufixo = "") {
   };
   chart.appear(800, 80);
 }
+// Cria barras lado a lado para comparar várias séries por categoria.
 function graficoBarrasAgrupadas(id, categoria, series, sufixo = "") {
   if (!existe(id)) return;
   const root = criarRoot(id);
@@ -750,6 +810,7 @@ function graficoBarrasAgrupadas(id, categoria, series, sufixo = "") {
   });
   criarLegenda(chart, root).data.setAll(chart.series.values);
   graficos[id] = {
+    // Atualiza dados e mostra somente séries comparativas ainda aplicáveis.
     update(data, novasSeries = series) {
       xA.data.setAll(data);
       Object.entries(seriesMap).forEach(([nome, s]) => {
@@ -763,6 +824,7 @@ function graficoBarrasAgrupadas(id, categoria, series, sufixo = "") {
   };
   chart.appear(800, 80);
 }
+// Cria uma pizza e mantém legenda e fatias sincronizadas nas atualizações.
 function graficoPizza(id, categoria, valor) {
   if (!existe(id)) return;
   const root = criarRoot(id);
@@ -773,6 +835,7 @@ function graficoPizza(id, categoria, valor) {
   const l = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 10 }));
   l.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
   graficos[id] = {
+    // Substitui fatias e reconstrói a legenda com os novos itens.
     update(data) {
       s.data.setAll(data);
       l.data.setAll(s.dataItems);
@@ -782,6 +845,7 @@ function graficoPizza(id, categoria, valor) {
   chart.appear(800, 80);
 }
 
+// Instancia todos os gráficos e seus controladores antes da primeira filtragem.
 function inicializarEstruturaGraficos() {
   graficoLinhas("chartLeiteSeries", "ano", SERIES_PRODUCAO_UF, " bi L");
   graficoPizza("chartLeiteRegiao", "regiao", "percentualParticipacao");
@@ -801,7 +865,11 @@ function inicializarEstruturaGraficos() {
   graficoBarras("chartRankingConsumo", "produto", "melhorPosicao", true);
 }
 
+// Distribui dados filtrados a gráficos, tabelas, KPIs e estados visuais.
 function aplicarFiltros() {
+  // Este é o ciclo central de renderização do dashboard. Ele parte sempre de
+  // `estadoFiltros`, filtra as coleções originais e distribui os resultados aos
+  // gráficos, tabelas, KPIs e indicadores de visibilidade.
   const anosVacasRegiao = anosNoPeriodo(metadadosApi.anosVacas || []);
   const anosMeso = anosNoPeriodo(ordenarAnos(DADOS_LEITE.producaoMeso.map(d => d.ano)));
   const anosVacasMeso = anosNoPeriodo(ordenarAnos(DADOS_LEITE.vacasMeso.flatMap(d => Object.keys(d).filter(k => /^\d{4}$/.test(k)))));
@@ -846,6 +914,7 @@ function aplicarFiltros() {
   atualizarResumoFiltros();
 }
 
+// Exibe apenas cards pertencentes ao indicador escolhido na barra de filtros.
 function atualizarVisibilidadeCards() {
   document.querySelectorAll("[data-category]").forEach(el => {
     const categoriaOk = estadoFiltros.indicador === "all" || el.dataset.category === estadoFiltros.indicador;
@@ -854,6 +923,7 @@ function atualizarVisibilidadeCards() {
   const visiveis = Array.from(document.querySelectorAll("[data-tab-content].active [data-category]")).some(el => !el.classList.contains("is-filter-hidden") && !el.classList.contains("is-chart-empty"));
   document.getElementById("semDadosLeite")?.style.setProperty("display", visiveis ? "none" : "block");
 }
+// Converte o estado atual em chips de leitura rápida.
 function atualizarResumoFiltros() {
   const target = document.getElementById("filtrosAtivosLeite");
   if (!target) return;
@@ -868,7 +938,10 @@ function atualizarResumoFiltros() {
   ].filter(Boolean);
   target.innerHTML = chips.map(texto => `<span class="filter-chip">${texto}</span>`).join("");
 }
+// Copia valores dos controles para `estadoFiltros` e redesenha o dashboard.
 function lerFiltrosDeFormulario() {
+  // Copia os valores do DOM para o estado antes de redesenhar; assim as funções
+  // de gráfico não dependem diretamente dos controles HTML.
   estadoFiltros.anoInicio = document.getElementById("filtroAnoInicio")?.value || estadoFiltros.anoInicio;
   estadoFiltros.anoFim = document.getElementById("filtroAnoFim")?.value || estadoFiltros.anoFim;
   if (Number(estadoFiltros.anoInicio) > Number(estadoFiltros.anoFim)) {
@@ -883,6 +956,7 @@ function lerFiltrosDeFormulario() {
   atualizarLabelsDropdowns();
   aplicarFiltros();
 }
+// Ativa a aba correspondente ao foco geográfico selecionado.
 function navegarParaFoco() {
   const destino = { brasil: "lt-brasil", goias: "lt-goias", municipio: "lt-municipios" }[estadoFiltros.escala];
   if (!destino) return;
@@ -902,6 +976,7 @@ function navegarParaFoco() {
   document.querySelectorAll("[data-tab-content]").forEach(item => item.classList.remove("active"));
   painel.classList.add("active");
 }
+// Restaura período e seleções múltiplas aos valores padrão.
 function limparFiltros() {
   Object.assign(estadoFiltros, { escala: "all", indicador: "all", anoInicio: PERIODO_PADRAO.inicio, anoFim: PERIODO_PADRAO.fim, regioes: [], ufs: [], municipios: [], produtos: [] });
   document.querySelectorAll("[data-filter-group] .filter-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.filter === "all"));
@@ -913,12 +988,14 @@ function limparFiltros() {
   atualizarLabelsDropdowns();
   aplicarFiltros();
 }
+// Sincroniza os textos dos dropdowns com `estadoFiltros`.
 function atualizarLabelsDropdowns() {
   atualizarLabelDropdown("filtroRegiaoBtn", estadoFiltros.regioes, "Todas");
   atualizarLabelDropdown("filtroUfBtn", estadoFiltros.ufs, "Todas");
   atualizarLabelDropdown("filtroMunicipioBtn", estadoFiltros.municipios, "Todos");
   atualizarLabelDropdown("filtroProdutoBtn", estadoFiltros.produtos, "Todos");
 }
+// Popula controles e conecta todos os eventos que alteram filtros.
 function inicializarFiltros() {
   setSelectOptions("filtroAnoInicio", ANOS_PRODUCAO);
   setSelectOptions("filtroAnoFim", ANOS_PRODUCAO);
@@ -950,7 +1027,10 @@ function inicializarFiltros() {
   });
   document.getElementById("btnLimparFiltros")?.addEventListener("click", limparFiltros);
 }
+// Aguarda os dados, cria controles e gráficos e aplica o estado inicial.
 async function inicializarDashboardLeite() {
+  // Aguarda a API para que anos, produtos e municípios dos filtros reflitam os
+  // dados reais antes da criação da primeira visualização.
   await carregarDadosNovaApiLeite();
   inicializarFiltros();
   inicializarEstruturaGraficos();
