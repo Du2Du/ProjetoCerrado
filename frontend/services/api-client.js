@@ -6,9 +6,7 @@
  * administrativa quando a sessão expirar.
  */
 const API_CONFIG = Object.freeze({
-  baseUrl: "",
-  useMocks: false,
-  useDocumentMocks: false
+  baseUrl: ""
 });
 
 export const apiConfig = API_CONFIG;
@@ -143,8 +141,4 @@ export async function apiRequest(path, options = {}) {
   }
 
   return payload;
-}
-
-export function wait(milliseconds = 450) {
-  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 }

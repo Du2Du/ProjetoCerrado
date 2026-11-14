@@ -109,7 +109,6 @@ async function buscarEndpointSeringueira(nome) {
   // como dados válidos pelo restante do dashboard.
   if (requisicoesSeringueira.has(nome)) return requisicoesSeringueira.get(nome);
   const requisicao = (async () => {
-    if (window.simularErroApi) throw new Error("Falha simulada para teste da interface.");
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 15000);
     try {

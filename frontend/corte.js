@@ -377,7 +377,6 @@ const ALVOS_API_CORTE = Object.freeze({
 // Busca e valida um conjunto da API de corte com limite de espera.
 async function buscarEndpointCorte(nome) {
   // O timeout impede que o dashboard permaneça indefinidamente em "Carregando".
-  if (window.simularErroApi) throw new Error("Falha simulada para teste da interface.");
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 15000);
   try {

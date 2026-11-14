@@ -195,7 +195,6 @@ function atualizarColecoesDinamicas() {
 async function buscarEndpointLeite(nome) {
   // Aborta requisições demoradas e valida o contrato mínimo antes de entregar
   // os dados às funções de transformação.
-  if (window.simularErroApi) throw new Error("Falha simulada para teste da interface.");
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 15000);
   try {

@@ -33,7 +33,6 @@ function atualizarKpiComApi(id, { label, value, unit = "", badge = "", tone = "n
 }
 
 window.atualizarKpiComApi = atualizarKpiComApi;
-window.simularErroApi = new URLSearchParams(window.location.search).get("simularErroApi") === "1";
 
 // Resolve o card visual que deve receber loading, vazio ou erro.
 function containerDeDados(id) {

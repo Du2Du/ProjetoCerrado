@@ -1,9 +1,8 @@
 /**
  * Dashboard do eucalipto.
  *
- * Os vetores declarados neste arquivo servem como estrutura inicial. A carga da
- * API substitui cada conjunto disponível, recalcula anos e filtros e, por fim,
- * atualiza gráficos, KPIs e textos a partir de `filtrosAtivos`.
+ * A carga da API preenche cada conjunto disponível, recalcula anos e filtros e,
+ * por fim, atualiza gráficos, KPIs e textos a partir de `filtrosAtivos`.
  */
 const P = ["#2d5c24", "#c8943a", "#a0622b", "#4a7c3f", "#6fa65e", "#e8a84c", "#7fb069", "#5c4033", "#1a4a18", "#d4a843"];
 
@@ -15,64 +14,10 @@ const produtosEucalipto = [
   { campo: "folha", nome: "Eucalipto (folha)", nomeCurto: "Folha", unidade: "t", cor: P[4] }
 ];
 
-// DASHBOARD_EUCALIPTO.txt pede uf, municipio e ranking na Tabela 1.
-// A planilha traz esses dados como localidade hierárquica, não como colunas explícitas;
-// por isso uf/municipio foram extraídos do texto "Município (UF)" e ranking foi calculado por quantidade.
-let dadosRankingProducao = [
-  { localidade: "Três Lagoas (MS)", uf: "MS", municipio: "Três Lagoas", produtoSilvicultura: "Madeira em tora de eucalipto para papel e celulose", quantidadeProduzida: 4729905, unidadeMedida: "Metros cúbicos", ranking: 1 },
-  { localidade: "Ribas do Rio Pardo (MS)", uf: "MS", municipio: "Ribas do Rio Pardo", produtoSilvicultura: "Madeira em tora de eucalipto para papel e celulose", quantidadeProduzida: 3692019, unidadeMedida: "Metros cúbicos", ranking: 2 },
-  { localidade: "Brasilândia (MS)", uf: "MS", municipio: "Brasilândia", produtoSilvicultura: "Madeira em tora de eucalipto para papel e celulose", quantidadeProduzida: 1475643, unidadeMedida: "Metros cúbicos", ranking: 3 },
-  { localidade: "Água Clara (MS)", uf: "MS", municipio: "Água Clara", produtoSilvicultura: "Madeira em tora de eucalipto para papel e celulose", quantidadeProduzida: 826607, unidadeMedida: "Metros cúbicos", ranking: 4 },
-  { localidade: "Selvíria (MS)", uf: "MS", municipio: "Selvíria", produtoSilvicultura: "Madeira em tora de eucalipto para papel e celulose", quantidadeProduzida: 725741, unidadeMedida: "Metros cúbicos", ranking: 5 },
-  { localidade: "Nova Andradina (MS)", uf: "MS", municipio: "Nova Andradina", produtoSilvicultura: "Madeira em tora de eucalipto para papel e celulose", quantidadeProduzida: 562963, unidadeMedida: "Metros cúbicos", ranking: 6 },
-  { localidade: "Santa Rita do Pardo (MS)", uf: "MS", municipio: "Santa Rita do Pardo", produtoSilvicultura: "Madeira em tora de eucalipto para papel e celulose", quantidadeProduzida: 414375, unidadeMedida: "Metros cúbicos", ranking: 7 },
-  { localidade: "Campo Grande (MS)", uf: "MS", municipio: "Campo Grande", produtoSilvicultura: "Madeira em tora de eucalipto para papel e celulose", quantidadeProduzida: 302858, unidadeMedida: "Metros cúbicos", ranking: 8 },
-  { localidade: "Inocência (MS)", uf: "MS", municipio: "Inocência", produtoSilvicultura: "Madeira em tora de eucalipto para papel e celulose", quantidadeProduzida: 210809, unidadeMedida: "Metros cúbicos", ranking: 9 },
-  { localidade: "Paranaíba (MS)", uf: "MS", municipio: "Paranaíba", produtoSilvicultura: "Madeira em tora de eucalipto para papel e celulose", quantidadeProduzida: 203124, unidadeMedida: "Metros cúbicos", ranking: 10 }
-];
-
-let dadosQuantidadeProduzida = [
-  { ano: 2012, localidade: "Centro-Oeste", carvao: 93462, lenha: 4065556, papelCelulose: 4968944, outrasFinalidades: null, folha: 3975 },
-  { ano: 2013, localidade: "Centro-Oeste", carvao: 145073, lenha: 6230147, papelCelulose: 8033052, outrasFinalidades: 863064, folha: 2400 },
-  { ano: 2014, localidade: "Centro-Oeste", carvao: 139192, lenha: 6472880, papelCelulose: 8293047, outrasFinalidades: 790701, folha: 1700 },
-  { ano: 2015, localidade: "Centro-Oeste", carvao: 70908, lenha: 5358997, papelCelulose: 9419761, outrasFinalidades: 787463, folha: 1556 },
-  { ano: 2016, localidade: "Centro-Oeste", carvao: 52945, lenha: 4994371, papelCelulose: 9958927, outrasFinalidades: 788761, folha: 2000 },
-  { ano: 2017, localidade: "Centro-Oeste", carvao: 65997, lenha: 4910293, papelCelulose: 12860798, outrasFinalidades: 831846, folha: 4700 },
-  { ano: 2018, localidade: "Centro-Oeste", carvao: 134453, lenha: 4795454, papelCelulose: 17511680, outrasFinalidades: 1056519, folha: 2858 },
-  { ano: 2019, localidade: "Centro-Oeste", carvao: 169969, lenha: 5369619, papelCelulose: 14602994, outrasFinalidades: 1163830, folha: 3386 },
-  { ano: 2020, localidade: "Centro-Oeste", carvao: 187119, lenha: 5883302, papelCelulose: 14661653, outrasFinalidades: 1061103, folha: 3075 },
-  { ano: 2021, localidade: "Centro-Oeste", carvao: 179191, lenha: 5998155, papelCelulose: 13144044, outrasFinalidades: 1069066, folha: 3071 }
-];
-
-// Em Tabela 2, algumas células de 2021 estavam gravadas 1000x acima da unidade "Mil Reais".
-// Foram normalizadas para manter a unidade dos demais anos e coerência com Tabela 3.
-let dadosValorProducao = [
-  { ano: 2012, uf: "Centro-Oeste", carvao: 42518, lenha: 253003, papelCelulose: 273169, outrasFinalidades: 143563, folha: 190 },
-  { ano: 2013, uf: "Centro-Oeste", carvao: 70016, lenha: 361651, papelCelulose: 427042, outrasFinalidades: 97468, folha: 121 },
-  { ano: 2014, uf: "Centro-Oeste", carvao: 64846, lenha: 391061, papelCelulose: 580513, outrasFinalidades: 85478, folha: 186 },
-  { ano: 2015, uf: "Centro-Oeste", carvao: 36815, lenha: 278142, papelCelulose: 565186, outrasFinalidades: 89909, folha: 93 },
-  { ano: 2016, uf: "Centro-Oeste", carvao: 24912, lenha: 260380, papelCelulose: 684781, outrasFinalidades: 90014, folha: 120 },
-  { ano: 2017, uf: "Centro-Oeste", carvao: 33395, lenha: 269547, papelCelulose: 885803, outrasFinalidades: 103723, folha: 376 },
-  { ano: 2018, uf: "Centro-Oeste", carvao: 69110, lenha: 251432, papelCelulose: 951141, outrasFinalidades: 130174, folha: 259 },
-  { ano: 2019, uf: "Centro-Oeste", carvao: 93036, lenha: 279023, papelCelulose: 760308, outrasFinalidades: 146211, folha: 440 },
-  { ano: 2020, uf: "Centro-Oeste", carvao: 104815, lenha: 315150, papelCelulose: 875828, outrasFinalidades: 124043, folha: 400 },
-  { ano: 2021, uf: "Centro-Oeste", carvao: 127258, lenha: 406334, papelCelulose: 1072734, outrasFinalidades: 138784, folha: 399 }
-];
-
-// Tabela 3 tem apenas percentuais de participação por produto.
-// principalProdutoPorQuantidade e valorTotalProducaoMilReais não existem nesta aba; ficam nulos e o gráfico usa os percentuais disponíveis.
-let dadosParticipacaoValor = [
-  { ano: 2012, uf: "Centro-Oeste", carvao: 5.93, lenha: 35.26, papelCelulose: 38.07, outrasFinalidades: 20.01, folha: 0.03, principalProdutoPorValor: "papelCelulose", percentualPrincipalProduto: 38.07, principalProdutoPorQuantidade: null, valorTotalProducaoMilReais: null },
-  { ano: 2013, uf: "Centro-Oeste", carvao: 6.6, lenha: 34.11, papelCelulose: 40.28, outrasFinalidades: 9.19, folha: 0.01, principalProdutoPorValor: "papelCelulose", percentualPrincipalProduto: 40.28, principalProdutoPorQuantidade: null, valorTotalProducaoMilReais: null },
-  { ano: 2014, uf: "Centro-Oeste", carvao: 5.33, lenha: 32.14, papelCelulose: 47.72, outrasFinalidades: 7.03, folha: 0.02, principalProdutoPorValor: "papelCelulose", percentualPrincipalProduto: 47.72, principalProdutoPorQuantidade: null, valorTotalProducaoMilReais: null },
-  { ano: 2015, uf: "Centro-Oeste", carvao: 3.37, lenha: 25.43, papelCelulose: 51.68, outrasFinalidades: 8.22, folha: 0.01, principalProdutoPorValor: "papelCelulose", percentualPrincipalProduto: 51.68, principalProdutoPorQuantidade: null, valorTotalProducaoMilReais: null },
-  { ano: 2016, uf: "Centro-Oeste", carvao: 2.05, lenha: 21.44, papelCelulose: 56.56, outrasFinalidades: 7.41, folha: 0.01, principalProdutoPorValor: "papelCelulose", percentualPrincipalProduto: 56.56, principalProdutoPorQuantidade: null, valorTotalProducaoMilReais: null },
-  { ano: 2017, uf: "Centro-Oeste", carvao: 2.35, lenha: 18.96, papelCelulose: 62.3, outrasFinalidades: 7.3, folha: 0.03, principalProdutoPorValor: "papelCelulose", percentualPrincipalProduto: 62.3, principalProdutoPorQuantidade: null, valorTotalProducaoMilReais: null },
-  { ano: 2018, uf: "Centro-Oeste", carvao: 4.55, lenha: 16.55, papelCelulose: 62.63, outrasFinalidades: 8.57, folha: 0.02, principalProdutoPorValor: "papelCelulose", percentualPrincipalProduto: 62.63, principalProdutoPorQuantidade: null, valorTotalProducaoMilReais: null },
-  { ano: 2019, uf: "Centro-Oeste", carvao: 6.65, lenha: 19.95, papelCelulose: 54.37, outrasFinalidades: 10.46, folha: 0.03, principalProdutoPorValor: "papelCelulose", percentualPrincipalProduto: 54.37, principalProdutoPorQuantidade: null, valorTotalProducaoMilReais: null },
-  { ano: 2020, uf: "Centro-Oeste", carvao: 6.81, lenha: 20.47, papelCelulose: 56.88, outrasFinalidades: 8.06, folha: 0.03, principalProdutoPorValor: "papelCelulose", percentualPrincipalProduto: 56.88, principalProdutoPorQuantidade: null, valorTotalProducaoMilReais: null },
-  { ano: 2021, uf: "Centro-Oeste", carvao: 6.57, lenha: 20.98, papelCelulose: 55.39, outrasFinalidades: 7.17, folha: 0.02, principalProdutoPorValor: "papelCelulose", percentualPrincipalProduto: 55.39, principalProdutoPorQuantidade: null, valorTotalProducaoMilReais: null }
-];
+let dadosRankingProducao = [];
+let dadosQuantidadeProduzida = [];
+let dadosValorProducao = [];
+let dadosParticipacaoValor = [];
 
 let anosDisponiveis = dadosQuantidadeProduzida.map(item => String(item.ano));
 // Estado canônico dos filtros; os controles do DOM apenas leem e escrevem aqui.
@@ -604,7 +549,6 @@ const estadoApiEucalipto = { quantidade: false, ranking: false, valor: false, pa
 // Busca e valida um conjunto da API de eucalipto com limite de espera.
 async function buscarEndpointEucalipto(nome) {
   // Cada recurso possui timeout próprio para que uma API lenta não trave a tela.
-  if (window.simularErroApi) throw new Error("Falha simulada para teste da interface.");
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 15000);
   try {
