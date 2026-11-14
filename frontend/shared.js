@@ -32,6 +32,31 @@ function atualizarKpiComApi(id, { label, value, unit = "", badge = "", tone = "n
     card.removeAttribute("aria-busy");
 }
 
+// Zero é uma medição válida. Campos vazios representam ausência de dados.
+function temMedicao(valor) {
+    return (typeof valor === "number" || (typeof valor === "string" && valor.trim() !== ""))
+        && Number.isFinite(Number(valor));
+}
+
+const codigosUfPainel = new Map([
+    ["Acre", "AC"], ["Alagoas", "AL"], ["Amapá", "AP"], ["Amazonas", "AM"],
+    ["Bahia", "BA"], ["Ceará", "CE"], ["Distrito Federal", "DF"], ["Espírito Santo", "ES"],
+    ["Goiás", "GO"], ["Maranhão", "MA"], ["Mato Grosso", "MT"], ["Mato Grosso do Sul", "MS"],
+    ["Minas Gerais", "MG"], ["Pará", "PA"], ["Paraíba", "PB"], ["Paraná", "PR"],
+    ["Pernambuco", "PE"], ["Piauí", "PI"], ["Rio de Janeiro", "RJ"], ["Rio Grande do Norte", "RN"],
+    ["Rio Grande do Sul", "RS"], ["Rondônia", "RO"], ["Roraima", "RR"], ["Santa Catarina", "SC"],
+    ["São Paulo", "SP"], ["Sergipe", "SE"], ["Tocantins", "TO"]
+]);
+const codigosCentroOeste = new Set(["DF", "GO", "MT", "MS"]);
+
+function codigoUfPainel(uf) {
+    return codigosUfPainel.get(uf) || uf;
+}
+
+function localidadeCentroOeste(uf) {
+    return codigosCentroOeste.has(codigoUfPainel(uf));
+}
+
 window.atualizarKpiComApi = atualizarKpiComApi;
 
 // Resolve o card visual que deve receber loading, vazio ou erro.

@@ -26,15 +26,6 @@ const filtrosCorte = {
   metricaAbate: "quantidade"
 };
 
-const ufCanonicaCorte = {
-  Brasil: "Brasil",
-  Goiás: "GO",
-  "Mato Grosso": "MT",
-  "Mato Grosso do Sul": "MS",
-  "Minas Gerais": "MG",
-  Pará: "PA"
-};
-
 const indicadorParaAbaCorte = {
   rebanho: "ct-rebanho",
   abate: "ct-rebanho",
@@ -46,11 +37,10 @@ function porId(id) { return document.getElementById(id); }
 // Converte valores absolutos de cabeças para a unidade exibida nos gráficos.
 function formatarMilhoes(valor) { return Math.round((valor / 1000000) * 100) / 100; }
 // Produz o texto padronizado do intervalo selecionado.
-function periodoLabel() { return `${filtrosCorte.anoInicio}-${filtrosCorte.anoFim}`; }
+function periodoLabel() { return filtrosCorte.anoInicio ? `${filtrosCorte.anoInicio}–${filtrosCorte.anoFim}` : "sem período"; }
 // Informa se um ano pertence ao intervalo atualmente selecionado.
 function dentroPeriodo(ano) { return Number(ano) >= filtrosCorte.anoInicio && Number(ano) <= filtrosCorte.anoFim; }
 // Normaliza nomes completos e siglas para a mesma chave de filtro.
-function canonUf(uf) { return ufCanonicaCorte[uf] || uf; }
 // Atualiza um texto somente quando o elemento existe na página atual.
 function atualizarTexto(id, texto) { const el = porId(id); if (el) el.textContent = texto; }
 
@@ -102,8 +92,14 @@ function anosDeObjetoSerie(dados) {
 // Une os anos existentes nas duas fontes para preencher os selects de período.
 function anosDisponiveisCorte() {
   const anos = new Set();
-  anosDeObjetoSerie(DADOS_CORTE.rebanhoCorte).forEach(ano => anos.add(ano));
-  DADOS_CORTE.abateBovinos.forEach(item => anos.add(item.ano));
+  if (filtrosCorte.indicador === "all" || filtrosCorte.indicador === "rebanho") {
+    anosDeObjetoSerie(DADOS_CORTE.rebanhoCorte).forEach(ano => anos.add(ano));
+  }
+  if (filtrosCorte.indicador === "all" || filtrosCorte.indicador === "abate") {
+    DADOS_CORTE.abateBovinos.filter(item => temMedicao(item[campoAbateCorte()]))
+      .filter(item => filtrosCorte.trimestre === "all" || item.trimestre === filtrosCorte.trimestre)
+      .forEach(item => anos.add(item.ano));
+  }
   return [...anos].sort((a, b) => a - b);
 }
 
@@ -111,14 +107,16 @@ function anosDisponiveisCorte() {
 function dadosSeriePorAno(dados, campoNome, anos, transformador = valor => valor) {
   return anos.map(ano => {
     const linha = { ano: String(ano) };
-    dados.forEach(item => { linha[item[campoNome]] = transformador(item[String(ano)]); });
+    dados.forEach(item => {
+      if (Number.isFinite(item[ano])) linha[item[campoNome]] = transformador(item[ano]);
+    });
     return linha;
   });
 }
 
 // Monta um gráfico de linhas genérico e ignora séries totalmente vazias.
 function criarLinhas(id, dados, campoCategoria, series, sufixo = "") {
-  const seriesValidas = series.filter(nome => dados.some(item => item[nome] !== null && item[nome] !== undefined));
+  const seriesValidas = series.filter(nome => dados.some(item => Number.isFinite(item[nome])));
   if (!dados.length || !seriesValidas.length) return mostrarSemDadosChart(id);
   const root = criarRoot(id);
   const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
@@ -155,12 +153,12 @@ function criarPizza(id, dados, categoria, valor) {
 function criarGraficoRebanho() {
   // Converte a resposta "larga" (um campo para cada ano) no formato esperado
   // pelas séries do amCharts e usa o último ano na pizza de participação.
-  const anos = anosDeObjetoSerie(DADOS_CORTE.rebanhoCorte).filter(dentroPeriodo);
-  const dadosBase = filtrosCorte.ufs.size ? DADOS_CORTE.rebanhoCorte.filter(item => filtrosCorte.ufs.has(canonUf(item.uf))) : DADOS_CORTE.rebanhoCorte;
+  const dadosBase = DADOS_CORTE.rebanhoCorte.filter(item => ufSelecionadaCorte(item.uf));
+  const anos = anosDeObjetoSerie(dadosBase).filter(dentroPeriodo);
   const estados = dadosBase.map(item => item.uf);
   atualizarTexto("subRebanhoCorte", `Milhões de cabeças (${periodoLabel()})`);
   if (!anos.length) {
-    atualizarTexto("tituloRebanhoPartic", "Participação no Rebanho Nacional");
+    atualizarTexto("tituloRebanhoPartic", "Participação no Rebanho das UFs Exibidas");
     mostrarSemDadosChart("chartRebanhoCorte");
     mostrarSemDadosChart("chartRebanhoPartic");
     return;
@@ -168,42 +166,61 @@ function criarGraficoRebanho() {
   criarLinhas("chartRebanhoCorte", dadosSeriePorAno(dadosBase, "uf", anos, formatarMilhoes), "ano", estados, " mi cab.");
 
   const anoFinal = Math.max(...anos);
-  atualizarTexto("tituloRebanhoPartic", `Participação no Rebanho Nacional (${anoFinal || filtrosCorte.anoFim})`);
-  criarPizza("chartRebanhoPartic", dadosBase.filter(item => item.uf !== "Brasil" && item[String(anoFinal)]).map(item => ({ uf: item.uf, quantidadeCabecas: item[String(anoFinal)] })), "uf", "quantidadeCabecas");
+  atualizarTexto("tituloRebanhoPartic", `Participação no Rebanho das UFs Exibidas (${anoFinal || filtrosCorte.anoFim})`);
+  criarPizza("chartRebanhoPartic", dadosBase.filter(item => !["Brasil", "Centro-Oeste"].includes(item.uf) && item[String(anoFinal)]).map(item => ({ uf: item.uf, quantidadeCabecas: item[String(anoFinal)] })), "uf", "quantidadeCabecas");
 }
 
 // Agrega os registros trimestrais de abate segundo a métrica selecionada.
 function criarGraficoAbate() {
   // Quando todos os trimestres estão selecionados, anos incompletos são omitidos
   // para que a comparação anual não misture totais parciais com totais fechados.
-  const ufsPadrao = ["Brasil", "Goiás", "Mato Grosso", "Mato Grosso do Sul"];
-  const ufs = filtrosCorte.ufs.size ? ufsPadrao.filter(uf => filtrosCorte.ufs.has(canonUf(uf))) : ufsPadrao;
-  const registrosFiltrados = DADOS_CORTE.abateBovinos.filter(item => dentroPeriodo(item.ano) && ufs.includes(item.uf) && (filtrosCorte.trimestre === "all" || item.trimestre === filtrosCorte.trimestre));
-  const anos = [...new Set(registrosFiltrados.map(item => item.ano))]
-    .sort((a, b) => a - b)
-    .filter(ano => filtrosCorte.trimestre !== "all" || anoAbateCompleto(ano, ufs));
-  const acumulado = anos.map(ano => {
-    const linha = { ano: String(ano) };
-    ufs.forEach(uf => {
-      const registros = registrosFiltrados.filter(item => item.uf === uf && item.ano === ano);
-      linha[uf] = filtrosCorte.metricaAbate === "peso"
-        ? Math.round(registros.reduce((total, item) => total + item.pesoTotalCarcacas, 0) / 1000000)
-        : formatarMilhoes(registros.reduce((total, item) => total + item.quantidadeAbatida, 0));
-    });
-    return linha;
-  });
+  const series = seriesAbateCorte(filtrosCorte.trimestre, campoAbateCorte());
+  const ufs = series.filter(item => ufSelecionadaCorte(item.uf)).map(item => item.uf);
+  const dados = series.filter(item => ufs.includes(item.uf));
+  const anos = anosDeObjetoSerie(dados);
+  const acumulado = dadosSeriePorAno(dados, "uf", anos, formatarMilhoes);
   const sufixo = filtrosCorte.metricaAbate === "peso" ? " mil t" : " mi cab.";
   const trimestre = filtrosCorte.trimestre === "all" ? "todos os trimestres" : `${filtrosCorte.trimestre} trimestre`;
   atualizarTexto("subAbateBovinos", `${filtrosCorte.metricaAbate === "peso" ? "Peso total das carcaças" : "Cabeças abatidas"} · ${trimestre} · ${periodoLabel()}`);
   criarLinhas("chartAbateBovinos", acumulado, "ano", ufs, sufixo);
 }
 
-// Lista as UFs presentes em qualquer fonte, já no formato usado pelos filtros.
+function ufSelecionadaCorte(uf) {
+  return !filtrosCorte.ufs.size || filtrosCorte.ufs.has(codigoUfPainel(uf));
+}
+
+function campoAbateCorte() {
+  return filtrosCorte.metricaAbate === "peso" ? "pesoTotalCarcacas" : "quantidadeAbatida";
+}
+
+function seriesAbateCorte(trimestre, campo) {
+  const porUf = new Map();
+  for (const item of DADOS_CORTE.abateBovinos) {
+    if (!dentroPeriodo(item.ano) || !temMedicao(item[campo])) continue;
+    if (trimestre !== "all" && item.trimestre !== trimestre) continue;
+    if (!porUf.has(item.uf)) porUf.set(item.uf, new Map());
+    const anos = porUf.get(item.uf);
+    if (!anos.has(item.ano)) anos.set(item.ano, new Map());
+    anos.get(item.ano).set(item.trimestre, Number(item[campo]));
+  }
+  return [...porUf].map(([uf, anos]) => {
+    const linha = { uf };
+    for (const [ano, trimestres] of anos) {
+      if (trimestre !== "all" || trimestres.size === 4) {
+        linha[ano] = [...trimestres.values()].reduce((total, valor) => total + valor, 0);
+      }
+    }
+    return linha;
+  }).filter(item => Object.keys(item).length > 1);
+}
+
 function valoresUfsCorte() {
-  const ufs = new Set();
-  DADOS_CORTE.rebanhoCorte.forEach(item => ufs.add(canonUf(item.uf)));
-  DADOS_CORTE.abateBovinos.forEach(item => ufs.add(canonUf(item.uf)));
-  return [...ufs].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const { indicador, trimestre } = filtrosCorte;
+  const rebanho = indicador === "all" || indicador === "rebanho"
+    ? DADOS_CORTE.rebanhoCorte.filter(item => anosDeObjetoSerie([item]).some(dentroPeriodo)) : [];
+  const abate = indicador === "all" || indicador === "abate"
+    ? seriesAbateCorte(trimestre, campoAbateCorte()) : [];
+  return [...new Set([...rebanho, ...abate].map(item => codigoUfPainel(item.uf)))].sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
 // Resume uma seleção múltipla no texto curto exibido pelo botão do dropdown.
@@ -222,12 +239,19 @@ function renderizarMultiselect({ menuId, buscaId, botaoId, valores, selecionados
   const termo = (busca?.value || "").toLocaleLowerCase("pt-BR");
   const visiveis = valores.filter(valor => label(valor).toLocaleLowerCase("pt-BR").includes(termo));
   botao.textContent = labelSelecao(selecionados, valores.length, todosLabel);
-  menu.innerHTML = visiveis.map(valor => `
-    <label class="filter-option">
-      <input type="checkbox" value="${valor}" ${selecionados.has(valor) ? "checked" : ""} />
-      <span>${label(valor)}</span>
-    </label>
-  `).join("") || '<div class="filter-chip">Nenhum resultado</div>';
+  menu.replaceChildren(...visiveis.map(valor => {
+    const opcao = document.createElement("label");
+    opcao.className = "filter-option";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.value = valor;
+    input.checked = selecionados.has(valor);
+    const texto = document.createElement("span");
+    texto.textContent = label(valor);
+    opcao.append(input, texto);
+    return opcao;
+  }));
+  if (!visiveis.length) menu.textContent = "Nenhum resultado";
   menu.querySelectorAll('input[type="checkbox"]').forEach(input => {
     input.addEventListener("change", () => {
       if (input.checked) selecionados.add(input.value); else selecionados.delete(input.value);
@@ -239,28 +263,31 @@ function renderizarMultiselect({ menuId, buscaId, botaoId, valores, selecionados
 
 // Configura o multiselect de UF com os valores derivados das respostas da API.
 function renderizarFiltrosMultiselect() {
+  const valores = valoresUfsCorte();
+  filtrosCorte.ufs = new Set([...filtrosCorte.ufs].filter(uf => valores.includes(uf)));
+  porId("filtroUfCorteBtn").disabled = !valores.length;
   renderizarMultiselect({
     menuId: "filtroUfCorteMenu",
     buscaId: "buscaUfCorte",
     botaoId: "filtroUfCorteBtn",
-    valores: valoresUfsCorte(),
+    valores,
     selecionados: filtrosCorte.ufs,
     todosLabel: "Todas"
   });
 }
 
-// Preenche os dois selects de ano e define o maior intervalo disponível.
-function popularSelectAnos() {
+// Mantém o período escolhido quando ele ainda existe no indicador ativo.
+function sincronizarAnosCorte() {
   const anos = anosDisponiveisCorte();
-  filtrosCorte.anoInicio = anos[0];
-  filtrosCorte.anoFim = anos[anos.length - 1];
-  ["filtroAnoInicioCorte", "filtroAnoFimCorte"].forEach(id => {
+  const noIntervalo = anos.filter(dentroPeriodo);
+  filtrosCorte.anoInicio = noIntervalo[0] ?? anos[0] ?? null;
+  filtrosCorte.anoFim = noIntervalo.at(-1) ?? anos.at(-1) ?? null;
+  ["filtroAnoInicioCorte", "filtroAnoFimCorte"].forEach((id, indice) => {
     const select = porId(id);
-    if (!select) return;
     select.innerHTML = anos.map(ano => `<option value="${ano}">${ano}</option>`).join("");
+    select.disabled = !anos.length;
+    select.value = indice === 0 ? filtrosCorte.anoInicio : filtrosCorte.anoFim;
   });
-  porId("filtroAnoInicioCorte").value = filtrosCorte.anoInicio;
-  porId("filtroAnoFimCorte").value = filtrosCorte.anoFim;
 }
 
 // Materializa os filtros ativos em chips de leitura rápida.
@@ -268,7 +295,7 @@ function atualizarChipsFiltros() {
   const el = porId("filtrosAtivosCorte");
   if (!el) return;
   const chips = [];
-  chips.push(`Período: ${periodoLabel()}`);
+  if (filtrosCorte.anoInicio) chips.push(`Período: ${periodoLabel()}`);
   if (filtrosCorte.indicador !== "all") chips.push(`Indicador: ${filtrosCorte.indicador}`);
   if (filtrosCorte.ufs.size) chips.push(`UF: ${[...filtrosCorte.ufs].join(", ")}`);
   if (filtrosCorte.trimestre !== "all") chips.push(`Trimestre: ${filtrosCorte.trimestre}`);
@@ -279,7 +306,7 @@ function atualizarChipsFiltros() {
 function atualizarVisibilidadeIndicador() {
   document.querySelectorAll('[data-filter-group="indicador"] .filter-btn').forEach(btn => btn.classList.toggle("active", btn.dataset.filter === filtrosCorte.indicador));
   document.querySelectorAll("[data-category]").forEach(el => {
-    el.style.display = filtrosCorte.indicador === "all" || el.dataset.category === filtrosCorte.indicador ? "" : "none";
+    el.classList.toggle("is-filter-hidden", filtrosCorte.indicador !== "all" && el.dataset.category !== filtrosCorte.indicador);
   });
 }
 
@@ -303,28 +330,28 @@ function renderizarAbaAtivaCorte() {
 function atualizarDashboardCorte() {
   // Centraliza toda atualização visual: corrige o período, redesenha a aba
   // visível e sincroniza os controles e o resumo dos filtros.
-  if (filtrosCorte.anoInicio > filtrosCorte.anoFim) {
+  if (filtrosCorte.anoInicio !== null && filtrosCorte.anoFim !== null && filtrosCorte.anoInicio > filtrosCorte.anoFim) {
     [filtrosCorte.anoInicio, filtrosCorte.anoFim] = [filtrosCorte.anoFim, filtrosCorte.anoInicio];
     porId("filtroAnoInicioCorte").value = filtrosCorte.anoInicio;
     porId("filtroAnoFimCorte").value = filtrosCorte.anoFim;
   }
-  renderizarAbaAtivaCorte();
+  sincronizarAnosCorte();
   renderizarFiltrosMultiselect();
+  atualizarRebanhoCorte();
+  atualizarAbateCorte();
+  renderizarAbaAtivaCorte();
   atualizarChipsFiltros();
   atualizarVisibilidadeIndicador();
 }
 
 // Restaura o estado inicial dos filtros e solicita uma renderização completa.
 function limparFiltrosCorte() {
-  const anos = anosDisponiveisCorte();
   filtrosCorte.indicador = "all";
-  filtrosCorte.anoInicio = anos[0];
-  filtrosCorte.anoFim = anos[anos.length - 1];
+  filtrosCorte.anoInicio = null;
+  filtrosCorte.anoFim = null;
   filtrosCorte.ufs.clear();
   filtrosCorte.trimestre = "all";
   filtrosCorte.metricaAbate = "quantidade";
-  porId("filtroAnoInicioCorte").value = filtrosCorte.anoInicio;
-  porId("filtroAnoFimCorte").value = filtrosCorte.anoFim;
   porId("filtroTrimestreCorte").value = "all";
   porId("filtroMetricaAbate").value = "quantidade";
   const buscaUf = porId("buscaUfCorte");
@@ -351,9 +378,7 @@ function configurarEventosFiltrosCorte() {
 
 // Prepara filtros e dispara a primeira renderização após a carga dos dados.
 function inicializarGraficosCorte() {
-  popularSelectAnos();
   configurarEventosFiltrosCorte();
-  renderizarFiltrosMultiselect();
   atualizarDashboardCorte();
 }
 
@@ -369,7 +394,6 @@ window.onTabChange = function () {
 };
 
 const API_CORTE = "https://api.projetocerradoifg.org/webhook/corte";
-const UFS_REBANHO_CORTE = ["Brasil", "Mato Grosso", "Goiás", "Pará", "Minas Gerais", "Mato Grosso do Sul"];
 const ALVOS_API_CORTE = Object.freeze({
   rebanho: ["chartRebanhoCorte", "chartRebanhoPartic", "tabelaRebanhoCorte"],
   abate: ["chartAbateBovinos", "tabelaAbateCorte"]
@@ -393,26 +417,15 @@ async function buscarEndpointCorte(nome) {
   }
 }
 
-// Converte linhas por UF/ano para objetos com os anos como propriedades.
+// Converte as localidades presentes na resposta em séries anuais.
 function montarRebanhoLargo(linhas) {
-  // A API entrega uma linha por UF/ano; os gráficos trabalham com uma linha por
-  // UF e os anos como propriedades (`{ uf, 2020, 2021, ... }`).
-  return UFS_REBANHO_CORTE.map(uf => {
-    const item = { uf };
-    linhas.filter(linha => linha.uf === uf).forEach(linha => {
-      if (Number.isFinite(Number(linha.quantidadeCabecas))) item[String(linha.ano)] = Number(linha.quantidadeCabecas);
-    });
-    return item;
-  }).filter(item => Object.keys(item).length > 1);
-}
-
-// Confirma que todas as UFs possuem os quatro trimestres de determinado ano.
-function anoAbateCompleto(ano, ufs) {
-  return ufs.every(uf => new Set(
-    DADOS_CORTE.abateBovinos
-      .filter(item => item.uf === uf && item.ano === ano)
-      .map(item => item.trimestre)
-  ).size === 4);
+  const series = new Map();
+  for (const linha of linhas) {
+    if (!linha.uf || !/^\d{4}$/.test(linha.ano) || !temMedicao(linha.quantidadeCabecas)) continue;
+    if (!series.has(linha.uf)) series.set(linha.uf, { uf: linha.uf });
+    series.get(linha.uf)[linha.ano] = Number(linha.quantidadeCabecas);
+  }
+  return [...series.values()];
 }
 
 const numeroMiCorte = valor => (Number(valor) / 1_000_000).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -429,71 +442,116 @@ function preencherKpiCorte(id, rotulo, valor, badge, tone = "neutral") {
   });
 }
 
-// Calcula variações, preenche KPIs e reconstrói a tabela de rebanho.
-function atualizarRebanhoCorte() {
-  const rebanho = DADOS_CORTE.rebanhoCorte;
-  const anos = anosDeObjetoSerie(rebanho);
-  const primeiro = anos[0];
-  const ultimo = anos.at(-1);
-  const porUf = uf => rebanho.find(item => item.uf === uf);
-  if (!primeiro || !ultimo || !porUf("Brasil") || !porUf("Goiás")) return;
+function atualizarKpiSerieCorte(id, titulo, serie, sufixo = "", compararCobertura = false) {
+  const anos = anosDeObjetoSerie([serie]).filter(dentroPeriodo);
+  const atual = anos.at(-1);
+  if (!atual) {
+    window.atualizarKpiComApi(id, { label: titulo, state: "error" });
+    return;
+  }
+  const inicial = anos[0];
+  const cobertura = serie.cobertura?.[atual];
+  const coberturaConstante = !compararCobertura || serie.cobertura?.[inicial] === cobertura;
+  const variacao = inicial !== atual && serie[inicial] > 0 && coberturaConstante
+    ? `${percentualCorte((serie[atual] / serie[inicial] - 1) * 100)} desde ${inicial}` : "";
+  const badge = [cobertura, variacao].filter(Boolean).join(" · ") || "Série disponível";
+  preencherKpiCorte(id, `${titulo} ${atual}${sufixo}`, serie[atual], badge);
+}
 
-  [["Brasil", "kpiCorteRebanhoBrasil"], ["Goiás", "kpiCorteRebanhoGoias"]].forEach(([uf, id]) => {
-    const variacao = (porUf(uf)[String(ultimo)] / porUf(uf)[String(primeiro)] - 1) * 100;
-    preencherKpiCorte(id, `Rebanho ${uf} ${ultimo}`, porUf(uf)[String(ultimo)],
-      `${variacao >= 0 ? "▲" : "▼"} ${percentualCorte(variacao)} desde ${primeiro}`, variacao >= 0 ? "up" : "down");
+function serieRecorteCorte(series) {
+  const selecionadas = [...filtrosCorte.ufs];
+  const oficial = series.find(item => item.uf === "Centro-Oeste");
+  if (!selecionadas.length && oficial) return oficial;
+  if (selecionadas.length === 1) {
+    return series.find(item => ufSelecionadaCorte(item.uf)) || { uf: selecionadas[0] };
+  }
+
+  const regional = !selecionadas.length;
+  const localidades = series.filter(item => regional ? localidadeCentroOeste(item.uf)
+    : !["Brasil", "Centro-Oeste"].includes(item.uf) && ufSelecionadaCorte(item.uf));
+  const resumo = { uf: regional ? "Centro-Oeste" : "UFs selecionadas", cobertura: {} };
+  anosDeObjetoSerie(localidades).forEach(ano => {
+    const fontes = localidades.filter(item => Number.isFinite(item[ano]));
+    if (!regional && fontes.length !== selecionadas.length) return;
+    resumo[ano] = fontes.reduce((total, item) => total + item[ano], 0);
+    if (regional) resumo.cobertura[ano] = fontes.map(item => codigoUfPainel(item.uf)).sort().join(", ");
   });
+  return resumo;
+}
+
+function atualizarRebanhoCorte() {
+  const series = DADOS_CORTE.rebanhoCorte;
+  atualizarKpiSerieCorte("kpiCorteRebanhoBrasil", "Rebanho Brasil", series.find(item => item.uf === "Brasil") || {});
+  const recorte = serieRecorteCorte(series);
+  atualizarKpiSerieCorte("kpiCorteRebanhoRecorte", `Rebanho ${recorte.uf}`, recorte, "", true);
 
   const tabela = document.querySelector("#tabelaRebanhoCorte table");
-  if (tabela) {
-    const meio = anos[Math.floor((anos.length - 1) / 2)];
-    const colunas = [primeiro, meio, ultimo];
-    tabela.querySelectorAll("thead th").forEach((th, indice) => {
-      if (indice > 0 && indice < 4) th.textContent = String(colunas[indice - 1]);
+  if (!tabela) return;
+  const dados = series.filter(uf => ufSelecionadaCorte(uf.uf));
+  const anos = anosDeObjetoSerie(dados).filter(dentroPeriodo);
+  const primeiro = anos[0];
+  const ultimo = anos.at(-1);
+  const colunas = [primeiro, anos[Math.floor((anos.length - 1) / 2)], ultimo];
+  tabela.querySelectorAll("thead th").forEach((th, indice) => {
+    if (indice > 0 && indice < 4) th.textContent = colunas[indice - 1] || "—";
+  });
+  const tbody = tabela.querySelector("tbody");
+  tbody.replaceChildren();
+  dados.filter(item => anos.some(ano => Number.isFinite(item[ano]))).forEach(item => {
+    const variacao = item[primeiro] > 0 && Number.isFinite(item[ultimo]) && primeiro !== ultimo
+      ? percentualCorte((item[ultimo] / item[primeiro] - 1) * 100) : "—";
+    const linha = tbody.insertRow();
+    linha.insertCell().textContent = item.uf;
+    [...colunas.map(ano => Number.isFinite(item[ano]) ? numeroMiCorte(item[ano]) : "—"), variacao].forEach(valor => {
+      const celula = linha.insertCell();
+      celula.className = "text-end num";
+      celula.textContent = valor;
     });
-    const ordem = ["Brasil", "Mato Grosso", "Goiás", "Minas Gerais", "Pará", "Mato Grosso do Sul"];
-    tabela.querySelector("tbody").innerHTML = ordem.filter(porUf).map(uf => {
-      const variacao = (porUf(uf)[String(ultimo)] / porUf(uf)[String(primeiro)] - 1) * 100;
-      return `<tr><td>${uf === "Brasil" ? `<strong>${uf}</strong>` : uf}</td>${colunas.map(ano => `<td class="text-end num">${numeroMiCorte(porUf(uf)[String(ano)])}</td>`).join("")}<td class="text-end"><span class="kpi-badge ${variacao >= 0 ? "kpi-badge--up" : "kpi-badge--down"}">${percentualCorte(variacao)}</span></td></tr>`;
-    }).join("");
-    document.querySelector("#tabelaRebanhoCorte .chart-card__sub").textContent = `Milhões de cabeças (${primeiro}–${ultimo})`;
-  }
+  });
 }
 
-// Consolida o abate anual para preencher KPIs e a tabela comparativa.
 function atualizarAbateCorte() {
-  const ufs = ["Brasil", "Goiás", "Mato Grosso", "Mato Grosso do Sul"];
-  const anos = [...new Set(DADOS_CORTE.abateBovinos.map(item => item.ano))]
-    .sort((a, b) => a - b).filter(ano => anoAbateCompleto(ano, ufs));
-  const atual = anos.at(-1);
-  const anterior = anos.at(-2);
-  const total = (uf, ano) => DADOS_CORTE.abateBovinos
-    .filter(item => item.uf === uf && item.ano === ano)
-    .reduce((soma, item) => soma + Number(item.quantidadeAbatida || 0), 0);
-  if (!atual) return;
-  const brasil = total("Brasil", atual);
-  const variacao = anterior ? (brasil / total("Brasil", anterior) - 1) * 100 : null;
-  preencherKpiCorte("kpiCorteAbateBrasil", `Abate Brasil ${atual}`, brasil,
-    variacao === null ? "Série disponível" : `${variacao >= 0 ? "↗" : "↘"} ${percentualCorte(variacao)} vs ${anterior}`);
-  preencherKpiCorte("kpiCorteAbateGoias", `Abate Goiás ${atual}`, total("Goiás", atual), `${Math.round(total("Goiás", atual) / brasil * 100)}% do Brasil`);
+  const trimestre = filtrosCorte.trimestre;
+  const series = seriesAbateCorte(trimestre, "quantidadeAbatida");
+  const sufixo = trimestre === "all" ? "" : ` · ${trimestre} trimestre`;
+  atualizarTexto("subTabelaAbateCorte", trimestre === "all" ? "Milhões de cabeças · totais anuais" : `Milhões de cabeças · ${trimestre} trimestre`);
+  atualizarKpiSerieCorte("kpiCorteAbateBrasil", "Abate Brasil", series.find(item => item.uf === "Brasil") || {}, sufixo);
+  const recorte = serieRecorteCorte(series);
+  atualizarKpiSerieCorte("kpiCorteAbateRecorte", `Abate ${recorte.uf}`, recorte, sufixo, true);
 
   const tabela = document.querySelector("#tabelaAbateCorte table");
-  if (tabela) {
-    const exibidos = anos.filter((_ano, indice) => indice % 2 === 0);
-    if (exibidos.at(-1) !== atual) exibidos.push(atual);
-    tabela.querySelector("tbody").innerHTML = exibidos.map(ano =>
-      `<tr><td>${ano}</td>${ufs.map(uf => `<td class="text-end num">${numeroMiCorte(total(uf, ano))}</td>`).join("")}</tr>`
-    ).join("");
-    document.querySelector("#tabelaAbateCorte .chart-card__sub").textContent = `Milhões de cabeças (${anos[0]}–${atual})`;
-  }
+  if (!tabela) return;
+  const dados = series.filter(item => ufSelecionadaCorte(item.uf));
+  const anos = anosDeObjetoSerie(dados);
+  const exibidos = anos.filter((_ano, indice) => indice % 2 === 0);
+  if (anos.length && exibidos.at(-1) !== anos.at(-1)) exibidos.push(anos.at(-1));
+  const cabecalho = tabela.querySelector("thead tr");
+  cabecalho.replaceChildren(cabecalho.firstElementChild);
+  dados.forEach(item => {
+    const th = document.createElement("th");
+    th.scope = "col";
+    th.className = "text-end";
+    th.textContent = item.uf;
+    cabecalho.append(th);
+  });
+  const tbody = tabela.querySelector("tbody");
+  tbody.replaceChildren();
+  exibidos.forEach(ano => {
+    const linha = tbody.insertRow();
+    linha.insertCell().textContent = ano;
+    dados.forEach(item => {
+      const celula = linha.insertCell();
+      celula.className = "text-end num";
+      celula.textContent = Number.isFinite(item[ano]) ? numeroMiCorte(item[ano]) : "—";
+    });
+  });
 }
 
-// Carrega as fontes em paralelo e atualiza cada grupo visual de forma independente.
 async function carregarDadosCorte() {
   // `allSettled` mantém os blocos independentes: se um endpoint falhar, os dados
   // do outro continuam disponíveis e apenas os seus próprios alvos exibem erro.
   Object.values(ALVOS_API_CORTE).flat().forEach(id => window.dashboardDataUi.definirEstado([id], "loading"));
-  ["kpiCorteRebanhoBrasil", "kpiCorteRebanhoGoias", "kpiCorteAbateBrasil", "kpiCorteAbateGoias"].forEach(id => {
+  ["kpiCorteRebanhoBrasil", "kpiCorteRebanhoRecorte", "kpiCorteAbateBrasil", "kpiCorteAbateRecorte"].forEach(id => {
     document.getElementById(id)?.setAttribute("aria-busy", "true");
   });
   DADOS_CORTE.rebanhoCorte = [];
@@ -506,15 +564,14 @@ async function carregarDadosCorte() {
     if (resultado.status === "fulfilled") {
       if (nome === "rebanho") {
         DADOS_CORTE.rebanhoCorte = montarRebanhoLargo(resultado.value);
-        atualizarRebanhoCorte();
       } else {
-        DADOS_CORTE.abateBovinos = resultado.value;
-        atualizarAbateCorte();
+        DADOS_CORTE.abateBovinos = resultado.value.filter(item => item.uf && temMedicao(item.ano))
+          .map(item => ({ ...item, ano: Number(item.ano) }));
       }
       window.dashboardDataUi.definirEstado(ALVOS_API_CORTE[nome], "ready");
       window.dashboardDataUi.marcarFonte(ALVOS_API_CORTE[nome], nome === "rebanho" ? "IBGE — PPM" : "IBGE — PTA");
     } else {
-      const kpis = nome === "rebanho" ? ["kpiCorteRebanhoBrasil", "kpiCorteRebanhoGoias"] : ["kpiCorteAbateBrasil", "kpiCorteAbateGoias"];
+      const kpis = nome === "rebanho" ? ["kpiCorteRebanhoBrasil", "kpiCorteRebanhoRecorte"] : ["kpiCorteAbateBrasil", "kpiCorteAbateRecorte"];
       kpis.forEach(id => window.atualizarKpiComApi(id, { state: "error" }));
       window.dashboardDataUi.definirEstado(ALVOS_API_CORTE[nome], "error", "Não foi possível carregar os dados.");
       console.error(`Falha ao carregar dados de corte (${nome}):`, resultado.reason);

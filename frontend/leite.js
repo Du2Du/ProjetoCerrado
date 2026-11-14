@@ -11,34 +11,32 @@ const P = ["#4a7c3f", "#c8943a", "#a0622b", "#6fa65e", "#2d5c24", "#e8a84c", "#7
 const DADOS_LEITE = {
   producaoBilhoes: [],
   participacaoRegiao: [],
-  producaoCO: [],
   producaoMeso: [],
   municipiosProducao: [],
   produtividadeMunicipios: [],
   rebanhoCO: [],
-  vacasRegiao2021: [],
+  vacasRegiao: [],
   produtividadeRegiao: [],
   vacasRegiaoSerie: [],
   vacasMeso: [],
   rankingConsumo: []
 };
 
-let ANOS_PRODUCAO = ["2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021"];
-const SERIES_PRODUCAO_UF = ["Brasil", "Minas Gerais", "Paraná", "Rio Grande do Sul", "Goiás", "Santa Catarina"];
-const SERIES_MESO = ["Noroeste goiano", "Norte goiano", "Centro goiano", "Leste goiano", "Sul goiano"];
-const SERIES_MESO_LABEL = ["Noroeste Goiano", "Norte Goiano", "Centro Goiano", "Leste Goiano", "Sul Goiano"];
+let SERIES_PRODUCAO_UF = [];
+let SERIES_MESO = [];
+let SERIES_VACAS_MESO = [];
+let linhasMunicipais = [];
+let linhasMesorregionais = [];
 let SERIES_REGIAO = [];
 let SERIES_UF_CO = [];
 let TODOS_MUNICIPIOS = [];
 let ANOS_PRODUTIVIDADE_MUNICIPIOS = [];
-let PRODUTOS_FILTRO = [];
-let PERIODO_PADRAO = { inicio: "2013", fim: "2021" };
+let PERIODO_PADRAO = { inicio: "", fim: "" };
 
 const estadoFiltros = {
-  escala: "all",
   indicador: "all",
-  anoInicio: "2013",
-  anoFim: "2021",
+  anoInicio: "",
+  anoFim: "",
   regioes: [],
   ufs: [],
   municipios: [],
@@ -170,25 +168,22 @@ function registrarFalhaApi(alvos, erro) {
 
 // Recalcula anos, séries, municípios e produtos após receber novos conjuntos.
 function atualizarColecoesDinamicas() {
-  const anosApi = ordenarAnos(DADOS_LEITE.producaoBilhoes.map(item => item.Ano));
-  const anosLocais = ordenarAnos([
-    ...DADOS_LEITE.producaoMeso.map(item => item.ano),
-    ...DADOS_LEITE.municipiosProducao.map(item => item.ano),
-    ...DADOS_LEITE.rebanhoCO.flatMap(item => Object.keys(item).filter(chave => /^\d{4}$/.test(chave)))
+  const anos = ordenarAnos([
+    ...DADOS_LEITE.producaoBilhoes.map(item => item.Ano),
+    ...(metadadosApi.anosVacas || []),
+    ...(metadadosApi.centroOesteLinhas || []).map(item => item.ano),
+    ...linhasMesorregionais.map(item => item.ano),
+    ...linhasMunicipais.map(item => item.ano),
+    ...DADOS_LEITE.rankingConsumo.map(item => item.ano)
   ]);
-  ANOS_PRODUCAO = ordenarAnos([...anosLocais, ...anosApi]);
   SERIES_REGIAO = Array.from(new Set([
     ...DADOS_LEITE.vacasRegiaoSerie.map(item => item.regiao),
-    ...DADOS_LEITE.participacaoRegiao.map(item => item.regiao)
+    ...(metadadosApi.linhasRegioes || []).filter(item => temMedicao(item.producao)).map(item => item.regiao)
   ]));
-  PRODUTOS_FILTRO = Array.from(new Set(DADOS_LEITE.rankingConsumo.map(d => d.produto)))
-    .sort((a, b) => a.localeCompare(b, "pt-BR"));
 
-  if (anosApi.length) {
-    PERIODO_PADRAO = { inicio: anosApi[0], fim: anosApi.at(-1) };
-    estadoFiltros.anoInicio = PERIODO_PADRAO.inicio;
-    estadoFiltros.anoFim = PERIODO_PADRAO.fim;
-  }
+  PERIODO_PADRAO = { inicio: anos[0] || "", fim: anos.at(-1) || "" };
+  estadoFiltros.anoInicio = PERIODO_PADRAO.inicio;
+  estadoFiltros.anoFim = PERIODO_PADRAO.fim;
 }
 
 // Busca e valida um conjunto da API de leite com limite de espera.
@@ -217,7 +212,7 @@ function pivotarLeitePorAno(linhas, campoNome, campoValor, campoAno = "ano", tra
   // séries de linha e barras do amCharts.
   return ordenarAnos(linhas.map(item => item.ano)).map(ano => {
     const linhaAno = { [campoAno]: Number(ano) };
-    linhas.filter(item => String(item.ano) === ano).forEach(item => {
+    linhas.filter(item => String(item.ano) === ano && temMedicao(item[campoValor])).forEach(item => {
       linhaAno[transformarNome(item[campoNome])] = Number(item[campoValor]);
     });
     return linhaAno;
@@ -228,7 +223,7 @@ function pivotarLeitePorAno(linhas, campoNome, campoValor, campoAno = "ano", tra
 function pivotarLeitePorNome(linhas, campoNome, campoValor, nomeSaida) {
   return Array.from(new Set(linhas.map(item => item[campoNome]))).map(nome => {
     const linhaNome = { [nomeSaida]: nome };
-    linhas.filter(item => item[campoNome] === nome).forEach(item => {
+    linhas.filter(item => item[campoNome] === nome && temMedicao(item[campoValor])).forEach(item => {
       linhaNome[String(item.ano)] = Number(item[campoValor]);
     });
     return linhaNome;
@@ -236,21 +231,32 @@ function pivotarLeitePorNome(linhas, campoNome, campoValor, nomeSaida) {
 }
 
 // Preenche a tabela municipal respeitando período, municípios e produtos ativos.
-function renderizarTabelaProdutividadeMunicipios() {
+function renderizarTabelaProdutividadeMunicipios(municipios) {
   const tabela = document.querySelector("#tabelaProdutividadeMunicipios table");
-  if (!tabela || ANOS_PRODUTIVIDADE_MUNICIPIOS.length < 2) return;
-  const [anoInicial, anoFinal] = ANOS_PRODUTIVIDADE_MUNICIPIOS;
+  if (!tabela) return;
+  tabela.querySelector("tbody").replaceChildren();
+  alternarCard("tabelaProdutividadeMunicipios", ANOS_PRODUTIVIDADE_MUNICIPIOS.length > 0 && municipios.length > 0);
+  if (!ANOS_PRODUTIVIDADE_MUNICIPIOS.length) return;
+  const anoInicial = ANOS_PRODUTIVIDADE_MUNICIPIOS[0];
+  const anoFinal = ANOS_PRODUTIVIDADE_MUNICIPIOS.at(-1);
   const cabecalho = tabela.querySelectorAll("thead th");
   cabecalho[2].textContent = anoInicial;
   cabecalho[3].textContent = anoFinal;
   const dados = [...DADOS_LEITE.produtividadeMunicipios]
-    .filter(item => Number.isFinite(item[anoFinal]))
+    .filter(item => municipios.includes(item.municipio) && Number.isFinite(item[anoFinal]))
     .sort((a, b) => b[anoFinal] - a[anoFinal]);
-  tabela.querySelector("tbody").innerHTML = dados.map((item, indice) => {
+  dados.forEach((item, indice) => {
     const classe = indice === 1 ? " badge-rank--2" : indice === 2 ? " badge-rank--3" : "";
     const posicao = indice < 3 ? `<span class="badge-rank${classe}">${indice + 1}</span>` : indice + 1;
-    return `<tr><td>${posicao}</td><td>${item.municipio}</td><td class="text-end num">${Math.round(item[anoInicial]).toLocaleString("pt-BR")}</td><td class="text-end num">${Math.round(item[anoFinal]).toLocaleString("pt-BR")}</td></tr>`;
-  }).join("");
+    const linha = tabela.querySelector("tbody").insertRow();
+    linha.insertCell().innerHTML = posicao;
+    linha.insertCell().textContent = item.municipio;
+    [anoInicial, anoFinal].forEach(ano => {
+      const celula = linha.insertCell();
+      celula.className = "text-end num";
+      celula.textContent = Number.isFinite(item[ano]) ? formatarNumeroKpi(item[ano], 0) : "—";
+    });
+  });
   document.querySelector("#tabelaProdutividadeMunicipios .chart-card__sub").textContent = `Litros / vaca / ano — ${anoInicial} & ${anoFinal}`;
 }
 
@@ -260,9 +266,8 @@ async function carregarDadosNovaApiLeite() {
   // conjuntos e componentes relacionados àquela resposta.
   Object.values(ALVOS_API).flat().forEach(id => definirEstadoVisualizacao([id], "loading"));
   [
-    "kpiLeiteBrasil", "kpiLeiteGoias", "kpiLeiteRegiao", "kpiLeiteProdutividade",
-    "kpiLeiteMesoSul", "kpiLeiteMesoCentro", "kpiLeiteMesoLeste", "kpiLeiteMesoNorte",
-    "kpiLeitePlanoProducaoCo", "kpiLeitePlanoGoias", "kpiLeitePlanoProdutividadeCo", "kpiLeitePlanoProdutividadeSul"
+    "kpiLeiteBrasil", "kpiLeiteRecorte", "kpiLeiteRegiao", "kpiLeiteProdutividade",
+    "kpiLeitePlanoProducaoCo", "kpiLeitePlanoProdutividadeCo", "kpiLeitePlanoProdutividadeSul"
   ].forEach(id => {
     document.getElementById(id)?.setAttribute("aria-busy", "true");
   });
@@ -288,6 +293,8 @@ async function carregarDadosNovaApiLeite() {
   };
 
   processar("producao", linhas => {
+    linhas = linhas.filter(item => item.uf && temMedicao(item.producaoBilhoesLitros));
+    SERIES_PRODUCAO_UF = [...new Set(linhas.map(item => item.uf))];
     DADOS_LEITE.producaoBilhoes = pivotarLeitePorAno(linhas, "uf", "producaoBilhoesLitros", "Ano");
     metadadosApi.anosProducao = ordenarAnos(linhas.map(item => item.ano));
     atualizarTextoVisualizacao("chartLeiteSeries", {
@@ -297,104 +304,81 @@ async function carregarDadosNovaApiLeite() {
 
   processar("regioes", linhas => {
     const anos = ordenarAnos(linhas.map(item => item.ano));
-    const anoAtual = [...anos].reverse().find(ano => {
-      const atuais = linhas.filter(item => String(item.ano) === ano);
-      return atuais.length >= 5 && atuais.every(item => Number.isFinite(Number(item.producao)) && Number.isFinite(Number(item.vacas)));
-    });
-    if (!anoAtual) throw new ErroDadosVazios("Não há um ano regional completo.");
-    const atuais = linhas.filter(item => String(item.ano) === anoAtual);
-    const totalProducao = atuais.reduce((soma, item) => soma + Number(item.producao), 0);
-    const totalVacas = atuais.reduce((soma, item) => soma + Number(item.vacas), 0);
-    DADOS_LEITE.participacaoRegiao = atuais.map(item => ({
-      regiao: item.regiao,
-      producaoLeiteMilhoesLitros: Number(item.producao) / 1_000,
-      percentualParticipacao: Number(item.producao) / totalProducao * 100
-    }));
-    DADOS_LEITE.produtividadeRegiao = atuais.map(item => ({
-      regiao: item.regiao,
-      produtividadeLitrosPorVacaAno: Number(item.producao) * 1_000 / Number(item.vacas)
-    }));
-    DADOS_LEITE.vacasRegiao2021 = atuais.map(item => ({
-      regiao: item.regiao,
-      quantidadeVacasOrdenhadas: Number(item.vacas),
-      percentualParticipacao: Number(item.vacas) / totalVacas * 100
-    }));
     DADOS_LEITE.vacasRegiaoSerie = pivotarLeitePorNome(linhas, "regiao", "vacas", "regiao");
-    metadadosApi.anoRegioes = anoAtual;
-    metadadosApi.anoVacas = anoAtual;
     metadadosApi.anosVacas = anos;
-    atualizarTextoVisualizacao("chartLeiteRegiao", { titulo: `Participação Regional (${anoAtual})` });
-    atualizarTextoVisualizacao("chartProdutividade", { titulo: `Produtividade por Região (${anoAtual})` });
-    atualizarTextoVisualizacao("chartVacasRegiao", { titulo: `Vacas Ordenhadas por Região (${anoAtual})` });
+    metadadosApi.linhasRegioes = linhas;
     atualizarTextoVisualizacao("chartVacasRegiaoSerie", { subtitulo: `Cabeças — ${periodoTexto(anos)}` });
-    atualizarTextoVisualizacao("tabelaRegioesLeite", { titulo: `Regiões Brasileiras — ${anoAtual}` });
   });
 
   processar("centroOeste", linhas => {
-    const ufs = ["Mato Grosso do Sul", "Mato Grosso", "Goiás"];
-    const anos = ordenarAnos(linhas.map(item => item.ano));
-    const anoAtual = [...anos].reverse().find(ano => ufs.every(uf => linhas.some(item => item.uf === uf && String(item.ano) === ano && Number.isFinite(Number(item.producao)))));
-    if (!anoAtual) throw new ErroDadosVazios("Não há um ano completo para o Centro-Oeste.");
-    const atuais = ufs.map(uf => linhas.find(item => item.uf === uf && String(item.ano) === anoAtual));
-    const total = atuais.reduce((soma, item) => soma + Number(item.producao), 0);
-    DADOS_LEITE.producaoCO = atuais.map(item => ({
-      uf: item.uf, producaoLeiteMilhoesLitros: Number(item.producao),
-      percentualParticipacao: Number(item.producao) / total * 100
-    }));
-    const linhasRebanho = linhas.filter(item => ["Centro-Oeste", ...ufs].includes(item.uf) && Number.isFinite(Number(item.rebanho)));
+    metadadosApi.centroOesteLinhas = linhas;
+    const linhasRebanho = linhas.filter(item => item.uf && temMedicao(item.rebanho));
     DADOS_LEITE.rebanhoCO = pivotarLeitePorNome(linhasRebanho, "uf", "rebanho", "uf");
-    SERIES_UF_CO = ufs.filter(uf => DADOS_LEITE.rebanhoCO.some(item => item.uf === uf));
-    metadadosApi.anoCentroOeste = anoAtual;
-    metadadosApi.centroOesteSerie = linhas.filter(item => item.uf === "Centro-Oeste").sort((a, b) => Number(a.ano) - Number(b.ano));
-    metadadosApi.centroOesteLinhasAtuais = linhas.filter(item => String(item.ano) === anoAtual);
-    atualizarTextoVisualizacao("chartLeiteProducaoCO", { titulo: `Produção de Leite — Centro-Oeste (${anoAtual})`, subtitulo: "Mil litros por estado" });
-    atualizarTextoVisualizacao("chartProducaoCentroOesteUf", { subtitulo: `Produção de leite em ${anoAtual} — mil litros` });
+    SERIES_UF_CO = DADOS_LEITE.rebanhoCO.map(item => item.uf).filter(uf => uf !== "Centro-Oeste");
   });
 
   processar("mesorregioes", linhas => {
-    const nomeGrafico = nome => String(nome).replace("Goiano", "goiano");
-    const producaoMilhoes = linhas.filter(item => Number.isFinite(Number(item.producao))).map(item => ({
+    // Este endpoint só contém Goiás e não inclui UF no contrato atual.
+    linhasMesorregionais = linhas.map(item => ({ ...item, uf: item.uf || "GO" }));
+    SERIES_MESO = [...new Set(linhasMesorregionais.filter(item => temMedicao(item.producao)).map(item => item.mesorregiao))];
+    SERIES_VACAS_MESO = [...new Set(linhasMesorregionais.filter(item => temMedicao(item.vacas)).map(item => item.mesorregiao))];
+    const producaoMilhoes = linhasMesorregionais.filter(item => temMedicao(item.producao)).map(item => ({
       ...item, producaoMilhoes: Number(item.producao) / 1_000
     }));
-    DADOS_LEITE.producaoMeso = pivotarLeitePorAno(producaoMilhoes, "mesorregiao", "producaoMilhoes", "ano", nomeGrafico);
-    DADOS_LEITE.vacasMeso = pivotarLeitePorNome(linhas.filter(item => Number.isFinite(Number(item.vacas))), "mesorregiao", "vacas", "mesorregiao");
-    const anos = ordenarAnos(linhas.map(item => item.ano));
-    atualizarTextoVisualizacao("chartGoiasMeso", { subtitulo: `Milhões de litros (${periodoTexto(anos)})` });
-    atualizarTextoVisualizacao("chartGoiasMesoPie", { titulo: `Distribuição Mesorregiões (${anos.at(-1)})` });
+    DADOS_LEITE.producaoMeso = pivotarLeitePorAno(producaoMilhoes, "mesorregiao", "producaoMilhoes");
+    DADOS_LEITE.vacasMeso = pivotarLeitePorNome(linhasMesorregionais, "mesorregiao", "vacas", "mesorregiao");
   });
 
   processar("municipios", linhas => {
-    TODOS_MUNICIPIOS = Array.from(new Set(linhas.map(item => item.municipio))).sort((a, b) => a.localeCompare(b, "pt-BR"));
-    DADOS_LEITE.municipiosProducao = pivotarLeitePorAno(linhas.filter(item => Number.isFinite(Number(item.producao))), "municipio", "producao");
-    const anosCompletos = ordenarAnos(linhas.filter(item => Number(item.vacas) > 0 && Number.isFinite(Number(item.producao))).map(item => item.ano));
-    ANOS_PRODUTIVIDADE_MUNICIPIOS = anosCompletos.slice(-2);
-    DADOS_LEITE.produtividadeMunicipios = TODOS_MUNICIPIOS.map(municipio => {
-      const item = { municipio };
-      ANOS_PRODUTIVIDADE_MUNICIPIOS.forEach(ano => {
-        const linha = linhas.find(registro => registro.municipio === municipio && String(registro.ano) === ano);
-        if (linha && Number(linha.vacas) > 0) item[ano] = Number(linha.producao) * 1_000 / Number(linha.vacas);
-      });
-      return item;
-    });
-    renderizarTabelaProdutividadeMunicipios();
-    const anos = ordenarAnos(linhas.map(item => item.ano));
-    atualizarTextoVisualizacao("chartMunicipios", { titulo: `Evolução dos Principais Municípios (${periodoTexto(anos)})` });
-    atualizarTextoVisualizacao("chartMunicipiosBars", { titulo: `Produção ${anos[0]} vs ${anos.at(-1)} — Top 5 Municípios` });
-    atualizarTextoVisualizacao("chartProdutividadeMunicipios", { subtitulo: `Litros / vaca / ano — ${ANOS_PRODUTIVIDADE_MUNICIPIOS.join(" vs ")}` });
+    // O endpoint atual oferece somente municípios selecionados de Goiás.
+    linhasMunicipais = linhas.map(item => ({ ...item, uf: item.uf || "GO" }));
+    TODOS_MUNICIPIOS = [...new Set(linhasMunicipais.filter(item => temMedicao(item.producao)).map(item => item.municipio))];
+    DADOS_LEITE.municipiosProducao = pivotarLeitePorAno(linhasMunicipais, "municipio", "producao");
+    DADOS_LEITE.produtividadeMunicipios = pivotarLeitePorNome(
+      linhasMunicipais.filter(item => Number(item.vacas) > 0 && temMedicao(item.producao))
+        .map(item => ({ ...item, produtividade: Number(item.producao) * 1_000 / Number(item.vacas) })),
+      "municipio", "produtividade", "municipio"
+    );
   });
 
   processar("ranking", linhas => {
-    DADOS_LEITE.rankingConsumo = linhas.filter(item => item.uf === "GO").map(item => ({
-      produto: item.produto, melhorPosicao: Number(item.posicao), ano: Number(item.ano), valor: Number(item.valor)
+    DADOS_LEITE.rankingConsumo = linhas.filter(item => item.uf && item.produto && temMedicao(item.posicao)).map(item => ({
+      produto: item.produto, uf: item.uf, melhorPosicao: Number(item.posicao), ano: Number(item.ano),
+      categoria: `${item.produto} — ${item.uf}`
     }));
-    if (!DADOS_LEITE.rankingConsumo.length) throw new ErroDadosVazios("Goiás não aparece no ranking retornado.");
-    metadadosApi.anoRanking = DADOS_LEITE.rankingConsumo[0].ano;
-    atualizarTextoVisualizacao("chartRankingConsumo", { subtitulo: `Posição de Goiás na aquisição domiciliar per capita — POF ${metadadosApi.anoRanking}` });
   });
 
   atualizarColecoesDinamicas();
-  atualizarCardsLeite();
-  atualizarCardsSecundariosLeite();
+}
+
+function atualizarRetratoRegionalLeite() {
+  const linhas = filtrarLinhasPorAno(metadadosApi.linhasRegioes || []);
+  const ano = ordenarAnos(linhas.filter(item => temMedicao(item.producao) || temMedicao(item.vacas)).map(item => item.ano)).at(-1);
+  const atuais = linhas.filter(item => String(item.ano) === ano);
+  const producao = atuais.filter(item => temMedicao(item.producao));
+  const totalProducao = producao.reduce((soma, item) => soma + Number(item.producao), 0);
+  const cobertura = new Set((metadadosApi.linhasRegioes || []).filter(item => temMedicao(item.producao)).map(item => item.regiao));
+  const completa = totalProducao > 0 && new Set(producao.map(item => item.regiao)).size === cobertura.size;
+  metadadosApi.anoRegioes = ano;
+  DADOS_LEITE.participacaoRegiao = completa ? producao.map(item => ({
+    regiao: item.regiao,
+    producaoLeiteMilhoesLitros: Number(item.producao) / 1_000,
+    percentualParticipacao: Number(item.producao) / totalProducao * 100
+  })) : [];
+  DADOS_LEITE.produtividadeRegiao = producao.filter(item => Number(item.vacas) > 0).map(item => ({
+    regiao: item.regiao,
+    produtividadeLitrosPorVacaAno: Number(item.producao) * 1_000 / Number(item.vacas)
+  }));
+  DADOS_LEITE.vacasRegiao = atuais.filter(item => temMedicao(item.vacas)).map(item => ({
+    regiao: item.regiao,
+    quantidadeVacasOrdenhadas: Number(item.vacas)
+  }));
+  [
+    ["chartLeiteRegiao", "Participação Regional"],
+    ["chartProdutividade", "Produtividade por Região"],
+    ["chartVacasRegiao", "Vacas Ordenhadas por Região"],
+    ["tabelaRegioesLeite", "Regiões Brasileiras"]
+  ].forEach(([id, titulo]) => atualizarTextoVisualizacao(id, { titulo: ano ? `${titulo} (${ano})` : titulo }));
 }
 
 // Formata valores numéricos usados nos KPIs segundo a localidade brasileira.
@@ -421,47 +405,52 @@ function variacaoKpi(atual, inicial, anoInicial) {
 
 // Atualiza os KPIs principais de produção, participação e produtividade.
 function atualizarCardsLeite() {
-  const serie = [...DADOS_LEITE.producaoBilhoes].sort((a, b) => Number(a.Ano) - Number(b.Ano));
-  const inicial = serie[0];
-  const atual = serie.at(-1);
-
-  if (atual && Number.isFinite(atual.Brasil)) {
-    const variacao = variacaoKpi(atual.Brasil, inicial?.Brasil, inicial?.Ano);
-    window.atualizarKpiComApi("kpiLeiteBrasil", {
-      label: `Produção Brasil ${atual.Ano}`,
-      value: formatarNumeroKpi(atual.Brasil, 1),
+  function preencherProducao(id, localidade) {
+    const label = `Produção ${localidade}`;
+    const codigo = codigoUfPainel(localidade);
+    const nomeSerie = SERIES_PRODUCAO_UF.find(uf => codigoUfPainel(uf) === codigo);
+    const regional = (metadadosApi.centroOesteLinhas || [])
+      .filter(item => codigoUfPainel(item.uf) === codigo && temMedicao(item.producao))
+      .map(item => ({ ano: item.ano, valor: Number(item.producao) / 1_000_000 }));
+    const nacional = DADOS_LEITE.producaoBilhoes
+      .filter(item => Number.isFinite(item[nomeSerie]))
+      .map(item => ({ ano: item.Ano, valor: item[nomeSerie] }));
+    const dados = new Map([...nacional, ...regional].map(item => [Number(item.ano), item]));
+    if (localidade === "Centro-Oeste") {
+      (metadadosApi.linhasRegioes || []).filter(item => item.regiao === localidade && temMedicao(item.producao)).forEach(item => {
+        if (!dados.has(Number(item.ano))) dados.set(Number(item.ano), { ano: item.ano, valor: Number(item.producao) / 1_000_000 });
+      });
+    }
+    const serie = filtrarLinhasPorAno([...dados.values()]).sort((a, b) => a.ano - b.ano);
+    const atual = serie.at(-1);
+    window.atualizarKpiComApi(id, atual ? {
+      label: `${label} ${atual.ano}`,
+      value: formatarNumeroKpi(atual.valor, 2),
       unit: "bi L",
-      ...variacao
-    });
-  } else {
-    window.atualizarKpiComApi("kpiLeiteBrasil", { label: "Produção Brasil", state: "error" });
+      ...variacaoKpi(atual.valor, serie[0].valor, serie[0].ano)
+    } : { label, state: "error" });
   }
 
-  if (atual && Number.isFinite(atual.Goiás)) {
-    const variacao = variacaoKpi(atual.Goiás, inicial?.Goiás, inicial?.Ano);
-    window.atualizarKpiComApi("kpiLeiteGoias", {
-      label: `Produção Goiás ${atual.Ano}`,
-      value: formatarNumeroKpi(atual.Goiás, 2),
-      unit: "bi L",
-      ...variacao
-    });
+  preencherProducao("kpiLeiteBrasil", "Brasil");
+  const [uf] = estadoFiltros.ufs;
+  if (estadoFiltros.ufs.length > 1) {
+    window.atualizarKpiComApi("kpiLeiteRecorte", { label: "Produção das UFs selecionadas", state: "error" });
   } else {
-    window.atualizarKpiComApi("kpiLeiteGoias", { label: "Produção Goiás", state: "error" });
+    preencherProducao("kpiLeiteRecorte", uf || "Centro-Oeste");
   }
+  preencherProducao("kpiLeitePlanoProducaoCo", "Centro-Oeste");
 
-  const maiorRegiao = [...DADOS_LEITE.participacaoRegiao]
-    .filter(item => Number.isFinite(item.percentualParticipacao))
-    .sort((a, b) => b.percentualParticipacao - a.percentualParticipacao)[0];
-  if (maiorRegiao) {
+  const participacao = DADOS_LEITE.participacaoRegiao.find(item => item.regiao === "Centro-Oeste");
+  if (participacao) {
     window.atualizarKpiComApi("kpiLeiteRegiao", {
-      label: `Maior região — ${maiorRegiao.regiao}`,
-      value: formatarNumeroKpi(maiorRegiao.percentualParticipacao, 1),
+      label: "Centro-Oeste na produção nacional",
+      value: formatarNumeroKpi(participacao.percentualParticipacao, 1),
       unit: "%",
-      badge: `${metadadosApi.anoRegioes} · ${formatarNumeroKpi(maiorRegiao.producaoLeiteMilhoesLitros / 1_000, 1)} bi L`,
+      badge: `${metadadosApi.anoRegioes} · ${formatarNumeroKpi(participacao.producaoLeiteMilhoesLitros / 1_000, 1)} bi L`,
       tone: "up"
     });
   } else {
-    window.atualizarKpiComApi("kpiLeiteRegiao", { label: "Maior região produtora", state: "error" });
+    window.atualizarKpiComApi("kpiLeiteRegiao", { label: "Centro-Oeste na produção nacional", state: "error" });
   }
 
   const produtividadeCo = DADOS_LEITE.produtividadeRegiao.find(item => item.regiao === "Centro-Oeste");
@@ -478,56 +467,8 @@ function atualizarCardsLeite() {
   }
 }
 
-// Atualiza os KPIs complementares ligados a vacas, mesorregiões e produtos.
+// Atualiza as comparações regionais do plano de intervenção.
 function atualizarCardsSecundariosLeite() {
-  const anosMeso = ordenarAnos(DADOS_LEITE.producaoMeso.map(item => item.ano));
-  const mesoInicial = DADOS_LEITE.producaoMeso.find(item => String(item.ano) === anosMeso[0]);
-  const mesoAtual = DADOS_LEITE.producaoMeso.find(item => String(item.ano) === anosMeso.at(-1));
-  const cardsMeso = [
-    ["kpiLeiteMesoSul", "Sul Goiano", "Sul goiano"],
-    ["kpiLeiteMesoCentro", "Centro Goiano", "Centro goiano"],
-    ["kpiLeiteMesoLeste", "Leste Goiano", "Leste goiano"],
-    ["kpiLeiteMesoNorte", "Norte Goiano", "Norte goiano"]
-  ];
-  const rankingMeso = mesoAtual ? SERIES_MESO.slice().sort((a, b) => (mesoAtual[b] || 0) - (mesoAtual[a] || 0)) : [];
-  cardsMeso.forEach(([id, label, campo]) => {
-    if (!mesoAtual || !Number.isFinite(mesoAtual[campo])) {
-      window.atualizarKpiComApi(id, { label, state: "error" });
-      return;
-    }
-    const posicao = rankingMeso.indexOf(campo) + 1;
-    window.atualizarKpiComApi(id, {
-      label: `${label} ${mesoAtual.ano}`,
-      value: formatarNumeroKpi(mesoAtual[campo], 0),
-      unit: "mi L",
-      ...(posicao <= 2
-        ? { badge: posicao === 1 ? "maior região" : "2ª região", tone: posicao === 1 ? "up" : "neutral" }
-        : variacaoKpi(mesoAtual[campo], mesoInicial?.[campo], mesoInicial?.ano))
-    });
-  });
-
-  const serieCo = metadadosApi.centroOesteSerie || [];
-  const coInicial = serieCo[0];
-  const coAtual = serieCo.at(-1);
-  const goiasAtual = metadadosApi.centroOesteLinhasAtuais?.find(item => item.uf === "Goiás");
-  if (coAtual && goiasAtual) {
-    window.atualizarKpiComApi("kpiLeitePlanoProducaoCo", {
-      label: `Produção no Centro-Oeste ${coAtual.ano}`,
-      value: formatarNumeroKpi(Number(coAtual.producao) / 1_000_000, 1),
-      unit: "bi L",
-      ...variacaoKpi(Number(coAtual.producao), Number(coInicial?.producao), coInicial?.ano)
-    });
-    window.atualizarKpiComApi("kpiLeitePlanoGoias", {
-      label: `Goiás no Centro-Oeste ${coAtual.ano}`,
-      value: formatarNumeroKpi(Number(goiasAtual.producao) / Number(coAtual.producao) * 100, 1),
-      unit: "%",
-      badge: "participação regional",
-      tone: "up"
-    });
-  } else {
-    ["kpiLeitePlanoProducaoCo", "kpiLeitePlanoGoias"].forEach(id => window.atualizarKpiComApi(id, { state: "error" }));
-  }
-
   [["kpiLeitePlanoProdutividadeCo", "Centro-Oeste"], ["kpiLeitePlanoProdutividadeSul", "Sul"]].forEach(([id, regiao]) => {
     const item = DADOS_LEITE.produtividadeRegiao.find(registro => registro.regiao === regiao);
     window.atualizarKpiComApi(id, item ? {
@@ -536,16 +477,19 @@ function atualizarCardsSecundariosLeite() {
       unit: "L/vaca/ano",
       badge: regiao === "Sul" ? "referência regional" : "média regional",
       tone: regiao === "Sul" ? "up" : "neutral"
-    } : { state: "error" });
+    } : { label: `Produtividade ${regiao}`, state: "error" });
   });
 
   const produtividadeCo = DADOS_LEITE.produtividadeRegiao.find(item => item.regiao === "Centro-Oeste");
   const produtividadeSul = DADOS_LEITE.produtividadeRegiao.find(item => item.regiao === "Sul");
-  const resumoPlano = document.querySelector("#lt-plano .info-bar");
-  if (resumoPlano && coAtual && coInicial && goiasAtual && produtividadeCo && produtividadeSul) {
-    const variacao = (Number(coAtual.producao) / Number(coInicial.producao) - 1) * 100;
-    const participacaoGoias = Number(goiasAtual.producao) / Number(coAtual.producao) * 100;
-    resumoPlano.innerHTML = `<span aria-hidden="true">📋</span>A produção de leite no Centro-Oeste variou ${formatarNumeroKpi(variacao, 1)}% entre ${coInicial.ano} e ${coAtual.ano}. Goiás representa ${formatarNumeroKpi(participacaoGoias, 1)}% da produção regional. A produtividade média é de ${formatarNumeroKpi(produtividadeCo.produtividadeLitrosPorVacaAno, 0)} L/vaca/ano no Centro-Oeste e ${formatarNumeroKpi(produtividadeSul.produtividadeLitrosPorVacaAno, 0)} L/vaca/ano no Sul.`;
+  const resumoPlano = document.getElementById("resumoPlanoLeite");
+  if (resumoPlano) {
+    const disponivel = Number.isFinite(produtividadeCo?.produtividadeLitrosPorVacaAno)
+      && Number.isFinite(produtividadeSul?.produtividadeLitrosPorVacaAno);
+    resumoPlano.classList.toggle("d-none", !disponivel);
+    if (disponivel) {
+      resumoPlano.textContent = `Em ${metadadosApi.anoRegioes}, a produtividade média foi de ${formatarNumeroKpi(produtividadeCo.produtividadeLitrosPorVacaAno, 0)} L/vaca/ano no Centro-Oeste e ${formatarNumeroKpi(produtividadeSul.produtividadeLitrosPorVacaAno, 0)} L/vaca/ano no Sul.`;
+    }
   }
 }
 
@@ -639,15 +583,23 @@ function setSelectOptions(id, valores) {
   select.innerHTML = valores.map(v => `<option value="${v}"${selecionadosAtuais.has(v) ? " selected" : ""}>${v}</option>`).join("");
 }
 // Reconstrói as opções marcáveis de um dropdown.
-function setDropdownOptions(menuId, valores) {
+function setDropdownOptions(menuId, valores, selecionados = []) {
   const menu = document.getElementById(menuId);
   if (!menu) return;
-  menu.innerHTML = valores.map(valor => `
-    <label class="filter-option" data-filter-option>
-      <input class="form-check-input mt-0" type="checkbox" value="${valor}">
-      <span>${valor}</span>
-    </label>
-  `).join("");
+  menu.replaceChildren(...valores.map(valor => {
+    const label = document.createElement("label");
+    label.className = "filter-option";
+    label.dataset.filterOption = "";
+    const input = document.createElement("input");
+    input.className = "form-check-input mt-0";
+    input.type = "checkbox";
+    input.value = valor;
+    input.checked = selecionados.includes(valor);
+    const texto = document.createElement("span");
+    texto.textContent = valor;
+    label.append(input, texto);
+    return label;
+  }));
 }
 // Lê os valores selecionados em um dropdown de checkboxes.
 function selecionadosDropdown(menuId) {
@@ -706,12 +658,12 @@ function dadosPorAno(data, campoNome, anos, series) {
   });
 }
 // Remapeia campos anuais para nomes comparativos como "Início" e "Fim".
-function dadosAgrupadosPorAnos(data, categoria, anos, series) {
+function dadosAgrupadosPorAnos(data, categoria, series) {
   return data.map(item => {
     const row = { [categoria]: item[categoria] };
     series.forEach(serie => { row[serie.nome] = item[serie.ano]; });
     return row;
-  });
+  }).filter(row => series.some(serie => Number.isFinite(row[serie.nome])));
 }
 // Monta duas referências usando os extremos do período selecionado.
 function serieComparativa(anos, nomeInicio = "Início", nomeFim = "Fim") {
@@ -745,7 +697,7 @@ function graficoLinhas(id, categoria, series, sufixo = "") {
   graficos[id] = {
     // Substitui dados e alterna apenas as séries selecionadas no filtro.
     update(data, seriesAtivas = series) {
-      const ativos = new Set(seriesAtivas);
+      const ativos = new Set(seriesAtivas.filter(nome => data.some(item => Number.isFinite(item[nome]))));
       xA.data.setAll(data);
       Object.entries(seriesMap).forEach(([nome, s]) => {
         const visivel = ativos.has(nome);
@@ -753,7 +705,7 @@ function graficoLinhas(id, categoria, series, sufixo = "") {
         s.set("visible", visivel);
         s.set("forceHidden", !visivel);
       });
-      alternarCard(id, data.length > 0 && seriesAtivas.length > 0);
+      alternarCard(id, ativos.size > 0);
     }
   };
   chart.appear(800, 80);
@@ -854,14 +806,14 @@ function inicializarEstruturaGraficos() {
   graficoLinhas("chartGoiasMeso", "ano", SERIES_MESO);
   graficoPizza("chartGoiasMesoPie", "mesorregiao", "producao");
   graficoBarrasAgrupadas("chartVacasGoias", "mesorregiao", [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }]);
-  graficoLinhas("chartVacasMesoSerie", "ano", SERIES_MESO_LABEL);
+  graficoLinhas("chartVacasMesoSerie", "ano", SERIES_VACAS_MESO);
   graficoBarras("chartLeiteProducaoCO", "uf", "producaoLeiteMilhoesLitros", false, " mil L");
   graficoBarras("chartProducaoCentroOesteUf", "uf", "producaoLeiteMilhoesLitros", false, " mil L");
   graficoLinhas("chartRebanhoCO", "ano", SERIES_UF_CO);
   graficoLinhas("chartMunicipios", "ano", TODOS_MUNICIPIOS);
   graficoBarrasAgrupadas("chartMunicipiosBars", "municipio", [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }]);
-  graficoBarrasAgrupadas("chartProdutividadeMunicipios", "municipio", ANOS_PRODUTIVIDADE_MUNICIPIOS.map(ano => ({ nome: ano, campo: ano })), " L/vaca/ano");
-  graficoBarras("chartRankingConsumo", "produto", "melhorPosicao", true);
+  graficoBarrasAgrupadas("chartProdutividadeMunicipios", "municipio", [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }], " L/vaca/ano");
+  graficoBarras("chartRankingConsumo", "categoria", "melhorPosicao", true);
 }
 
 // Distribui dados filtrados a gráficos, tabelas, KPIs e estados visuais.
@@ -869,45 +821,84 @@ function aplicarFiltros() {
   // Este é o ciclo central de renderização do dashboard. Ele parte sempre de
   // `estadoFiltros`, filtra as coleções originais e distribui os resultados aos
   // gráficos, tabelas, KPIs e indicadores de visibilidade.
+  atualizarRetratoRegionalLeite();
   const anosVacasRegiao = anosNoPeriodo(metadadosApi.anosVacas || []);
   const anosMeso = anosNoPeriodo(ordenarAnos(DADOS_LEITE.producaoMeso.map(d => d.ano)));
   const anosVacasMeso = anosNoPeriodo(ordenarAnos(DADOS_LEITE.vacasMeso.flatMap(d => Object.keys(d).filter(k => /^\d{4}$/.test(k)))));
   const anosRebanho = anosNoPeriodo(ordenarAnos(DADOS_LEITE.rebanhoCO.flatMap(d => Object.keys(d).filter(k => /^\d{4}$/.test(k)))));
   const anosMunicipios = anosNoPeriodo(ordenarAnos(DADOS_LEITE.municipiosProducao.map(d => d.ano)));
-  const regioes = seriesSelecionadas(SERIES_REGIAO, estadoFiltros.regioes);
-  const mesorregioes = SERIES_MESO.filter((_, i) => !estadoFiltros.regioes.length || estadoFiltros.regioes.includes(SERIES_MESO_LABEL[i]));
-  const mesorregioesLabel = SERIES_MESO_LABEL.filter(label => !estadoFiltros.regioes.length || estadoFiltros.regioes.includes(label));
-  const ufsProducao = seriesSelecionadas(SERIES_PRODUCAO_UF, estadoFiltros.ufs);
-  const ufsCO = seriesSelecionadas(SERIES_UF_CO, estadoFiltros.ufs);
-  const municipios = seriesSelecionadas(TODOS_MUNICIPIOS, estadoFiltros.municipios);
+  const regioesSelecionadas = estadoFiltros.regioes;
+  const regioes = seriesSelecionadas(SERIES_REGIAO, regioesSelecionadas);
+  const mesorregioesComDados = new Set(filtrarLinhasPorAno(linhasMesorregionais)
+    .filter(item => ufSelecionadaLeite(item.uf)).map(item => item.mesorregiao));
+  const mesorregioes = seriesSelecionadas(SERIES_MESO, regioesSelecionadas).filter(nome => mesorregioesComDados.has(nome));
+  const mesorregioesVacas = seriesSelecionadas(SERIES_VACAS_MESO, regioesSelecionadas).filter(nome => mesorregioesComDados.has(nome));
+  const ufsProducao = SERIES_PRODUCAO_UF.filter(ufSelecionadaLeite);
+  const ufsCO = SERIES_UF_CO.filter(ufSelecionadaLeite);
+  const municipios = seriesSelecionadas(municipiosDisponiveisLeite(), estadoFiltros.municipios);
+  ANOS_PRODUTIVIDADE_MUNICIPIOS = anosNoPeriodo(ordenarAnos(DADOS_LEITE.produtividadeMunicipios
+    .filter(item => municipios.includes(item.municipio))
+    .flatMap(item => Object.keys(item).filter(chave => /^\d{4}$/.test(chave))))).slice(-2);
   const comparacaoVacasMeso = serieComparativa(anosVacasMeso);
+  atualizarTextoVisualizacao("chartVacasGoias", {
+    subtitulo: ["Cabeças", periodoTexto(anosVacasMeso)].filter(Boolean).join(" — ")
+  });
 
   graficos.chartLeiteSeries?.update(filtrarLinhasPorAno(DADOS_LEITE.producaoBilhoes, "Ano").map(d => ({ ...d, ano: String(d.Ano) })), ufsProducao);
   graficos.chartLeiteRegiao?.update(filtrarPorCampo(DADOS_LEITE.participacaoRegiao, "regiao", estadoFiltros.regioes));
   renderizarTabelaRegioes(filtrarPorCampo(DADOS_LEITE.participacaoRegiao, "regiao", estadoFiltros.regioes));
   graficos.chartProdutividade?.update(filtrarPorCampo(DADOS_LEITE.produtividadeRegiao, "regiao", estadoFiltros.regioes));
-  graficos.chartVacasRegiao?.update(filtrarPorCampo(DADOS_LEITE.vacasRegiao2021, "regiao", estadoFiltros.regioes));
+  graficos.chartVacasRegiao?.update(filtrarPorCampo(DADOS_LEITE.vacasRegiao, "regiao", estadoFiltros.regioes));
   graficos.chartVacasRegiaoSerie?.update(dadosPorAno(DADOS_LEITE.vacasRegiaoSerie, "regiao", anosVacasRegiao, regioes), regioes);
 
   graficos.chartGoiasMeso?.update(filtrarLinhasPorAno(DADOS_LEITE.producaoMeso).map(d => ({ ...d, ano: String(d.ano) })), mesorregioes);
   graficos.chartGoiasMesoPie?.update(Object.entries(DADOS_LEITE.producaoMeso.find(d => String(d.ano) === anosMeso.at(-1)) || {}).filter(([k]) => k !== "ano" && mesorregioes.includes(k)).map(([mesorregiao, producao]) => ({ mesorregiao, producao })));
-  graficos.chartVacasGoias?.update(dadosAgrupadosPorAnos(DADOS_LEITE.vacasMeso.filter(d => mesorregioesLabel.includes(d.mesorregiao)), "mesorregiao", anosVacasMeso, comparacaoVacasMeso), [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }]);
-  graficos.chartVacasMesoSerie?.update(dadosPorAno(DADOS_LEITE.vacasMeso, "mesorregiao", anosVacasMeso, mesorregioesLabel), mesorregioesLabel);
-  const producaoCO = filtrarPorCampo(DADOS_LEITE.producaoCO, "uf", estadoFiltros.ufs);
+  graficos.chartVacasGoias?.update(dadosAgrupadosPorAnos(DADOS_LEITE.vacasMeso.filter(d => mesorregioesVacas.includes(d.mesorregiao)), "mesorregiao", comparacaoVacasMeso), [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }]);
+  graficos.chartVacasMesoSerie?.update(dadosPorAno(DADOS_LEITE.vacasMeso, "mesorregiao", anosVacasMeso, mesorregioesVacas), mesorregioesVacas);
+  const linhasCO = filtrarLinhasPorAno(metadadosApi.centroOesteLinhas || [])
+    .filter(item => item.uf !== "Centro-Oeste" && temMedicao(item.producao));
+  const anoCO = ordenarAnos(linhasCO.filter(item => ufSelecionadaLeite(item.uf)).map(item => item.ano)).at(-1);
+  const producaoCO = linhasCO.filter(item => String(item.ano) === anoCO && ufSelecionadaLeite(item.uf))
+    .map(item => ({ uf: item.uf, producaoLeiteMilhoesLitros: Number(item.producao) }));
+  ["chartLeiteProducaoCO", "chartProducaoCentroOesteUf"].forEach(id => {
+    atualizarTextoVisualizacao(id, { subtitulo: anoCO ? `Mil litros — ${anoCO}` : "Mil litros" });
+  });
   graficos.chartLeiteProducaoCO?.update(producaoCO);
   graficos.chartProducaoCentroOesteUf?.update(producaoCO);
   graficos.chartRebanhoCO?.update(dadosPorAno(DADOS_LEITE.rebanhoCO.filter(d => d.uf !== "Centro-Oeste"), "uf", anosRebanho, ufsCO), ufsCO);
 
   graficos.chartMunicipios?.update(filtrarLinhasPorAno(DADOS_LEITE.municipiosProducao).map(d => ({ ...d, ano: String(d.ano) })), municipios);
   graficos.chartMunicipiosBars?.update(municipios.map(municipio => ({ municipio, "Início": DADOS_LEITE.municipiosProducao.find(d => String(d.ano) === anosMunicipios[0])?.[municipio], "Fim": DADOS_LEITE.municipiosProducao.find(d => String(d.ano) === anosMunicipios.at(-1))?.[municipio] })).filter(d => d.Início !== undefined || d.Fim !== undefined).sort((a, b) => (b.Fim || 0) - (a.Fim || 0)).slice(0, 10), [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }]);
-  const seriesProdutividadeMunicipios = ANOS_PRODUTIVIDADE_MUNICIPIOS.map(ano => ({ nome: ano, campo: ano }));
   const anoProdutividadeAtual = ANOS_PRODUTIVIDADE_MUNICIPIOS.at(-1);
+  const produtividadeMunicipal = DADOS_LEITE.produtividadeMunicipios
+    .filter(item => municipios.includes(item.municipio) && ANOS_PRODUTIVIDADE_MUNICIPIOS.some(ano => Number.isFinite(item[ano])))
+    .sort((a, b) => (b[anoProdutividadeAtual] ?? -1) - (a[anoProdutividadeAtual] ?? -1));
+  const comparacaoProdutividade = serieComparativa(ANOS_PRODUTIVIDADE_MUNICIPIOS);
   graficos.chartProdutividadeMunicipios?.update(
-    DADOS_LEITE.produtividadeMunicipios.filter(d => municipios.includes(d.municipio)).sort((a, b) => (b[anoProdutividadeAtual] || 0) - (a[anoProdutividadeAtual] || 0)),
-    seriesProdutividadeMunicipios
+    dadosAgrupadosPorAnos(produtividadeMunicipal, "municipio", comparacaoProdutividade),
+    comparacaoProdutividade
   );
+  atualizarTextoVisualizacao("chartProdutividadeMunicipios", {
+    subtitulo: ["Litros / vaca / ano", periodoTexto(ANOS_PRODUTIVIDADE_MUNICIPIOS)].filter(Boolean).join(" — ")
+  });
+  atualizarTextoVisualizacao("chartGoiasMesoPie", {
+    titulo: anosMeso.length ? `Distribuição por Mesorregião (${anosMeso.at(-1)})` : "Distribuição por Mesorregião"
+  });
 
-  graficos.chartRankingConsumo?.update(DADOS_LEITE.rankingConsumo.filter(d => temIntersecaoProduto(d.produto)));
+  renderizarTabelaProdutividadeMunicipios(municipios);
+  const ufRanking = estadoFiltros.ufs.length
+    ? item => ufSelecionadaLeite(item.uf)
+    : item => localidadeCentroOeste(item.uf);
+  const ranking = filtrarLinhasPorAno(DADOS_LEITE.rankingConsumo)
+    .filter(item => ufRanking(item) && temIntersecaoProduto(item.produto));
+  const anoRanking = ordenarAnos(ranking.map(item => item.ano)).at(-1);
+  const recorteRanking = estadoFiltros.ufs.length ? "UFs selecionadas" : "Centro-Oeste";
+  atualizarTextoVisualizacao("chartRankingConsumo", {
+    subtitulo: `Aquisição domiciliar per capita — ${recorteRanking}${anoRanking ? ` · POF ${anoRanking}` : ""}`
+  });
+  graficos.chartRankingConsumo?.update(ranking.filter(item => String(item.ano) === anoRanking));
+  atualizarCardsLeite();
+  atualizarCardsSecundariosLeite();
 
   atualizarVisibilidadeCards();
   atualizarResumoFiltros();
@@ -927,9 +918,8 @@ function atualizarResumoFiltros() {
   const target = document.getElementById("filtrosAtivosLeite");
   if (!target) return;
   const chips = [
-    `Escala: ${estadoFiltros.escala === "all" ? "todas" : estadoFiltros.escala}`,
     `Indicador: ${estadoFiltros.indicador === "all" ? "todos" : estadoFiltros.indicador}`,
-    `Período: ${estadoFiltros.anoInicio}-${estadoFiltros.anoFim}`,
+    estadoFiltros.anoInicio ? `Período: ${estadoFiltros.anoInicio}-${estadoFiltros.anoFim}` : "",
     estadoFiltros.regioes.length ? `Região: ${estadoFiltros.regioes.length}` : "",
     estadoFiltros.ufs.length ? `UF: ${estadoFiltros.ufs.length}` : "",
     estadoFiltros.municipios.length ? `Municípios: ${estadoFiltros.municipios.length}` : "",
@@ -952,38 +942,110 @@ function lerFiltrosDeFormulario() {
   estadoFiltros.ufs = selecionadosDropdown("filtroUfMenu");
   estadoFiltros.municipios = selecionadosDropdown("filtroMunicipioMenu");
   estadoFiltros.produtos = selecionadosDropdown("filtroProdutoMenu");
+  atualizarOpcoesDependentesLeite();
   atualizarLabelsDropdowns();
   aplicarFiltros();
 }
-// Ativa a aba correspondente ao foco geográfico selecionado.
-function navegarParaFoco() {
-  const destino = { brasil: "lt-brasil", goias: "lt-goias", municipio: "lt-municipios" }[estadoFiltros.escala];
-  if (!destino) return;
-
-  const botao = document.querySelector(`[data-tab="${destino}"]`);
-  if (botao) {
-    botao.click();
-    return;
-  }
-
-  const painel = document.querySelector(`[data-tab-content="${destino}"]`);
-  if (!painel) return;
-  document.querySelectorAll("[data-tab]").forEach(item => {
-    item.classList.remove("active");
-    item.setAttribute("aria-selected", "false");
-  });
-  document.querySelectorAll("[data-tab-content]").forEach(item => item.classList.remove("active"));
-  painel.classList.add("active");
+function ufSelecionadaLeite(uf) {
+  return !estadoFiltros.ufs.length || estadoFiltros.ufs.some(nome => codigoUfPainel(nome) === codigoUfPainel(uf));
 }
+
+function municipiosDisponiveisLeite() {
+  const produtividade = estadoFiltros.indicador === "produtividade";
+  return [...new Set(filtrarLinhasPorAno(linhasMunicipais)
+    .filter(item => ufSelecionadaLeite(item.uf) && temMedicao(item.producao) && (!produtividade || Number(item.vacas) > 0))
+    .map(item => item.municipio))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+}
+
+function fontesFiltrosLeite() {
+  const aba = document.querySelector("[data-tab-content].active")?.id || "lt-brasil";
+  const indicador = estadoFiltros.indicador;
+  const aceita = (...indicadores) => indicador === "all" || indicadores.includes(indicador);
+  const centroOeste = metadadosApi.centroOesteLinhas || [];
+  const fontes = {};
+  if (aba === "lt-brasil") {
+    if (aceita("producao")) fontes.producao = DADOS_LEITE.producaoBilhoes;
+    if (aceita("producao", "vacas", "produtividade")) {
+      fontes.regioes = (metadadosApi.linhasRegioes || []).filter(item =>
+        (aceita("producao") && temMedicao(item.producao))
+        || (aceita("vacas") && temMedicao(item.vacas))
+        || (aceita("produtividade") && temMedicao(item.producao) && Number(item.vacas) > 0));
+    }
+    if (aceita("mercado")) fontes.ranking = DADOS_LEITE.rankingConsumo;
+    if (aceita("producao")) fontes.centroOeste = centroOeste.filter(item => temMedicao(item.producao));
+  } else if (aba === "lt-mesorregioes") {
+    if (aceita("producao", "vacas")) {
+      fontes.mesorregioes = linhasMesorregionais.filter(item =>
+        (aceita("producao") && temMedicao(item.producao)) || (aceita("vacas") && temMedicao(item.vacas)));
+    }
+    if (aceita("producao", "mercado")) {
+      fontes.centroOeste = centroOeste.filter(item =>
+        (aceita("producao") && temMedicao(item.producao)) || (aceita("mercado") && temMedicao(item.rebanho)));
+    }
+  } else if (aba === "lt-municipios" && aceita("producao", "produtividade")) {
+    fontes.municipios = linhasMunicipais.filter(item => temMedicao(item.producao)
+      && (aceita("producao") || Number(item.vacas) > 0));
+  } else if (aba === "lt-plano" && aceita("producao")) {
+    fontes.centroOeste = centroOeste.filter(item => temMedicao(item.producao));
+  }
+  return fontes;
+}
+
+function atualizarOpcoesDependentesLeite() {
+  const fontes = fontesFiltrosLeite();
+  const anos = ordenarAnos(Object.values(fontes).flat().map(item => item.ano ?? item.Ano));
+  const noIntervalo = anosNoPeriodo(anos);
+  estadoFiltros.anoInicio = noIntervalo[0] || anos[0] || "";
+  estadoFiltros.anoFim = noIntervalo.at(-1) || anos.at(-1) || "";
+  ["filtroAnoInicio", "filtroAnoFim"].forEach((id, indice) => {
+    setSelectOptions(id, anos);
+    const select = document.getElementById(id);
+    select.value = indice === 0 ? estadoFiltros.anoInicio : estadoFiltros.anoFim;
+    select.disabled = !anos.length;
+  });
+
+  const ufs = new Map();
+  [
+    ...filtrarLinhasPorAno(fontes.ranking || []).map(item => item.uf),
+    ...filtrarLinhasPorAno(fontes.mesorregioes || []).map(item => item.uf),
+    ...filtrarLinhasPorAno(fontes.municipios || []).map(item => item.uf),
+    ...filtrarLinhasPorAno(fontes.producao || [], "Ano").flatMap(item => Object.keys(item).filter(chave => chave !== "Ano")),
+    ...filtrarLinhasPorAno(fontes.centroOeste || []).map(item => item.uf)
+  ].filter(uf => uf && uf !== "Centro-Oeste").forEach(uf => ufs.set(codigoUfPainel(uf), uf));
+
+  const opcoesUf = [...ufs.values()];
+  estadoFiltros.ufs = [...new Set(estadoFiltros.ufs.map(uf => ufs.get(codigoUfPainel(uf))).filter(Boolean))];
+  const mesorregioes = filtrarLinhasPorAno(fontes.mesorregioes || [])
+    .filter(item => ufSelecionadaLeite(item.uf)).map(item => item.mesorregiao);
+  const regioes = filtrarLinhasPorAno(fontes.regioes || []).map(item => item.regiao);
+  const produtos = filtrarLinhasPorAno(fontes.ranking || [])
+    .filter(item => estadoFiltros.ufs.length ? ufSelecionadaLeite(item.uf) : localidadeCentroOeste(item.uf))
+    .map(item => item.produto);
+  const municipios = fontes.municipios ? municipiosDisponiveisLeite() : [];
+  [
+    ["Regiao", "regioes", [...regioes, ...mesorregioes]],
+    ["Uf", "ufs", opcoesUf],
+    ["Municipio", "municipios", municipios],
+    ["Produto", "produtos", produtos]
+  ].forEach(([controle, chave, valores]) => {
+    const opcoes = [...new Set(valores)].sort((a, b) => a.localeCompare(b, "pt-BR"));
+    estadoFiltros[chave] = estadoFiltros[chave].filter(item => opcoes.includes(item));
+    setDropdownOptions(`filtro${controle}Menu`, opcoes, estadoFiltros[chave]);
+    document.getElementById(`filtro${controle}Btn`).disabled = !opcoes.length;
+    document.getElementById(`busca${controle}`)?.dispatchEvent(new Event("input"));
+  });
+}
+
 // Restaura período e seleções múltiplas aos valores padrão.
 function limparFiltros() {
-  Object.assign(estadoFiltros, { escala: "all", indicador: "all", anoInicio: PERIODO_PADRAO.inicio, anoFim: PERIODO_PADRAO.fim, regioes: [], ufs: [], municipios: [], produtos: [] });
+  Object.assign(estadoFiltros, { indicador: "all", anoInicio: PERIODO_PADRAO.inicio, anoFim: PERIODO_PADRAO.fim, regioes: [], ufs: [], municipios: [], produtos: [] });
   document.querySelectorAll("[data-filter-group] .filter-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.filter === "all"));
   document.querySelectorAll(".filter-dropdown-menu input[type='checkbox']").forEach(input => { input.checked = false; });
   ["buscaRegiao", "buscaUf", "buscaMunicipio", "buscaProduto"].forEach(id => { document.getElementById(id).value = ""; });
   document.querySelectorAll("[data-filter-option]").forEach(option => { option.style.display = ""; });
   document.getElementById("filtroAnoInicio").value = estadoFiltros.anoInicio;
   document.getElementById("filtroAnoFim").value = estadoFiltros.anoFim;
+  atualizarOpcoesDependentesLeite();
   atualizarLabelsDropdowns();
   aplicarFiltros();
 }
@@ -996,15 +1058,6 @@ function atualizarLabelsDropdowns() {
 }
 // Popula controles e conecta todos os eventos que alteram filtros.
 function inicializarFiltros() {
-  setSelectOptions("filtroAnoInicio", ANOS_PRODUCAO);
-  setSelectOptions("filtroAnoFim", ANOS_PRODUCAO);
-  document.getElementById("filtroAnoInicio").value = estadoFiltros.anoInicio;
-  document.getElementById("filtroAnoFim").value = estadoFiltros.anoFim;
-  setDropdownOptions("filtroRegiaoMenu", [...SERIES_REGIAO, ...SERIES_MESO_LABEL]);
-  setDropdownOptions("filtroUfMenu", Array.from(new Set([...SERIES_PRODUCAO_UF, ...DADOS_LEITE.producaoCO.map(d => d.uf)])).sort((a, b) => a.localeCompare(b, "pt-BR")));
-  const municipiosOrdenados = TODOS_MUNICIPIOS.sort((a, b) => a.localeCompare(b, "pt-BR"));
-  setDropdownOptions("filtroMunicipioMenu", municipiosOrdenados);
-  setDropdownOptions("filtroProdutoMenu", PRODUTOS_FILTRO);
   conectarBuscaDropdown("buscaRegiao", "filtroRegiaoMenu");
   conectarBuscaDropdown("buscaUf", "filtroUfMenu");
   conectarBuscaDropdown("buscaMunicipio", "filtroMunicipioMenu");
@@ -1014,7 +1067,8 @@ function inicializarFiltros() {
       const group = btn.closest("[data-filter-group]").dataset.filterGroup;
       estadoFiltros[group] = btn.dataset.filter;
       btn.closest("[data-filter-group]").querySelectorAll(".filter-btn").forEach(item => item.classList.toggle("active", item === btn));
-      if (group === "escala") navegarParaFoco();
+      atualizarOpcoesDependentesLeite();
+      atualizarLabelsDropdowns();
       aplicarFiltros();
     });
   });
@@ -1033,10 +1087,22 @@ async function inicializarDashboardLeite() {
   await carregarDadosNovaApiLeite();
   inicializarFiltros();
   inicializarEstruturaGraficos();
+  metadadosApi.dashboardPronto = true;
+  atualizarOpcoesDependentesLeite();
+  atualizarLabelsDropdowns();
   aplicarFiltros();
 }
 
-window.onFilterChange = function () {};
+window.onTabChange = function () {
+  if (!metadadosApi.dashboardPronto) return;
+  estadoFiltros.indicador = "all";
+  document.querySelectorAll('[data-filter-group="indicador"] .filter-btn').forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.filter === "all");
+  });
+  atualizarOpcoesDependentesLeite();
+  atualizarLabelsDropdowns();
+  aplicarFiltros();
+};
 am5.ready(() => {
   inicializarDashboardLeite().catch(erro => {
     Object.values(ALVOS_API).flat().forEach(id => registrarFalhaApi([id], erro));

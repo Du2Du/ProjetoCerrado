@@ -286,30 +286,30 @@
 
           <!-- KPIs -->
           <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3 fade-up">
+            <div class="col-6 col-md-3 fade-up" data-category="rebanho">
               <div id="kpiCorteRebanhoBrasil" class="kpi-card kpi-card--terra">
-                <div class="kpi-label">Rebanho Brasil 2021</div>
+                <div class="kpi-label">Rebanho Brasil</div>
                 <div class="kpi-value">—</div>
                 <span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
             </div>
-            <div class="col-6 col-md-3 fade-up">
-              <div id="kpiCorteRebanhoGoias" class="kpi-card kpi-card--gold">
-                <div class="kpi-label">Rebanho Goiás 2021</div>
+            <div class="col-6 col-md-3 fade-up" data-category="rebanho">
+              <div id="kpiCorteRebanhoRecorte" class="kpi-card kpi-card--gold">
+                <div class="kpi-label">Rebanho Centro-Oeste</div>
                 <div class="kpi-value">—</div>
                 <span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
             </div>
-            <div class="col-6 col-md-3 fade-up">
+            <div class="col-6 col-md-3 fade-up" data-category="abate">
               <div id="kpiCorteAbateBrasil" class="kpi-card">
-                <div class="kpi-label">Abate Brasil 2022</div>
+                <div class="kpi-label">Abate Brasil</div>
                 <div class="kpi-value">—</div>
                 <span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
             </div>
-            <div class="col-6 col-md-3 fade-up">
-              <div id="kpiCorteAbateGoias" class="kpi-card kpi-card--light">
-                <div class="kpi-label">Abate Goiás 2022</div>
+            <div class="col-6 col-md-3 fade-up" data-category="abate">
+              <div id="kpiCorteAbateRecorte" class="kpi-card kpi-card--light">
+                <div class="kpi-label">Abate Centro-Oeste</div>
                 <div class="kpi-value">—</div>
                 <span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
@@ -319,16 +319,16 @@
           <div class="row g-4">
             <div class="col-lg-8" data-category="rebanho">
               <div class="chart-card" role="figure"
-                aria-label="Gráfico: Efetivo bovino dos principais estados — 2012 a 2021">
+                aria-label="Gráfico: Efetivo bovino dos principais estados">
                 <div class="chart-card__title">Efetivo Bovino — Principais Estados</div>
-                <div id="subRebanhoCorte" class="chart-card__sub">Milhões de cabeças (2012–2021)</div>
+                <div id="subRebanhoCorte" class="chart-card__sub">Milhões de cabeças</div>
                 <div id="chartRebanhoCorte" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
             <div class="col-lg-4" data-category="rebanho">
               <div class="chart-card" role="figure"
-                aria-label="Gráfico: Participação no rebanho bovino nacional em 2021">
-                <div id="tituloRebanhoPartic" class="chart-card__title">Participação no Rebanho Nacional (2021)</div>
+                aria-label="Gráfico: Participação no rebanho das UFs exibidas">
+                <div id="tituloRebanhoPartic" class="chart-card__title">Participação no Rebanho das UFs Exibidas</div>
                 <div class="chart-card__sub">Cabeças no ano final filtrado</div>
                 <div id="chartRebanhoPartic" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
@@ -337,10 +337,10 @@
 
           <div class="row g-4">
             <div class="col-lg-12" data-category="abate">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Animais abatidos por estado — 2013 a 2022">
+              <div class="chart-card" role="figure" aria-label="Gráfico: Animais abatidos por estado">
                 <div class="chart-card__head">
                   <div>
-                    <div class="chart-card__title">Animais Abatidos (Bovinos) — Goiás, MT e MS</div>
+                    <div class="chart-card__title">Animais Abatidos (Bovinos) por Localidade</div>
                     <div id="subAbateBovinos" class="chart-card__sub">Série anual filtrada</div>
                   </div>
                   <div class="chart-card__tools">
@@ -361,63 +361,20 @@
               <div id="tabelaRebanhoCorte" class="table-card" role="figure" aria-label="Tabela: Rebanho bovino dos principais estados">
                 <div class="table-card__head">
                   <div class="chart-card__title">Rebanho Bovino por Estado</div>
-                  <div class="chart-card__sub">Milhões de cabeças (2012–2021)</div>
+                  <div class="chart-card__sub">Milhões de cabeças</div>
                 </div>
                 <div class="table-responsive">
-                  <table class="table table-obs" aria-label="Rebanho bovino por estado — 2012 a 2021">
+                  <table class="table table-obs" aria-label="Rebanho bovino por estado">
                     <thead>
                       <tr>
                         <th scope="col">Estado</th>
-                        <th scope="col" class="text-end">2012</th>
-                        <th scope="col" class="text-end">2017</th>
-                        <th scope="col" class="text-end">2021</th>
+                        <th scope="col" class="text-end">Ano inicial</th>
+                        <th scope="col" class="text-end">Ano intermediário</th>
+                        <th scope="col" class="text-end">Ano final</th>
                         <th scope="col" class="text-end">Var.%</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      <tr>
-                        <td><strong>Brasil</strong></td>
-                        <td class="text-end num">211,3</td>
-                        <td class="text-end num">215,0</td>
-                        <td class="text-end num">224,6</td>
-                        <td class="text-end"><span class="kpi-badge kpi-badge--up">+6,3%</span></td>
-                      </tr>
-                      <tr>
-                        <td>Mato Grosso</td>
-                        <td class="text-end num">28,7</td>
-                        <td class="text-end num">29,7</td>
-                        <td class="text-end num">32,4</td>
-                        <td class="text-end"><span class="kpi-badge kpi-badge--up">+12,8%</span></td>
-                      </tr>
-                      <tr>
-                        <td>Goiás</td>
-                        <td class="text-end num">22,0</td>
-                        <td class="text-end num">22,8</td>
-                        <td class="text-end num">24,3</td>
-                        <td class="text-end"><span class="kpi-badge kpi-badge--up">+10,2%</span></td>
-                      </tr>
-                      <tr>
-                        <td>Minas Gerais</td>
-                        <td class="text-end num">24,0</td>
-                        <td class="text-end num">22,0</td>
-                        <td class="text-end num">22,9</td>
-                        <td class="text-end"><span class="kpi-badge kpi-badge--down">-4,5%</span></td>
-                      </tr>
-                      <tr>
-                        <td>Pará</td>
-                        <td class="text-end num">18,6</td>
-                        <td class="text-end num">20,6</td>
-                        <td class="text-end num">23,9</td>
-                        <td class="text-end"><span class="kpi-badge kpi-badge--up">+28,6%</span></td>
-                      </tr>
-                      <tr>
-                        <td>Mato Grosso do Sul</td>
-                        <td class="text-end num">21,5</td>
-                        <td class="text-end num">21,5</td>
-                        <td class="text-end num">18,6</td>
-                        <td class="text-end"><span class="kpi-badge kpi-badge--down">-13,5%</span></td>
-                      </tr>
-                    </tbody>
+                    <tbody></tbody>
                   </table>
                 </div>
               </div>
@@ -426,63 +383,16 @@
               <div id="tabelaAbateCorte" class="table-card" role="figure" aria-label="Tabela: Abate bovino anual por estado">
                 <div class="table-card__head">
                   <div class="chart-card__title">Abate Bovino Anual por Estado</div>
-                  <div class="chart-card__sub">Milhões de cabeças (2013–2022)</div>
+                  <div id="subTabelaAbateCorte" class="chart-card__sub">Milhões de cabeças</div>
                 </div>
                 <div class="table-responsive">
-                  <table class="table table-obs" aria-label="Abate bovino anual — 2013 a 2022">
+                  <table class="table table-obs" aria-label="Abate bovino anual">
                     <thead>
                       <tr>
                         <th scope="col">Ano</th>
-                        <th scope="col" class="text-end">Brasil</th>
-                        <th scope="col" class="text-end">Goiás</th>
-                        <th scope="col" class="text-end">MT</th>
-                        <th scope="col" class="text-end">MS</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      <tr>
-                        <td>2013</td>
-                        <td class="text-end num">34,4</td>
-                        <td class="text-end num">3,5</td>
-                        <td class="text-end num">5,8</td>
-                        <td class="text-end num">4,1</td>
-                      </tr>
-                      <tr>
-                        <td>2015</td>
-                        <td class="text-end num">30,7</td>
-                        <td class="text-end num">3,1</td>
-                        <td class="text-end num">4,5</td>
-                        <td class="text-end num">3,4</td>
-                      </tr>
-                      <tr>
-                        <td>2017</td>
-                        <td class="text-end num">30,9</td>
-                        <td class="text-end num">3,2</td>
-                        <td class="text-end num">4,8</td>
-                        <td class="text-end num">3,4</td>
-                      </tr>
-                      <tr>
-                        <td>2019</td>
-                        <td class="text-end num">32,4</td>
-                        <td class="text-end num">3,0</td>
-                        <td class="text-end num">5,6</td>
-                        <td class="text-end num">3,6</td>
-                      </tr>
-                      <tr>
-                        <td>2021</td>
-                        <td class="text-end num">27,7</td>
-                        <td class="text-end num">3,0</td>
-                        <td class="text-end num">4,6</td>
-                        <td class="text-end num">3,0</td>
-                      </tr>
-                      <tr>
-                        <td>2022</td>
-                        <td class="text-end num">29,9</td>
-                        <td class="text-end num">3,0</td>
-                        <td class="text-end num">4,7</td>
-                        <td class="text-end num">3,3</td>
-                      </tr>
-                    </tbody>
+                    <tbody></tbody>
                   </table>
                 </div>
               </div>
@@ -506,13 +416,6 @@
                 <div class="kpi-label">Cerrado CO</div>
                 <div class="kpi-value">31,4<span class="kpi-unit">mi ha</span></div>
                 <span class="kpi-badge kpi-badge--up">1º bioma em pastagem</span>
-              </div>
-            </div>
-            <div class="col-12 col-sm-6 col-xl-3 fade-up d-flex">
-              <div class="kpi-card kpi-card--terra w-100">
-                <div class="kpi-label">Goiás</div>
-                <div class="kpi-value">13,4<span class="kpi-unit">mi ha</span></div>
-                <span class="kpi-badge kpi-badge--neutral">3º estado CO</span>
               </div>
             </div>
             <div class="col-12 col-sm-6 col-xl-3 fade-up d-flex">

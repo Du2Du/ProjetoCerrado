@@ -8,13 +8,6 @@ const P = ["#2d5c24","#c8943a","#a0622b","#4a7c3f","#6fa65e","#e8a84c","#7fb069"
  * séries já criadas em vez de reconstruir toda a página a cada interação.
  */
 let anosSeringueira = [];
-let ufsSeringueira  = [];
-const coresUf = {
-  "Centro-Oeste":       P[0],
-  "Mato Grosso do Sul": P[1],
-  "Mato Grosso":        P[2],
-  "Goiás":              P[3]
-};
 const rootsSeringueira = [];
 
 // ── ESTADO CENTRAL ───────────────────────────────────────────────────
@@ -37,7 +30,6 @@ const API_SERINGUEIRA = "https://api.projetocerradoifg.org/webhook/seringueira";
 const ENDPOINTS_SERINGUEIRA = ["pam", "censo"];
 const requisicoesSeringueira = new Map();
 const PRODUTO_BORRACHA = "Borracha (látex coagulado)";
-const ORDEM_LOCALIDADES = ["Centro-Oeste", "Mato Grosso do Sul", "Mato Grosso", "Goiás"];
 const ALVOS_API = Object.freeze({
   producao: ["chartProducaoSeringueira"],
   areas: ["chartAreaColhidaSeringueira", "chartAreaDestinadaSeringueira", "chartAreaPerdaSeringueira"],
@@ -150,7 +142,6 @@ function montarIndicadores() {
       produtividadeKgPorHectare: r.produtividadeKgPorHectare
     };
   }).filter(Boolean);
-  if (!indicadores.length) throw new ErroDadosVazios("Não foi possível combinar os indicadores produtivos.");
   return indicadores;
 }
 
@@ -187,11 +178,9 @@ function atualizarPeriodoDinamico() {
     ...dadosProducao.map(item => item.ano),
     ...dadosAreaColhida.map(item => item.ano),
     ...dadosProdutividade.map(item => item.ano),
-    ...dadosValorProducao.map(item => item.ano)
+    ...dadosValorProducao.map(item => item.ano),
+    ...dadosEstabelecimentos.map(item => item.ano)
   ]);
-  ufsSeringueira = ORDEM_LOCALIDADES.filter(uf => [
-    ...dadosProducao, ...dadosAreaColhida, ...dadosProdutividade, ...dadosValorProducao
-  ].some(item => item.uf === uf));
   if (anosSeringueira.length) {
     periodoPadrao = { inicio: anosSeringueira[0], fim: anosSeringueira.at(-1) };
     estadoFiltros.anoInicio = periodoPadrao.inicio;
@@ -224,7 +213,11 @@ function variacaoKpiSeringueira(serie, campo) {
 
 // Preenche um KPI com o último valor da série e sua tendência histórica.
 function atualizarCardSerieSeringueira({ id, label, dados, campo, divisor = 1, casas = 1, prefixo = "", unidade }) {
-  const serie = dados.filter(item => item.uf === "Centro-Oeste" && Number.isFinite(item[campo]));
+  const [uf] = estadoFiltros.ufs;
+  const recorte = estadoFiltros.ufs.size > 1 ? "UFs selecionadas" : uf || "Centro-Oeste";
+  label = `${label} — ${recorte}`;
+  const serie = dados.filter(item => item.uf === recorte && temMedicao(item[campo])
+    && item.ano >= estadoFiltros.anoInicio && item.ano <= estadoFiltros.anoFim);
   const atual = [...serie].sort((a, b) => a.ano - b.ano).at(-1);
   if (!atual) {
     window.atualizarKpiComApi(id, { label, state: "error" });
@@ -241,19 +234,19 @@ function atualizarCardSerieSeringueira({ id, label, dados, campo, divisor = 1, c
 // Atualiza todos os KPIs após a carga das fontes.
 function atualizarCardsSeringueira() {
   atualizarCardSerieSeringueira({
-    id: "kpiSeringueiraProducao", label: "Produção Centro-Oeste", dados: dadosProducao,
+    id: "kpiSeringueiraProducao", label: "Produção", dados: dadosProducao,
     campo: "quantidadeProduzidaToneladas", divisor: 1_000, casas: 1, unidade: "mil t"
   });
   atualizarCardSerieSeringueira({
-    id: "kpiSeringueiraValor", label: "Valor da produção Centro-Oeste", dados: dadosValorProducao,
+    id: "kpiSeringueiraValor", label: "Valor da produção", dados: dadosValorProducao,
     campo: "valorProducaoMilReais", divisor: 1_000, casas: 1, prefixo: "R$ ", unidade: "mi"
   });
   atualizarCardSerieSeringueira({
-    id: "kpiSeringueiraArea", label: "Área colhida Centro-Oeste", dados: dadosAreaColhida,
+    id: "kpiSeringueiraArea", label: "Área colhida", dados: dadosAreaColhida,
     campo: "areaColhidaHectares", divisor: 1_000, casas: 1, unidade: "mil ha"
   });
   atualizarCardSerieSeringueira({
-    id: "kpiSeringueiraProdutividade", label: "Produtividade Centro-Oeste", dados: dadosProdutividade,
+    id: "kpiSeringueiraProdutividade", label: "Produtividade", dados: dadosProdutividade,
     campo: "produtividadeKgPorHectare", casas: 0, unidade: "kg/ha"
   });
 }
@@ -271,7 +264,7 @@ async function carregarDadosApiSeringueira() {
     try {
       const pam = resposta.pam.value;
       const mapear = (campoOrigem, campoDestino, unidadeMedida) => pam
-        .filter(item => Number.isFinite(Number(item[campoOrigem])))
+        .filter(item => item.uf && temMedicao(item[campoOrigem]))
         .map(item => ({
           ano: Number(item.ano), uf: item.uf, produto: PRODUTO_BORRACHA,
           unidadeMedida, [campoDestino]: Number(item[campoOrigem])
@@ -281,7 +274,7 @@ async function carregarDadosApiSeringueira() {
       dadosAreaDestinada = mapear("areaDestinada", "areaDestinadaColheitaHectares", "Hectares");
       dadosProdutividade = mapear("rendimento", "produtividadeKgPorHectare", "Quilogramas por Hectare");
       dadosValorProducao = mapear("valor", "valorProducaoMilReais", "Mil Reais");
-      dadosAreaPerda = pam.filter(item => Number(item.areaDestinada) > 0 && Number.isFinite(Number(item.areaColhida))).map(item => ({
+      dadosAreaPerda = pam.filter(item => Number(item.areaDestinada) > 0 && temMedicao(item.areaColhida)).map(item => ({
         ano: Number(item.ano), uf: item.uf, produto: PRODUTO_BORRACHA, unidadeMedida: "%",
         percentualPerdaArea: Math.max(0, (Number(item.areaDestinada) - Number(item.areaColhida)) / Number(item.areaDestinada) * 100)
       }));
@@ -310,7 +303,7 @@ async function carregarDadosApiSeringueira() {
     dadosEstabelecimentos = resposta.censo.value.map(item => ({
       ano: Number(item.ano), produto: item.produto, condicaoProdutor: item.condicaoProdutor,
       numeroEstabelecimentos: Number(item.numeroEstabelecimentos)
-    }));
+    })).filter(item => item.produto && Number.isFinite(item.numeroEstabelecimentos));
     definirEstadoVisualizacao(ALVOS_API.estabelecimentos, "ready");
     marcarFonteApi(ALVOS_API.estabelecimentos);
   } else {
@@ -327,9 +320,10 @@ function anosVisiveis() {
 
 // Transpõe linhas da API para uma linha anual com uma coluna por UF.
 function buildDadosUF(dados, campoValor) {
+  const ufs = [...new Set(dados.map(item => item.uf))];
   return anosVisiveis().map(ano => {
     const item = { ano: String(ano) };
-    ufsSeringueira.forEach(uf => {
+    ufs.forEach(uf => {
       const linha = dados.find(r => r.ano === ano && r.uf === uf);
       item[uf] = linha ? linha[campoValor] : null;
     });
@@ -380,11 +374,12 @@ function criarGraficoLinhasUF(containerId, dados, campoValor, sufixoTooltip) {
   eixoX.data.setAll(dadosGrafico);
 
   const seriesMap = {};
-  ufsSeringueira.forEach(uf => {
+  [...new Set(dados.map(item => item.uf))].sort((a, b) => a.localeCompare(b, "pt-BR")).forEach((uf, indice) => {
+    const cor = P[indice % P.length];
     const serie = chart.series.push(am5xy.LineSeries.new(root, {
       name: uf, xAxis: eixoX, yAxis: eixoY,
       valueYField: uf, categoryXField: "ano", connect: false,
-      stroke: am5.color(coresUf[uf]), fill: am5.color(coresUf[uf]),
+      stroke: am5.color(cor), fill: am5.color(cor),
       tooltip: am5.Tooltip.new(root, { labelText: `${uf}: {valueY} ${sufixoTooltip}` })
     }));
     serie.strokes.template.setAll({ strokeWidth: uf === "Centro-Oeste" ? 3 : 2 });
@@ -406,15 +401,18 @@ function criarGraficoEstabelecimentos() {
   if (!ctx) return;
   const { root, chart } = ctx;
 
-  const buildDados = () => Object.values(
-    dadosEstabelecimentos.reduce((acc, item) => {
-      if (!acc[item.condicaoProdutor]) acc[item.condicaoProdutor] = { condicaoProdutor: item.condicaoProdutor, latexLiquido: 0, latexCoagulado: 0 };
-      if (item.produto.includes("líquido"))   acc[item.condicaoProdutor].latexLiquido   += item.numeroEstabelecimentos;
-      if (item.produto.includes("coagulado")) acc[item.condicaoProdutor].latexCoagulado += item.numeroEstabelecimentos;
-      return acc;
-    }, {})
-  ).filter(i => i.condicaoProdutor !== "Total").reverse();
-
+  const produtos = [...new Set(dadosEstabelecimentos.map(item => item.produto).filter(Boolean))];
+  const buildDados = () => {
+    const porCondicao = new Map();
+    dadosEstabelecimentos.filter(item => item.ano >= estadoFiltros.anoInicio && item.ano <= estadoFiltros.anoFim)
+      .filter(item => item.condicaoProdutor && item.condicaoProdutor !== "Total")
+      .forEach(item => {
+        if (!porCondicao.has(item.condicaoProdutor)) porCondicao.set(item.condicaoProdutor, { condicaoProdutor: item.condicaoProdutor });
+        const d = porCondicao.get(item.condicaoProdutor);
+        d[item.produto] = (d[item.produto] || 0) + item.numeroEstabelecimentos;
+      });
+    return [...porCondicao.values()].reverse();
+  };
   const dados = buildDados();
   const eixoY = chart.yAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "condicaoProdutor", renderer: am5xy.AxisRendererY.new(root, { minGridDistance: 18 }) }));
   const eixoX = chart.xAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererX.new(root, {}) }));
@@ -422,23 +420,22 @@ function criarGraficoEstabelecimentos() {
   eixoY.data.setAll(dados);
 
   const seriesMap = {};
-  [{ campo: "latexCoagulado", nome: "Látex coagulado", cor: P[0] },
-   { campo: "latexLiquido",   nome: "Látex líquido",   cor: P[1] }
-  ].forEach(cfg => {
+  produtos.forEach((produto, indice) => {
+    const cor = am5.color(P[indice % P.length]);
     const serie = chart.series.push(am5xy.ColumnSeries.new(root, {
-      name: cfg.nome, xAxis: eixoX, yAxis: eixoY,
-      valueXField: cfg.campo, categoryYField: "condicaoProdutor", stacked: true,
-      fill: am5.color(cfg.cor), stroke: am5.color(cfg.cor),
-      tooltip: am5.Tooltip.new(root, { labelText: `${cfg.nome}: {valueX}` })
+      name: produto, xAxis: eixoX, yAxis: eixoY,
+      valueXField: produto, categoryYField: "condicaoProdutor", stacked: true,
+      fill: cor, stroke: cor,
+      tooltip: am5.Tooltip.new(root, { labelText: `${produto}: {valueX}` })
     }));
     serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65) });
     serie.data.setAll(dados);
-    seriesMap[cfg.campo] = serie;
+    seriesMap[produto] = serie;
   });
 
   criarLegenda(chart, root).data.setAll(chart.series.values);
   chart.appear(1000, 100);
-  graficosFixos["chartEstabelecimentosSeringueira"] = { isEstab: true, seriesMap };
+  graficosFixos["chartEstabelecimentosSeringueira"] = { isEstab: true, seriesMap, eixoY, buildDados };
 }
 
 // Monta as séries anuais consolidadas de produção, área e produtividade.
@@ -495,9 +492,12 @@ function atualizarGraficosUF() {
 function atualizarGraficosFixos() {
   Object.entries(graficosFixos).forEach(([, g]) => {
     if (g.isEstab) {
-      const sel = estadoFiltros.produto;
-      g.seriesMap.latexCoagulado.set("visible", sel.size === 0 || sel.has("Borracha (látex coagulado)"));
-      g.seriesMap.latexLiquido.set("visible",   sel.size === 0 || sel.has("Borracha (látex líquido)"));
+      const dados = g.buildDados();
+      g.eixoY.data.setAll(dados);
+      Object.entries(g.seriesMap).forEach(([produto, serie]) => {
+        serie.data.setAll(dados);
+        serie.set("visible", !estadoFiltros.produto.size || estadoFiltros.produto.has(produto));
+      });
       return;
     }
     const dados = g.getDados();
@@ -510,8 +510,10 @@ function atualizarGraficosFixos() {
 function aplicarFiltros() {
   // Recalcula o período visível e repassa os dados filtrados a todos os gráficos
   // registrados, mantendo chips e KPIs alinhados com a mesma seleção.
+  atualizarOpcoesSeringueira();
   atualizarGraficosUF();
   atualizarGraficosFixos();
+  atualizarCardsSeringueira();
   renderizarChips();
 }
 
@@ -593,21 +595,48 @@ function conectarBusca(inputId, menuId) {
   });
 }
 
+function atualizarOpcoesSeringueira() {
+  const indicador = document.querySelector('[data-filter-group="ind"] .filter-btn.active')?.dataset.filter || "all";
+  const aba = document.querySelector("[data-tab-content].active")?.id || "fl-co";
+  const area = [...dadosAreaColhida, ...dadosAreaDestinada, ...dadosAreaPerda];
+  const producao = [...dadosProducao, ...dadosProdutividade, ...dadosValorProducao];
+  const fontes = { all: [...area, ...producao], area, producao };
+  const dados = aba === "fl-co" ? fontes[indicador] || [] : [];
+  const estabelecimentos = aba === "fl-co" && indicador !== "area" ? dadosEstabelecimentos : [];
+  const anos = ordenarAnos([...dados, ...estabelecimentos].map(item => item.ano));
+  const noIntervalo = anos.filter(ano => ano >= estadoFiltros.anoInicio && ano <= estadoFiltros.anoFim);
+  estadoFiltros.anoInicio = noIntervalo[0] ?? anos[0] ?? null;
+  estadoFiltros.anoFim = noIntervalo.at(-1) ?? anos.at(-1) ?? null;
+  ["Inicio", "Fim"].forEach((extremo, indice) => {
+    const select = document.getElementById(`seriAno${extremo}`);
+    select.replaceChildren(...anos.map(ano => new Option(String(ano), String(ano))));
+    select.value = indice === 0 ? estadoFiltros.anoInicio : estadoFiltros.anoFim;
+    select.disabled = !anos.length;
+  });
+  const noPeriodo = item => item.ano >= estadoFiltros.anoInicio && item.ano <= estadoFiltros.anoFim;
+  const localidades = dados.filter(noPeriodo).map(item => item.uf);
+  const produtos = estabelecimentos.filter(noPeriodo).map(item => item.produto);
+  [
+    ["Uf", "ufs", localidades, "Todas"],
+    ["Produto", "produto", produtos, "Todos"]
+  ].forEach(([nome, chave, valores, vazio]) => {
+    const opcoes = [...new Set(valores.filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+    estadoFiltros[chave] = new Set([...estadoFiltros[chave]].filter(valor => opcoes.includes(valor)));
+    montarDropdownCheckbox(`seri${nome}Menu`, opcoes);
+    const menu = document.getElementById(`seri${nome}Menu`);
+    menu.querySelectorAll("input").forEach(input => { input.checked = estadoFiltros[chave].has(input.value); });
+    document.getElementById(`seri${nome}Btn`).disabled = !opcoes.length;
+    labelDropdown(`seri${nome}Btn`, [...estadoFiltros[chave]], vazio);
+    document.getElementById(`busca${nome}Seri`)?.dispatchEvent(new Event("input"));
+  });
+}
+
 // Preenche controles e liga suas mudanças ao estado central de filtros.
 function inicializarFiltrosUI() {
   // Período
   const selectInicio = document.getElementById("seriAnoInicio");
   const selectFim    = document.getElementById("seriAnoFim");
   if (selectInicio && selectFim) {
-    selectInicio.replaceChildren();
-    selectFim.replaceChildren();
-    anosSeringueira.forEach(ano => {
-      const criarOpt = (sel) => {
-        const o = document.createElement("option"); o.value = String(ano); o.textContent = String(ano); o.selected = sel; return o;
-      };
-      selectInicio.appendChild(criarOpt(ano === periodoPadrao.inicio));
-      selectFim.appendChild(criarOpt(ano === periodoPadrao.fim));
-    });
     selectInicio.addEventListener("change", () => {
       estadoFiltros.anoInicio = Number(selectInicio.value);
       if (estadoFiltros.anoFim < estadoFiltros.anoInicio) { estadoFiltros.anoFim = estadoFiltros.anoInicio; selectFim.value = String(estadoFiltros.anoInicio); }
@@ -621,7 +650,6 @@ function inicializarFiltrosUI() {
   }
 
   // UF dropdown
-  montarDropdownCheckbox("seriUfMenu", ufsSeringueira);
   conectarBusca("buscaUfSeri", "seriUfMenu");
   document.getElementById("seriUfMenu")?.addEventListener("change", () => {
     estadoFiltros.ufs = new Set(Array.from(document.querySelectorAll("#seriUfMenu input:checked")).map(i => i.value));
@@ -630,7 +658,6 @@ function inicializarFiltrosUI() {
   });
 
   // Produto dropdown
-  montarDropdownCheckbox("seriProdutoMenu", ["Borracha (látex coagulado)", "Borracha (látex líquido)"]);
   document.getElementById("seriProdutoMenu")?.addEventListener("change", () => {
     estadoFiltros.produto = new Set(Array.from(document.querySelectorAll("#seriProdutoMenu input:checked")).map(i => i.value));
     labelDropdown("seriProdutoBtn", [...estadoFiltros.produto], "Todos");
@@ -669,7 +696,10 @@ async function inicializarDashboard() {
   criarGraficoEstabelecimentos();
   criarGraficoIndicadores();
   inicializarFiltrosUI();
+  aplicarFiltros();
 }
+
+window.onTabChange = () => requestAnimationFrame(aplicarFiltros);
 
 window.onFilterChange = function (filterId, group) {
   if (group === "escala") {
@@ -677,6 +707,7 @@ window.onFilterChange = function (filterId, group) {
     if (tabMap[filterId]) document.querySelector(`[data-tab="${tabMap[filterId]}"]`)?.click();
     document.querySelectorAll('[data-filter-group="ind"] .filter-btn').forEach(b => b.classList.toggle("active", b.dataset.filter === "all"));
     document.querySelectorAll("[data-category]").forEach(el => { el.style.display = ""; });
+    aplicarFiltros();
     return;
   }
   if (group === "ind") {
@@ -685,6 +716,7 @@ window.onFilterChange = function (filterId, group) {
     tab.querySelectorAll("[data-category]").forEach(el => {
       el.style.display = (filterId === "all" || el.dataset.category === filterId) ? "" : "none";
     });
+    aplicarFiltros();
   }
 };
 
