@@ -343,7 +343,7 @@ def recommend():
     }
 
     completion = client.beta.chat.completions.parse(
-        model="sabia-3",
+        model="sabiazinho-4",
         messages=[
             {"role": "system", "content": "Você é um consultor sobre desenvolvimento de culturas no cerrado. Converta a solicitação do usuário em um relatório estruturado."},
             {"role": "user", "content": prompt}

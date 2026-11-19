@@ -96,9 +96,8 @@ function anosDisponiveisCorte() {
     anosDeObjetoSerie(DADOS_CORTE.rebanhoCorte).forEach(ano => anos.add(ano));
   }
   if (filtrosCorte.indicador === "all" || filtrosCorte.indicador === "abate") {
-    DADOS_CORTE.abateBovinos.filter(item => temMedicao(item[campoAbateCorte()]))
-      .filter(item => filtrosCorte.trimestre === "all" || item.trimestre === filtrosCorte.trimestre)
-      .forEach(item => anos.add(item.ano));
+    anosDeObjetoSerie(seriesAbateCorte(filtrosCorte.trimestre, campoAbateCorte(), false))
+      .forEach(ano => anos.add(ano));
   }
   return [...anos].sort((a, b) => a - b);
 }
@@ -193,10 +192,10 @@ function campoAbateCorte() {
   return filtrosCorte.metricaAbate === "peso" ? "pesoTotalCarcacas" : "quantidadeAbatida";
 }
 
-function seriesAbateCorte(trimestre, campo) {
+function seriesAbateCorte(trimestre, campo, limitarPeriodo = true) {
   const porUf = new Map();
   for (const item of DADOS_CORTE.abateBovinos) {
-    if (!dentroPeriodo(item.ano) || !temMedicao(item[campo])) continue;
+    if ((limitarPeriodo && !dentroPeriodo(item.ano)) || !temMedicao(item[campo])) continue;
     if (trimestre !== "all" && item.trimestre !== trimestre) continue;
     if (!porUf.has(item.uf)) porUf.set(item.uf, new Map());
     const anos = porUf.get(item.uf);
@@ -215,11 +214,11 @@ function seriesAbateCorte(trimestre, campo) {
 }
 
 function valoresUfsCorte() {
-  const { indicador, trimestre } = filtrosCorte;
+  const { indicador } = filtrosCorte;
   const rebanho = indicador === "all" || indicador === "rebanho"
-    ? DADOS_CORTE.rebanhoCorte.filter(item => anosDeObjetoSerie([item]).some(dentroPeriodo)) : [];
+    ? DADOS_CORTE.rebanhoCorte : [];
   const abate = indicador === "all" || indicador === "abate"
-    ? seriesAbateCorte(trimestre, campoAbateCorte()) : [];
+    ? DADOS_CORTE.abateBovinos : [];
   return [...new Set([...rebanho, ...abate].map(item => codigoUfPainel(item.uf)))].sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
@@ -298,7 +297,9 @@ function atualizarChipsFiltros() {
   if (filtrosCorte.anoInicio) chips.push(`Período: ${periodoLabel()}`);
   if (filtrosCorte.indicador !== "all") chips.push(`Indicador: ${filtrosCorte.indicador}`);
   if (filtrosCorte.ufs.size) chips.push(`UF: ${[...filtrosCorte.ufs].join(", ")}`);
-  if (filtrosCorte.trimestre !== "all") chips.push(`Trimestre: ${filtrosCorte.trimestre}`);
+  if (filtrosCorte.indicador !== "rebanho" && filtrosCorte.trimestre !== "all") {
+    chips.push(`Trimestre do abate: ${filtrosCorte.trimestre}`);
+  }
   el.innerHTML = chips.map(chip => `<span class="filter-chip">${chip}</span>`).join("");
 }
 
@@ -328,6 +329,16 @@ function renderizarAbaAtivaCorte() {
 
 // Sincroniza período, gráficos visíveis, multiselects e resumo dos filtros.
 function atualizarDashboardCorte() {
+  const abaDados = document.querySelector("[data-tab-content].active")?.id === "ct-rebanho";
+  ["filtroAnoInicioCorte", "filtroUfCorteBtn"].forEach(id => {
+    porId(id)?.closest(".filter-cluster").classList.toggle("is-filter-hidden", !abaDados);
+  });
+  porId("filtroTrimestreCorte")?.closest(".filter-cluster").classList
+    .toggle("is-filter-hidden", !abaDados || filtrosCorte.indicador === "rebanho");
+  porId("filtrosAtivosCorte").classList.toggle("is-filter-hidden", !abaDados);
+  atualizarVisibilidadeIndicador();
+  if (!abaDados) return;
+
   // Centraliza toda atualização visual: corrige o período, redesenha a aba
   // visível e sincroniza os controles e o resumo dos filtros.
   if (filtrosCorte.anoInicio !== null && filtrosCorte.anoFim !== null && filtrosCorte.anoInicio > filtrosCorte.anoFim) {
@@ -341,7 +352,6 @@ function atualizarDashboardCorte() {
   atualizarAbateCorte();
   renderizarAbaAtivaCorte();
   atualizarChipsFiltros();
-  atualizarVisibilidadeIndicador();
 }
 
 // Restaura o estado inicial dos filtros e solicita uma renderização completa.
@@ -361,13 +371,6 @@ function limparFiltrosCorte() {
 
 // Conecta controles de filtro às respectivas propriedades de `filtrosCorte`.
 function configurarEventosFiltrosCorte() {
-  document.querySelectorAll('[data-filter-group="indicador"] .filter-btn').forEach(btn => {
-    btn.addEventListener("click", () => {
-      filtrosCorte.indicador = btn.dataset.filter;
-      if (filtrosCorte.indicador !== "all") switchTabCorte(indicadorParaAbaCorte[filtrosCorte.indicador]);
-      atualizarDashboardCorte();
-    });
-  });
   porId("filtroAnoInicioCorte")?.addEventListener("change", event => { filtrosCorte.anoInicio = Number(event.target.value); atualizarDashboardCorte(); });
   porId("filtroAnoFimCorte")?.addEventListener("change", event => { filtrosCorte.anoFim = Number(event.target.value); atualizarDashboardCorte(); });
   porId("filtroTrimestreCorte")?.addEventListener("change", event => { filtrosCorte.trimestre = event.target.value; atualizarDashboardCorte(); });
@@ -383,14 +386,17 @@ function inicializarGraficosCorte() {
 }
 
 window.onFilterChange = function (filterId, group) {
-  if (group === "indicador" || group === "ind") {
-    filtrosCorte.indicador = filterId;
-    atualizarDashboardCorte();
-  }
+  if (group !== "indicador") return;
+  filtrosCorte.indicador = filterId;
+  const aba = indicadorParaAbaCorte[filterId] || "ct-rebanho";
+  if (document.getElementById(aba)?.classList.contains("active")) atualizarDashboardCorte();
+  else switchTabCorte(aba);
 };
 
-window.onTabChange = function () {
-  requestAnimationFrame(renderizarAbaAtivaCorte);
+window.onTabChange = function (aba) {
+  if (aba === "ct-pastagens") filtrosCorte.indicador = "pastagens";
+  else if (aba !== "ct-rebanho" || filtrosCorte.indicador === "pastagens") filtrosCorte.indicador = "all";
+  atualizarDashboardCorte();
 };
 
 const API_CORTE = "https://api.projetocerradoifg.org/webhook/corte";

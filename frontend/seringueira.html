@@ -170,6 +170,16 @@
       font-family: var(--font-d);
     }
 
+    .data-card--filter-empty > .chart-area {
+      display: none;
+    }
+
+    .data-card--filter-empty > .data-state {
+      position: static;
+      min-height: 7rem;
+      margin-top: .75rem;
+    }
+
     @media (max-width: 768px) {
 
       .filter-cluster,
@@ -281,25 +291,25 @@
             </div>
           </div>
           <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3 fade-up">
+            <div class="col-6 col-md-3 fade-up" data-category="producao">
               <div id="kpiSeringueiraProducao" class="kpi-card" aria-busy="true">
                 <div class="kpi-label">Produção Centro-Oeste</div>
                 <div class="kpi-value">—</div><span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
             </div>
-            <div class="col-6 col-md-3 fade-up">
+            <div class="col-6 col-md-3 fade-up" data-category="producao">
               <div id="kpiSeringueiraValor" class="kpi-card kpi-card--gold" aria-busy="true">
                 <div class="kpi-label">Valor da produção Centro-Oeste</div>
                 <div class="kpi-value">—</div><span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
             </div>
-            <div class="col-6 col-md-3 fade-up">
+            <div class="col-6 col-md-3 fade-up" data-category="area">
               <div id="kpiSeringueiraArea" class="kpi-card kpi-card--terra" aria-busy="true">
                 <div class="kpi-label">Área colhida Centro-Oeste</div>
                 <div class="kpi-value">—</div><span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
             </div>
-            <div class="col-6 col-md-3 fade-up">
+            <div class="col-6 col-md-3 fade-up" data-category="producao">
               <div id="kpiSeringueiraProdutividade" class="kpi-card kpi-card--light" aria-busy="true">
                 <div class="kpi-label">Produtividade Centro-Oeste</div>
                 <div class="kpi-value">—</div><span class="kpi-badge kpi-badge--neutral">Carregando…</span>
@@ -310,7 +320,7 @@
             <div class="col-lg-6" data-category="producao">
               <div class="chart-card" role="figure" aria-label="Gráfico: Evolução da produção de borracha">
                 <div class="chart-card__title">Evolução da Produção</div>
-                <div class="chart-card__sub">Borracha (látex coagulado), toneladas</div>
+                <div class="chart-card__sub">Toneladas</div>
                 <div id="chartProducaoSeringueira" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
@@ -352,7 +362,7 @@
             <div class="col-lg-6" data-category="producao">
               <div class="chart-card" role="figure" aria-label="Gráfico: Estabelecimentos produtores por perfil">
                 <div class="chart-card__title">Estabelecimentos Produtores por Perfil</div>
-                <div class="chart-card__sub">Número de estabelecimentos, Censo Agro 2017</div>
+                <div class="chart-card__sub">Censo Agro 2017 · número de estabelecimentos por tipo de látex</div>
                 <div id="chartEstabelecimentosSeringueira" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>

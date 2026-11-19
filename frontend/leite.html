@@ -201,7 +201,6 @@
         <button class="filter-btn" type="button" data-filter="produtividade">Produtividade</button>
         <button class="filter-btn" type="button" data-filter="vacas">Vacas</button>
         <button class="filter-btn" type="button" data-filter="mercado">Mercado</button>
-        <button class="filter-btn" type="button" data-filter="perfil">Perfil</button>
       </div>
     </div>
     <div class="filter-cluster">
@@ -248,13 +247,13 @@
       </div>
     </div>
     <div class="filter-cluster filter-cluster--wide">
-      <span class="filter-label">Produto / perfil</span>
+      <span class="filter-label">Produto do ranking de consumo</span>
       <div class="dropdown" data-bs-auto-close="outside">
         <button id="filtroProdutoBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
           data-bs-auto-close="outside" aria-expanded="false">Todos</button>
         <div class="dropdown-menu filter-dropdown-menu">
-          <input id="buscaProduto" class="filter-search w-100 mb-2" type="search" placeholder="Buscar produto ou perfil"
-            aria-label="Buscar produto ou perfil" />
+          <input id="buscaProduto" class="filter-search w-100 mb-2" type="search" placeholder="Buscar produto"
+            aria-label="Buscar produto do ranking de consumo" />
           <div id="filtroProdutoMenu"></div>
         </div>
       </div>
@@ -291,25 +290,25 @@
             </div>
           </div>
           <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3 fade-up">
+            <div class="col-6 col-md-3 fade-up" data-category="producao">
               <div id="kpiLeiteBrasil" class="kpi-card" aria-busy="true">
                 <div class="kpi-label">Produção Brasil</div>
                 <div class="kpi-value">—</div><span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
             </div>
-            <div class="col-6 col-md-3 fade-up">
+            <div class="col-6 col-md-3 fade-up" data-category="producao">
               <div id="kpiLeiteRecorte" class="kpi-card kpi-card--gold" aria-busy="true">
                 <div class="kpi-label">Produção Centro-Oeste</div>
                 <div class="kpi-value">—</div><span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
             </div>
-            <div class="col-6 col-md-3 fade-up">
+            <div class="col-6 col-md-3 fade-up" data-category="producao">
               <div id="kpiLeiteRegiao" class="kpi-card kpi-card--terra" aria-busy="true">
                 <div class="kpi-label">Centro-Oeste na produção nacional</div>
                 <div class="kpi-value">—</div><span class="kpi-badge kpi-badge--neutral">Carregando…</span>
               </div>
             </div>
-            <div class="col-6 col-md-3 fade-up">
+            <div class="col-6 col-md-3 fade-up" data-category="produtividade">
               <div id="kpiLeiteProdutividade" class="kpi-card kpi-card--light" aria-busy="true">
                 <div class="kpi-label">Produtividade Centro-Oeste</div>
                 <div class="kpi-value">—</div><span class="kpi-badge kpi-badge--neutral">Carregando…</span>

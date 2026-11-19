@@ -162,7 +162,8 @@ function sincronizarAnosEucalipto() {
 function produtosDisponiveisEucalipto() {
   const indicador = filtrosAtivos.indicador;
   const series = filtrarPeriodo(fontesEucalipto());
-  return produtosEucalipto.filter(produto => series.some(item => temMedicao(item[produto.campo]))
+  return produtosEucalipto.filter(produto => filtrosAtivos.produtos.includes(produto.campo)
+    || series.some(item => temMedicao(item[produto.campo]))
     || ((indicador === "all" || indicador === "ranking") && produto.campo === "papelCelulose"
       && dadosRankingNoPeriodo().length));
 }
@@ -170,6 +171,10 @@ function produtosDisponiveisEucalipto() {
 function dadosRankingNoPeriodo() {
   return dadosRankingProducao.filter(item => item.ano >= Number(filtrosAtivos.anoInicio)
     && item.ano <= Number(filtrosAtivos.anoFim) && temMedicao(item.quantidadeProduzida));
+}
+
+function produtoCompativelComRanking() {
+  return !filtrosAtivos.produtos.length || filtrosAtivos.produtos.includes("papelCelulose");
 }
 
 // Resolve os metadados completos dos produtos selecionados pelo usuário.
@@ -196,7 +201,6 @@ function alternarEstadoVazio(containerId, vazio) {
   const empty = document.getElementById(`empty${containerId.replace(/^chart/, "")}`);
   if (chart) chart.style.display = vazio ? "none" : "";
   if (empty) empty.style.display = vazio ? "flex" : "none";
-  chart?.closest("[data-category]")?.classList.toggle("is-chart-empty", vazio);
 }
 
 // Cria um gráfico de linhas reutilizável para os diferentes produtos.
@@ -224,21 +228,22 @@ function criarGraficoLinhasProdutos(containerId, dataSource, unidadePadrao) {
     serie.bullets.push(() => am5.Bullet.new(root, { sprite: am5.Circle.new(root, { radius: 3, fill: serie.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2 }) }));
     series[produto.campo] = serie;
   });
-  criarLegenda(chart, root).data.setAll(chart.series.values);
+  const legenda = criarLegenda(chart, root);
 
   graficos[containerId] = {
     // Atualiza o período e alterna os produtos selecionados.
     update(data, produtos) {
-      const ativos = new Set(produtos.map(produto => produto.campo));
+      const ativos = new Set(produtos.filter(produto => data.some(row => temMedicao(row[produto.campo])))
+        .map(produto => produto.campo));
       eixoX.data.setAll(data);
       Object.entries(series).forEach(([campo, serie]) => {
         const visivel = ativos.has(campo);
-        serie.data.setAll(data);
+        serie.data.setAll(visivel ? data : []);
         serie.set("visible", visivel);
         serie.set("forceHidden", !visivel);
       });
-      const temDados = data.some(row => produtos.some(produto => row[produto.campo] !== null && row[produto.campo] !== undefined));
-      alternarEstadoVazio(containerId, !temDados);
+      legenda.data.setAll([...ativos].map(campo => series[campo]));
+      alternarEstadoVazio(containerId, !ativos.size);
     }
   };
   graficos[containerId].update(filtrarPeriodo(dataSource), produtosSelecionados());
@@ -269,21 +274,22 @@ function criarGraficoValorProducao() {
     serie.columns.template.setAll({ cornerRadiusTL: 2, cornerRadiusTR: 2, width: am5.percent(60) });
     series[produto.campo] = serie;
   });
-  criarLegenda(chart, root).data.setAll(chart.series.values);
+  const legenda = criarLegenda(chart, root);
 
   graficos[containerId] = {
     // Atualiza as colunas empilhadas e os produtos visíveis.
     update(data, produtos) {
-      const ativos = new Set(produtos.map(produto => produto.campo));
+      const ativos = new Set(produtos.filter(produto => data.some(row => temMedicao(row[produto.campo])))
+        .map(produto => produto.campo));
       eixoX.data.setAll(data);
       Object.entries(series).forEach(([campo, serie]) => {
         const visivel = ativos.has(campo);
-        serie.data.setAll(data);
+        serie.data.setAll(visivel ? data : []);
         serie.set("visible", visivel);
         serie.set("forceHidden", !visivel);
       });
-      const temDados = data.some(row => produtos.some(produto => Number(row[produto.campo] || 0) > 0));
-      alternarEstadoVazio(containerId, !temDados);
+      legenda.data.setAll([...ativos].map(campo => series[campo]));
+      alternarEstadoVazio(containerId, !ativos.size);
     }
   };
   graficos[containerId].update(filtrarPeriodo(dadosValorProducao), produtosSelecionados());
@@ -318,6 +324,9 @@ function criarGraficoRankingProducao() {
       eixoY.data.setAll(dados);
       serie.data.setAll(dados);
       alternarEstadoVazio(containerId, !dados.length);
+      document.getElementById("emptyRankingProducaoEucalipto").textContent = produtoCompativelComRanking()
+        ? "Nenhum município atende aos filtros do ranking."
+        : "O ranking está disponível para madeira para papel e celulose.";
     }
   };
   graficos[containerId].update(dadosRankingFiltrados());
@@ -329,7 +338,7 @@ function criarGraficoParticipacaoValor() {
   const containerId = "chartParticipacaoValorEucalipto";
   const { root, chart } = inicializarXY(containerId);
   const eixoY = chart.yAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "produto", renderer: am5xy.AxisRendererY.new(root, { minGridDistance: 16 }) }));
-  const eixoX = chart.xAxes.push(am5xy.ValueAxis.new(root, { min: 0, max: 100, renderer: am5xy.AxisRendererX.new(root, {}) }));
+  const eixoX = chart.xAxes.push(am5xy.ValueAxis.new(root, { min: 0, max: 100, strictMinMax: true, renderer: am5xy.AxisRendererX.new(root, {}) }));
   configurarEixo(eixoX); configurarEixo(eixoY);
   eixoY.get("renderer").labels.template.setAll({ oversizedBehavior: "truncate", maxWidth: 145 });
 
@@ -360,13 +369,14 @@ function criarGraficoParticipacaoValor() {
 
 // Aplica UF, município, faixa e limite de posições ao ranking.
 function dadosRankingFiltrados() {
-  const produtoRankingSelecionado = !filtrosAtivos.produtos.length || filtrosAtivos.produtos.includes("papelCelulose");
-  if (!produtoRankingSelecionado) return [];
+  if (!produtoCompativelComRanking()) return [];
   return dadosRankingNoPeriodo()
     .filter(item => !filtrosAtivos.ufs.length || filtrosAtivos.ufs.includes(item.uf))
     .filter(item => !filtrosAtivos.municipios.length || filtrosAtivos.municipios.includes(item.municipio))
     .filter(item => item.quantidadeProduzida >= filtrosAtivos.minimoRanking)
-    .slice(0, filtrosAtivos.topRanking);
+    .sort((a, b) => b.quantidadeProduzida - a.quantidadeProduzida)
+    .slice(0, filtrosAtivos.topRanking)
+    .map((item, indice) => ({ ...item, ranking: indice + 1 }));
 }
 
 // Prepara as fatias de participação dos produtos no último ano do período.
@@ -453,10 +463,8 @@ function atualizarResumoFiltros() {
     `Indicador: ${filtrosAtivos.indicador === "all" ? "todos" : filtrosAtivos.indicador}`,
     filtrosAtivos.anoInicio ? `Período: ${filtrosAtivos.anoInicio}-${filtrosAtivos.anoFim}` : "",
     filtrosAtivos.produtos.length ? `Produtos: ${filtrosAtivos.produtos.length}` : "",
-    filtrosAtivos.ufs.length ? `UF: ${filtrosAtivos.ufs.join(", ")}` : "",
-    filtrosAtivos.municipios.length ? `Municípios: ${filtrosAtivos.municipios.length}` : "",
-    `Ranking: Top ${filtrosAtivos.topRanking}`,
-    filtrosAtivos.minimoRanking ? `Faixa: acima de ${formatarNumero(filtrosAtivos.minimoRanking)} m³` : ""
+    filtrosAtivos.ufs.length ? `UF do ranking: ${filtrosAtivos.ufs.join(", ")}` : "",
+    filtrosAtivos.municipios.length ? `Municípios do ranking: ${filtrosAtivos.municipios.length}` : ""
   ].filter(Boolean);
   target.innerHTML = chips.map(texto => `<span class="filter-chip">${texto}</span>`).join("");
 }
@@ -493,21 +501,24 @@ function atualizarLabelsDropdowns() {
 // Restringe municípios às UFs selecionadas e remove escolhas inválidas.
 function atualizarOpcoesRankingEucalipto() {
   const ranking = filtrosAtivos.indicador === "all" || filtrosAtivos.indicador === "ranking" ? dadosRankingNoPeriodo() : [];
+  const filtrarRanking = ranking.length > 0 && produtoCompativelComRanking();
   const ufs = [...new Set(ranking.map(item => item.uf).filter(Boolean))].sort();
   filtrosAtivos.ufs = filtrosAtivos.ufs.filter(uf => ufs.includes(uf));
   setDropdownOptions("filtroUfEucaliptoMenu", ufs);
   marcarDropdown("filtroUfEucaliptoMenu", filtrosAtivos.ufs);
   atualizarMunicipiosDisponiveis(ranking);
   const produtos = produtosDisponiveisEucalipto();
-  filtrosAtivos.produtos = filtrosAtivos.produtos.filter(campo => produtos.some(produto => produto.campo === campo));
   setDropdownOptions("filtroProdutoEucaliptoMenu", produtos.map(produto => produto.campo), campo => produtos.find(produto => produto.campo === campo).nome);
   marcarDropdown("filtroProdutoEucaliptoMenu", filtrosAtivos.produtos);
   [
     ["Produto", produtos], ["Uf", ufs],
     ["Municipio", document.querySelectorAll("#filtroMunicipioEucaliptoMenu input")]
   ].forEach(([nome, opcoes]) => {
-    document.getElementById(`filtro${nome}EucaliptoBtn`).disabled = !opcoes.length;
+    document.getElementById(`filtro${nome}EucaliptoBtn`).disabled = !opcoes.length || (nome !== "Produto" && !filtrarRanking);
     document.getElementById(`busca${nome}Eucalipto`)?.dispatchEvent(new Event("input"));
+  });
+  ["filtroTopRankingEucalipto", "filtroFaixaRankingEucalipto"].forEach(id => {
+    document.getElementById(id).disabled = !filtrarRanking;
   });
 }
 
@@ -561,7 +572,9 @@ function inicializarFiltros() {
     document.getElementById(id)?.addEventListener("change", lerFiltrosFormulario);
   });
   document.querySelectorAll("[data-tab]").forEach(botao => {
-    botao.addEventListener("click", () => window.setTimeout(atualizarVisibilidadeCards, 0));
+    botao.addEventListener("click", () => {
+      document.querySelector(".filter-bar--eucalipto").hidden = botao.dataset.tab !== "fl-co";
+    });
   });
   document.getElementById("btnLimparFiltrosEucalipto")?.addEventListener("click", limparFiltros);
   atualizarLabelsDropdowns();

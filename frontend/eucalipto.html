@@ -195,7 +195,7 @@
     }
 
     .is-filter-hidden,
-    .is-chart-empty {
+    .filter-bar--eucalipto[hidden] {
       display: none !important;
     }
 
@@ -374,28 +374,28 @@
             </div>
           </div>
           <div class="row g-3 mb-4">
-            <div class="col-12 col-sm-6 col-md-3 fade-up">
+            <div class="col-12 col-sm-6 col-md-3 fade-up" data-category="producao">
               <div class="kpi-card">
                 <div class="kpi-label">Produto líder em quantidade</div>
                 <div class="kpi-value" id="kpiQuantidadeLider">—</div><span
                   class="kpi-badge kpi-badge--neutral" id="kpiQuantidadeLiderBadge">Carregando…</span>
               </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3 fade-up">
+            <div class="col-12 col-sm-6 col-md-3 fade-up" data-category="ranking">
               <div class="kpi-card kpi-card--gold">
                 <div class="kpi-label">Maior localidade produtora</div>
                 <div class="kpi-value" id="kpiRankingLider">—</div><span
                   class="kpi-badge kpi-badge--neutral" id="kpiRankingLiderBadge">Carregando…</span>
               </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3 fade-up">
+            <div class="col-12 col-sm-6 col-md-3 fade-up" data-category="valor">
               <div class="kpi-card kpi-card--terra">
                 <div class="kpi-label">Valor da produção CO</div>
                 <div class="kpi-value" id="kpiValorTotal">—</div><span
                   class="kpi-badge kpi-badge--neutral" id="kpiValorTotalBadge">Carregando…</span>
               </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3 fade-up">
+            <div class="col-12 col-sm-6 col-md-3 fade-up" data-category="valor">
               <div class="kpi-card kpi-card--light">
                 <div class="kpi-label">Participação principal produto</div>
                 <div class="kpi-value" id="kpiParticipacaoLider">—</div><span

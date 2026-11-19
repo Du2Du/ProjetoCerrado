@@ -44,6 +44,13 @@ const estadoFiltros = {
 };
 
 const graficos = {};
+const regioesPorUf = {
+  Norte: ["AC", "AP", "AM", "PA", "RO", "RR", "TO"],
+  Nordeste: ["AL", "BA", "CE", "MA", "PB", "PE", "PI", "RN", "SE"],
+  "Centro-Oeste": ["DF", "GO", "MT", "MS"],
+  Sudeste: ["ES", "MG", "RJ", "SP"],
+  Sul: ["PR", "RS", "SC"]
+};
 
 const metadadosApi = {};
 
@@ -638,13 +645,30 @@ function filtrarLinhasPorAno(data, campo = "ano") {
 function seriesSelecionadas(todas, filtro) {
   return filtro.length ? todas.filter(v => filtro.includes(v)) : todas;
 }
-// Aplica um filtro opcional a qualquer campo categórico.
-function filtrarPorCampo(data, campo, filtro) {
-  return filtro.length ? data.filter(d => filtro.includes(d[campo])) : data;
-}
 // Verifica se uma série corresponde aos produtos atualmente selecionados.
 function temIntersecaoProduto(nome) {
   return !estadoFiltros.produtos.length || estadoFiltros.produtos.includes(nome);
+}
+
+function regiaoDaUfLeite(uf) {
+  const codigo = codigoUfPainel(uf);
+  return Object.keys(regioesPorUf).find(regiao => regiao === uf || regioesPorUf[regiao].includes(codigo));
+}
+
+function ufNoRecorteRegionalLeite(uf) {
+  const regioes = estadoFiltros.regioes.filter(regiao => Object.hasOwn(regioesPorUf, regiao));
+  return !regioes.length || regioes.includes(regiaoDaUfLeite(uf));
+}
+
+function ufNoRankingLeite(uf) {
+  if (!estadoFiltros.ufs.length && !estadoFiltros.regioes.length) return localidadeCentroOeste(uf);
+  return ufSelecionadaLeite(uf) && ufNoRecorteRegionalLeite(uf);
+}
+
+function participacaoComComplemento(dados, recorte, categoria, medida, complemento) {
+  if (!recorte.length || recorte.length === dados.length) return recorte;
+  const restantes = dados.filter(item => !recorte.includes(item)).reduce((total, item) => total + item[medida], 0);
+  return restantes > 0 ? [...recorte, { [categoria]: complemento, [medida]: restantes }] : recorte;
 }
 // Transpõe séries para linhas anuais prontas para os gráficos de evolução.
 function dadosPorAno(data, campoNome, anos, series) {
@@ -828,13 +852,15 @@ function aplicarFiltros() {
   const anosRebanho = anosNoPeriodo(ordenarAnos(DADOS_LEITE.rebanhoCO.flatMap(d => Object.keys(d).filter(k => /^\d{4}$/.test(k)))));
   const anosMunicipios = anosNoPeriodo(ordenarAnos(DADOS_LEITE.municipiosProducao.map(d => d.ano)));
   const regioesSelecionadas = estadoFiltros.regioes;
-  const regioes = seriesSelecionadas(SERIES_REGIAO, regioesSelecionadas);
+  const regioes = estadoFiltros.ufs.length ? [] : seriesSelecionadas(SERIES_REGIAO, regioesSelecionadas);
+  const retratoRegional = dados => dados.filter(item => regioes.includes(item.regiao));
   const mesorregioesComDados = new Set(filtrarLinhasPorAno(linhasMesorregionais)
     .filter(item => ufSelecionadaLeite(item.uf)).map(item => item.mesorregiao));
   const mesorregioes = seriesSelecionadas(SERIES_MESO, regioesSelecionadas).filter(nome => mesorregioesComDados.has(nome));
   const mesorregioesVacas = seriesSelecionadas(SERIES_VACAS_MESO, regioesSelecionadas).filter(nome => mesorregioesComDados.has(nome));
-  const ufsProducao = SERIES_PRODUCAO_UF.filter(ufSelecionadaLeite);
-  const ufsCO = SERIES_UF_CO.filter(ufSelecionadaLeite);
+  const ufsProducao = SERIES_PRODUCAO_UF.filter(uf => ufSelecionadaLeite(uf) && ufNoRecorteRegionalLeite(uf));
+  const recorteSoMesorregioes = regioesSelecionadas.some(regiao => !Object.hasOwn(regioesPorUf, regiao));
+  const ufsCO = recorteSoMesorregioes ? [] : SERIES_UF_CO.filter(ufSelecionadaLeite);
   const municipios = seriesSelecionadas(municipiosDisponiveisLeite(), estadoFiltros.municipios);
   ANOS_PRODUTIVIDADE_MUNICIPIOS = anosNoPeriodo(ordenarAnos(DADOS_LEITE.produtividadeMunicipios
     .filter(item => municipios.includes(item.municipio))
@@ -845,18 +871,28 @@ function aplicarFiltros() {
   });
 
   graficos.chartLeiteSeries?.update(filtrarLinhasPorAno(DADOS_LEITE.producaoBilhoes, "Ano").map(d => ({ ...d, ano: String(d.Ano) })), ufsProducao);
-  graficos.chartLeiteRegiao?.update(filtrarPorCampo(DADOS_LEITE.participacaoRegiao, "regiao", estadoFiltros.regioes));
-  renderizarTabelaRegioes(filtrarPorCampo(DADOS_LEITE.participacaoRegiao, "regiao", estadoFiltros.regioes));
-  graficos.chartProdutividade?.update(filtrarPorCampo(DADOS_LEITE.produtividadeRegiao, "regiao", estadoFiltros.regioes));
-  graficos.chartVacasRegiao?.update(filtrarPorCampo(DADOS_LEITE.vacasRegiao, "regiao", estadoFiltros.regioes));
+  const participacao = DADOS_LEITE.participacaoRegiao;
+  const participacaoFiltrada = retratoRegional(participacao);
+  graficos.chartLeiteRegiao?.update(participacaoComComplemento(
+    participacao, participacaoFiltrada, "regiao", "percentualParticipacao", "Demais regiões"
+  ));
+  renderizarTabelaRegioes(participacaoFiltrada);
+  alternarCard("tabelaRegioesLeite", participacaoFiltrada.length > 0);
+  graficos.chartProdutividade?.update(retratoRegional(DADOS_LEITE.produtividadeRegiao));
+  graficos.chartVacasRegiao?.update(retratoRegional(DADOS_LEITE.vacasRegiao));
   graficos.chartVacasRegiaoSerie?.update(dadosPorAno(DADOS_LEITE.vacasRegiaoSerie, "regiao", anosVacasRegiao, regioes), regioes);
 
   graficos.chartGoiasMeso?.update(filtrarLinhasPorAno(DADOS_LEITE.producaoMeso).map(d => ({ ...d, ano: String(d.ano) })), mesorregioes);
-  graficos.chartGoiasMesoPie?.update(Object.entries(DADOS_LEITE.producaoMeso.find(d => String(d.ano) === anosMeso.at(-1)) || {}).filter(([k]) => k !== "ano" && mesorregioes.includes(k)).map(([mesorregiao, producao]) => ({ mesorregiao, producao })));
+  const producaoMeso = Object.entries(DADOS_LEITE.producaoMeso.find(d => String(d.ano) === anosMeso.at(-1)) || {})
+    .filter(([chave]) => chave !== "ano").map(([mesorregiao, producao]) => ({ mesorregiao, producao }));
+  graficos.chartGoiasMesoPie?.update(participacaoComComplemento(
+    producaoMeso, producaoMeso.filter(item => mesorregioes.includes(item.mesorregiao)),
+    "mesorregiao", "producao", "Demais mesorregiões"
+  ));
   graficos.chartVacasGoias?.update(dadosAgrupadosPorAnos(DADOS_LEITE.vacasMeso.filter(d => mesorregioesVacas.includes(d.mesorregiao)), "mesorregiao", comparacaoVacasMeso), [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }]);
   graficos.chartVacasMesoSerie?.update(dadosPorAno(DADOS_LEITE.vacasMeso, "mesorregiao", anosVacasMeso, mesorregioesVacas), mesorregioesVacas);
   const linhasCO = filtrarLinhasPorAno(metadadosApi.centroOesteLinhas || [])
-    .filter(item => item.uf !== "Centro-Oeste" && temMedicao(item.producao));
+    .filter(item => !recorteSoMesorregioes && item.uf !== "Centro-Oeste" && temMedicao(item.producao));
   const anoCO = ordenarAnos(linhasCO.filter(item => ufSelecionadaLeite(item.uf)).map(item => item.ano)).at(-1);
   const producaoCO = linhasCO.filter(item => String(item.ano) === anoCO && ufSelecionadaLeite(item.uf))
     .map(item => ({ uf: item.uf, producaoLeiteMilhoesLitros: Number(item.producao) }));
@@ -886,13 +922,10 @@ function aplicarFiltros() {
   });
 
   renderizarTabelaProdutividadeMunicipios(municipios);
-  const ufRanking = estadoFiltros.ufs.length
-    ? item => ufSelecionadaLeite(item.uf)
-    : item => localidadeCentroOeste(item.uf);
   const ranking = filtrarLinhasPorAno(DADOS_LEITE.rankingConsumo)
-    .filter(item => ufRanking(item) && temIntersecaoProduto(item.produto));
+    .filter(item => temIntersecaoProduto(item.produto) && ufNoRankingLeite(item.uf));
   const anoRanking = ordenarAnos(ranking.map(item => item.ano)).at(-1);
-  const recorteRanking = estadoFiltros.ufs.length ? "UFs selecionadas" : "Centro-Oeste";
+  const recorteRanking = estadoFiltros.ufs.length ? "UFs selecionadas" : estadoFiltros.regioes.join(", ") || "Centro-Oeste";
   atualizarTextoVisualizacao("chartRankingConsumo", {
     subtitulo: `Aquisição domiciliar per capita — ${recorteRanking}${anoRanking ? ` · POF ${anoRanking}` : ""}`
   });
@@ -906,11 +939,18 @@ function aplicarFiltros() {
 
 // Exibe apenas cards pertencentes ao indicador escolhido na barra de filtros.
 function atualizarVisibilidadeCards() {
+  const aba = document.querySelector("[data-tab-content].active");
+  const categorias = new Set(Array.from(aba?.querySelectorAll("[data-category]") || [], el => el.dataset.category));
+  document.querySelectorAll('[data-filter-group="indicador"] .filter-btn').forEach(btn => {
+    btn.hidden = btn.dataset.filter !== "all" && !categorias.has(btn.dataset.filter);
+  });
   document.querySelectorAll("[data-category]").forEach(el => {
     const categoriaOk = estadoFiltros.indicador === "all" || el.dataset.category === estadoFiltros.indicador;
-    el.classList.toggle("is-filter-hidden", !categoriaOk);
+    const produtoOk = !estadoFiltros.produtos.length || el.dataset.category === "mercado";
+    el.classList.toggle("is-filter-hidden", !categoriaOk || !produtoOk);
   });
-  const visiveis = Array.from(document.querySelectorAll("[data-tab-content].active [data-category]")).some(el => !el.classList.contains("is-filter-hidden") && !el.classList.contains("is-chart-empty"));
+  const visiveis = [...(aba?.querySelectorAll("[data-category]") || [])].some(el =>
+    el.querySelector(".chart-card, .table-card") && !el.matches(".is-filter-hidden, .is-chart-empty"));
   document.getElementById("semDadosLeite")?.style.setProperty("display", visiveis ? "none" : "block");
 }
 // Converte o estado atual em chips de leitura rápida.
@@ -923,7 +963,7 @@ function atualizarResumoFiltros() {
     estadoFiltros.regioes.length ? `Região: ${estadoFiltros.regioes.length}` : "",
     estadoFiltros.ufs.length ? `UF: ${estadoFiltros.ufs.length}` : "",
     estadoFiltros.municipios.length ? `Municípios: ${estadoFiltros.municipios.length}` : "",
-    estadoFiltros.produtos.length ? `Produto/perfil: ${estadoFiltros.produtos.length}` : ""
+    estadoFiltros.produtos.length ? `Produto do ranking: ${estadoFiltros.produtos.length}` : ""
   ].filter(Boolean);
   target.innerHTML = chips.map(texto => `<span class="filter-chip">${texto}</span>`).join("");
 }
@@ -1017,9 +1057,12 @@ function atualizarOpcoesDependentesLeite() {
   estadoFiltros.ufs = [...new Set(estadoFiltros.ufs.map(uf => ufs.get(codigoUfPainel(uf))).filter(Boolean))];
   const mesorregioes = filtrarLinhasPorAno(fontes.mesorregioes || [])
     .filter(item => ufSelecionadaLeite(item.uf)).map(item => item.mesorregiao);
-  const regioes = filtrarLinhasPorAno(fontes.regioes || []).map(item => item.regiao);
-  const produtos = filtrarLinhasPorAno(fontes.ranking || [])
-    .filter(item => estadoFiltros.ufs.length ? ufSelecionadaLeite(item.uf) : localidadeCentroOeste(item.uf))
+  const regioes = [
+    ...filtrarLinhasPorAno(fontes.regioes || []).map(item => item.regiao),
+    ...filtrarLinhasPorAno(fontes.ranking || []).map(item => regiaoDaUfLeite(item.uf)).filter(Boolean)
+  ];
+  const produtos = (fontes.ranking || [])
+    .filter(item => ufNoRankingLeite(item.uf) || estadoFiltros.produtos.includes(item.produto))
     .map(item => item.produto);
   const municipios = fontes.municipios ? municipiosDisponiveisLeite() : [];
   [
