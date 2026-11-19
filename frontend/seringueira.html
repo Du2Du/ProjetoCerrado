@@ -170,15 +170,6 @@
       font-family: var(--font-d);
     }
 
-    .data-card--filter-empty > .chart-area {
-      display: none;
-    }
-
-    .data-card--filter-empty > .data-state {
-      position: static;
-      min-height: 7rem;
-      margin-top: .75rem;
-    }
 
     @media (max-width: 768px) {
 
@@ -371,7 +362,8 @@
                 aria-label="Gráfico: Indicadores produtivos da borracha no Centro-Oeste">
                 <div class="chart-card__title">Indicadores Produtivos da Borracha</div>
                 <div class="chart-card__sub">Produção, área e produtividade no Centro-Oeste</div>
-                <div id="chartIndicadoresBorracha" class="chart-area chart-area--tall" aria-hidden="true"></div>
+                <div id="chartIndicadoresBorracha" class="chart-area chart-area--tall" data-indicadores="producao area"
+                  aria-hidden="true"></div>
               </div>
             </div>
 

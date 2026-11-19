@@ -14,7 +14,7 @@ const rootsSeringueira = [];
 const estadoFiltros = { anoInicio: null, anoFim: null, ufs: new Set(), produto: new Set() };
 const graficosUF    = {};  // id → { eixoX, seriesMap:{uf→serie}, dados, campoValor }
 // Guarda referências dos gráficos para atualizar dados sem recriar roots do amCharts.
-const graficosFixos = {};  // id → { eixoX, seriesList } ou { isEstab, seriesMap }
+const graficosFixos = {};  // id → gráfico consolidado ou gráfico de estabelecimentos
 
 // ── DADOS ────────────────────────────────────────────────────────────
 let dadosProducao = [];
@@ -65,7 +65,7 @@ function definirEstadoVisualizacao(ids, estado, mensagem = "") {
   ids.forEach(id => {
     const container = containerVisualizacao(id);
     if (!container) return;
-    container.classList.remove("data-card--loading", "data-card--error", "data-card--empty", "data-card--filter-empty");
+    container.classList.remove("data-card--loading", "data-card--error", "data-card--empty");
     container.querySelector(":scope > .data-state")?.remove();
     container.removeAttribute("aria-busy");
     if (estado === "ready") return;
@@ -78,7 +78,7 @@ function definirEstadoVisualizacao(ids, estado, mensagem = "") {
     const icone = document.createElement("span");
     icone.className = estado === "loading" ? "data-state__spinner" : "data-state__icon";
     icone.setAttribute("aria-hidden", "true");
-    if (estado !== "loading") icone.textContent = estado.endsWith("empty") ? "○" : "!";
+    if (estado !== "loading") icone.textContent = estado === "empty" ? "○" : "!";
     const texto = document.createElement("span");
     texto.textContent = mensagem || (estado === "loading" ? "Carregando dados…" : "Dados indisponíveis.");
     status.append(icone, texto);
@@ -169,11 +169,8 @@ function montarIndicadores() {
   }));
 }
 
-function atualizarEstadoFiltro(id, temDados, mensagem) {
-  const card = containerVisualizacao(id);
-  if (!card || card.matches(".data-card--loading, .data-card--error, .data-card--empty")) return;
-  const estado = temDados ? "ready" : "filter-empty";
-  definirEstadoVisualizacao([id], estado, mensagem || "Sem dados para os filtros selecionados.");
+function atualizarAvisoSeringueira(id, temDados, indicador, mensagem = avisoSemDadosGrafico) {
+  mostrarAvisoGrafico(id, avisoIndicadorGrafico(id, indicador) || (temDados ? "" : mensagem));
 }
 
 // Atualiza subtítulo e descrição acessível de um card.
@@ -208,6 +205,7 @@ function atualizarPeriodoDinamico() {
   anosSeringueira = ordenarAnos([
     ...dadosProducao.map(item => item.ano),
     ...dadosAreaColhida.map(item => item.ano),
+    ...dadosAreaDestinada.map(item => item.ano),
     ...dadosProdutividade.map(item => item.ano),
     ...dadosValorProducao.map(item => item.ano),
     ...dadosEstabelecimentos.map(item => item.ano)
@@ -466,7 +464,7 @@ function criarGraficoIndicadores() {
   configurarEixo(eixoX); configurarEixo(eixoY); configurarEixo(eixoY2);
   eixoX.data.setAll(dados);
 
-  const seriesList = [
+  const seriesMap = Object.fromEntries([
     { campo: "producaoToneladas",         nome: "Produção (t)",          cor: P[0], eixo: eixoY  },
     { campo: "areaPlantadaHectares",      nome: "Área destinada (ha)",    cor: P[2], eixo: eixoY  },
     { campo: "areaColhidaHectares",       nome: "Área colhida (ha)",      cor: P[3], eixo: eixoY  },
@@ -481,17 +479,17 @@ function criarGraficoIndicadores() {
     serie.strokes.template.setAll({ strokeWidth: 2.5 });
     serie.bullets.push(() => am5.Bullet.new(root, { sprite: am5.Circle.new(root, { radius: 3, fill: serie.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2 }) }));
     serie.data.setAll(dados);
-    return serie;
-  });
+    return [cfg.campo, serie];
+  }));
 
-  criarLegenda(chart, root).data.setAll(chart.series.values);
+  const legenda = criarLegenda(chart, root);
   chart.appear(1000, 100);
-  graficosFixos["chartIndicadoresBorracha"] = { eixoX, seriesList };
+  graficosFixos["chartIndicadoresBorracha"] = { eixoX, eixoY2, seriesMap, legenda };
 }
 
 // ── APLICAR FILTROS ──────────────────────────────────────────────────
 // Atualiza dados e visibilidade das séries estaduais segundo os filtros.
-function atualizarGraficosUF() {
+function atualizarGraficosUF(indicador) {
   Object.entries(graficosUF).forEach(([id, g]) => {
     const novos = buildDadosUF(g.dados, g.campoValor);
     g.eixoX.data.setAll(novos);
@@ -499,44 +497,57 @@ function atualizarGraficosUF() {
     atualizarTextoVisualizacao(id, {
       subtitulo: ["Látex coagulado", g.subtitulo, periodoTexto(novos.map(item => item.ano))].filter(Boolean).join(" · ")
     });
-    atualizarEstadoFiltro(id, novos.length > 0, mensagemSemDadosPam());
+    atualizarAvisoSeringueira(id, novos.length > 0, indicador, mensagemSemDadosPam());
   });
 }
 
-function atualizarSeriesFiltradas(grafico, dados) {
+function atualizarSeriesFiltradas(grafico, dados, campos) {
   const visiveis = [];
   Object.entries(grafico.seriesMap).forEach(([chave, serie]) => {
-    const visivel = dados.some(item => temMedicao(item[chave]));
+    const visivel = (!campos || campos.includes(chave)) && dados.some(item => temMedicao(item[chave]));
     serie.data.setAll(visivel ? dados : []);
     serie.set("forceHidden", !visivel);
     if (visivel) visiveis.push(serie);
   });
   grafico.legenda.data.setAll(visiveis);
+  return visiveis.length > 0;
 }
 
 function mensagemSemDadosPam() {
-  return produtoSelecionado(PRODUTO_BORRACHA) ? "" : "A série histórica está disponível apenas para látex coagulado.";
+  return produtoSelecionado(PRODUTO_BORRACHA) ? avisoSemDadosGrafico : "Sem dados históricos para látex líquido.";
+}
+
+function mensagemSemDadosCenso() {
+  if (!ufSelecionada("Centro-Oeste")) return "O Censo não tem dados de estabelecimentos por estado.";
+  const anos = ordenarAnos(dadosEstabelecimentos.filter(item => produtoSelecionado(item.produto)).map(item => item.ano));
+  return anos.length === 1 && (anos[0] < estadoFiltros.anoInicio || anos[0] > estadoFiltros.anoFim)
+    ? `O Censo só tem dados de estabelecimentos de ${anos[0]}.` : avisoSemDadosGrafico;
 }
 
 // Atualiza os gráficos especiais que não seguem o formato comum por UF.
-function atualizarGraficosFixos() {
+function atualizarGraficosFixos(indicador) {
   Object.entries(graficosFixos).forEach(([id, g]) => {
     if (g.isEstab) {
       const dados = g.buildDados();
       g.eixoY.data.setAll(dados);
       atualizarSeriesFiltradas(g, dados);
-      atualizarEstadoFiltro(id, dados.length > 0, ufSelecionada("Centro-Oeste") ? "" : "O Censo disponível não detalha estabelecimentos por UF.");
+      atualizarAvisoSeringueira(id, dados.length > 0, indicador, mensagemSemDadosCenso());
       return;
     }
     const dados = montarIndicadores();
+    const campos = {
+      area: ["areaPlantadaHectares", "areaColhidaHectares"],
+      producao: ["producaoToneladas", "produtividadeKgPorHectare"]
+    }[indicador];
     g.eixoX.data.setAll(dados);
-    g.seriesList.forEach(s => s.data.setAll(dados));
+    g.eixoY2.set("forceHidden", indicador === "area");
+    const temDados = atualizarSeriesFiltradas(g, dados, campos);
     const recorte = recortePam().join(", ");
     atualizarTextoVisualizacao(id, {
       subtitulo: ["Látex coagulado", recorte, periodoTexto(dados.map(item => item.ano))].filter(Boolean).join(" · "),
       ariaLabel: `Indicadores produtivos de látex coagulado — ${recorte}`
     });
-    atualizarEstadoFiltro(id, dados.length > 0, mensagemSemDadosPam());
+    atualizarAvisoSeringueira(id, temDados, indicador, mensagemSemDadosPam());
   });
 }
 
@@ -544,9 +555,14 @@ function atualizarGraficosFixos() {
 function aplicarFiltros() {
   // Recalcula o período visível e repassa os dados filtrados a todos os gráficos
   // registrados, mantendo chips e KPIs alinhados com a mesma seleção.
+  const indicador = document.querySelector('[data-filter-group="ind"] .filter-btn.active')?.dataset.filter || "all";
   atualizarOpcoesSeringueira();
-  atualizarGraficosUF();
-  atualizarGraficosFixos();
+  atualizarGraficosUF(indicador);
+  atualizarGraficosFixos(indicador);
+  document.querySelectorAll("#fl-co [data-category] > .kpi-card").forEach(card => {
+    const coluna = card.parentElement;
+    coluna.style.display = indicador === "all" || coluna.dataset.category === indicador ? "" : "none";
+  });
   atualizarCardsSeringueira();
   renderizarChips();
 }
@@ -630,7 +646,6 @@ function conectarBusca(inputId, menuId) {
 }
 
 function atualizarOpcoesSeringueira() {
-  const indicador = document.querySelector('[data-filter-group="ind"] .filter-btn.active')?.dataset.filter || "all";
   const aba = document.querySelector("[data-tab-content].active")?.id || "fl-co";
   const temGraficos = aba === "fl-co";
   document.querySelectorAll('[data-filter-group="ind"] .filter-btn').forEach(btn => { btn.disabled = !temGraficos; });
@@ -642,24 +657,16 @@ function atualizarOpcoesSeringueira() {
     return;
   }
 
-  const area = [...dadosAreaColhida, ...dadosAreaDestinada, ...dadosAreaPerda];
-  const producao = [...dadosProducao, ...dadosProdutividade, ...dadosValorProducao];
-  const fontes = { all: [...area, ...producao], area, producao };
-  const dados = fontes[indicador] || [];
-  const estabelecimentos = indicador !== "area" ? dadosEstabelecimentos : [];
-  const anos = ordenarAnos([...dados, ...estabelecimentos].map(item => item.ano));
-  const noIntervalo = anos.filter(ano => ano >= estadoFiltros.anoInicio && ano <= estadoFiltros.anoFim);
-  estadoFiltros.anoInicio = noIntervalo[0] ?? anos[0] ?? null;
-  estadoFiltros.anoFim = noIntervalo.at(-1) ?? anos.at(-1) ?? null;
+  const dados = [...dadosProducao, ...dadosAreaColhida, ...dadosAreaDestinada, ...dadosAreaPerda, ...dadosProdutividade, ...dadosValorProducao];
+  const anos = anosSeringueira;
   ["Inicio", "Fim"].forEach((extremo, indice) => {
     const select = document.getElementById(`seriAno${extremo}`);
     select.replaceChildren(...anos.map(ano => new Option(String(ano), String(ano))));
     select.value = indice === 0 ? estadoFiltros.anoInicio : estadoFiltros.anoFim;
     select.disabled = !anos.length;
   });
-  const noPeriodo = item => item.ano >= estadoFiltros.anoInicio && item.ano <= estadoFiltros.anoFim;
-  const localidades = dados.filter(noPeriodo).map(item => item.uf);
-  const produtos = [...area, ...producao, ...dadosEstabelecimentos].map(item => item.produto);
+  const localidades = dados.map(item => item.uf);
+  const produtos = [...dados, ...dadosEstabelecimentos].map(item => item.produto);
   [
     ["Uf", "ufs", localidades, "Todas"],
     ["Produto", "produto", produtos, "Todos"]
@@ -763,11 +770,6 @@ window.onFilterChange = function (filterId, group) {
     return;
   }
   if (group === "ind") {
-    const tab = document.querySelector("[data-tab-content].active");
-    if (!tab) return;
-    tab.querySelectorAll("[data-category]").forEach(el => {
-      el.style.display = (filterId === "all" || el.dataset.category === filterId) ? "" : "none";
-    });
     aplicarFiltros();
   }
 };

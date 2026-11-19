@@ -49,6 +49,7 @@ function criarRoot(id) {
   // Um root do amCharts só pode ocupar o container uma vez; descarte o anterior
   // antes de recriar o gráfico para evitar referências e eventos duplicados.
   limparGrafico(id);
+  mostrarAvisoGrafico(id);
   const root = am5.Root.new(id);
   root.setThemes([am5themes_Animated.new(root)]);
   rootsGraficosCorte.set(id, root);
@@ -65,11 +66,9 @@ function limparGrafico(id) {
 }
 
 // Substitui um gráfico sem conteúdo por uma mensagem de estado vazio.
-function mostrarSemDadosChart(id, mensagem = "Sem dados para os filtros selecionados.") {
+function mostrarSemDadosChart(id, mensagem = avisoSemDadosGrafico) {
   limparGrafico(id);
-  const el = porId(id);
-  if (!el) return;
-  el.innerHTML = `<div class="filter-empty d-block h-100 d-flex align-items-center justify-content-center text-center">${mensagem}</div>`;
+  mostrarAvisoGrafico(id, mensagem);
 }
 
 // Aplica tipografia e cor comuns aos eixos do dashboard.
@@ -152,25 +151,41 @@ function criarPizza(id, dados, categoria, valor) {
 function criarGraficoRebanho() {
   // Converte a resposta "larga" (um campo para cada ano) no formato esperado
   // pelas séries do amCharts e usa o último ano na pizza de participação.
+  const avisoIndicador = avisoIndicadorGrafico("chartRebanhoCorte", filtrosCorte.indicador);
+  const avisoTrimestre = filtrosCorte.indicador === "all" && filtrosCorte.trimestre !== "all"
+    ? "O rebanho tem dados por ano. O filtro de trimestre vale só para o abate." : "";
+  if (avisoIndicador || avisoTrimestre) {
+    atualizarTexto("tituloRebanhoPartic", "Participação no Rebanho das UFs Exibidas");
+    ["chartRebanhoCorte", "chartRebanhoPartic"].forEach(id => mostrarSemDadosChart(id, avisoIndicador || avisoTrimestre));
+    return;
+  }
   const dadosBase = DADOS_CORTE.rebanhoCorte.filter(item => ufSelecionadaCorte(item.uf));
   const anos = anosDeObjetoSerie(dadosBase).filter(dentroPeriodo);
   const estados = dadosBase.map(item => item.uf);
   atualizarTexto("subRebanhoCorte", `Milhões de cabeças (${periodoLabel()})`);
   if (!anos.length) {
     atualizarTexto("tituloRebanhoPartic", "Participação no Rebanho das UFs Exibidas");
-    mostrarSemDadosChart("chartRebanhoCorte");
-    mostrarSemDadosChart("chartRebanhoPartic");
+    const mensagem = dadosBase.length ? "Não há dados de rebanho no período escolhido." : "Não há dados de rebanho para os estados escolhidos.";
+    mostrarSemDadosChart("chartRebanhoCorte", mensagem);
+    mostrarSemDadosChart("chartRebanhoPartic", mensagem);
     return;
   }
   criarLinhas("chartRebanhoCorte", dadosSeriePorAno(dadosBase, "uf", anos, formatarMilhoes), "ano", estados, " mi cab.");
 
   const anoFinal = Math.max(...anos);
   atualizarTexto("tituloRebanhoPartic", `Participação no Rebanho das UFs Exibidas (${anoFinal || filtrosCorte.anoFim})`);
-  criarPizza("chartRebanhoPartic", dadosBase.filter(item => !["Brasil", "Centro-Oeste"].includes(item.uf) && item[String(anoFinal)]).map(item => ({ uf: item.uf, quantidadeCabecas: item[String(anoFinal)] })), "uf", "quantidadeCabecas");
+  const ufsParticipacao = dadosBase.filter(item => !["Brasil", "Centro-Oeste"].includes(item.uf));
+  if (!ufsParticipacao.length) {
+    mostrarSemDadosChart("chartRebanhoPartic", "Selecione um estado para ver a participação no rebanho.");
+    return;
+  }
+  criarPizza("chartRebanhoPartic", ufsParticipacao.filter(item => item[String(anoFinal)]).map(item => ({ uf: item.uf, quantidadeCabecas: item[String(anoFinal)] })), "uf", "quantidadeCabecas");
 }
 
 // Agrega os registros trimestrais de abate segundo a métrica selecionada.
 function criarGraficoAbate() {
+  const aviso = avisoIndicadorGrafico("chartAbateBovinos", filtrosCorte.indicador);
+  if (aviso) return mostrarSemDadosChart("chartAbateBovinos", aviso);
   // Quando todos os trimestres estão selecionados, anos incompletos são omitidos
   // para que a comparação anual não misture totais parciais com totais fechados.
   const series = seriesAbateCorte(filtrosCorte.trimestre, campoAbateCorte());
@@ -181,6 +196,14 @@ function criarGraficoAbate() {
   const sufixo = filtrosCorte.metricaAbate === "peso" ? " mil t" : " mi cab.";
   const trimestre = filtrosCorte.trimestre === "all" ? "todos os trimestres" : `${filtrosCorte.trimestre} trimestre`;
   atualizarTexto("subAbateBovinos", `${filtrosCorte.metricaAbate === "peso" ? "Peso total das carcaças" : "Cabeças abatidas"} · ${trimestre} · ${periodoLabel()}`);
+  if (!anos.length) {
+    const registros = DADOS_CORTE.abateBovinos.filter(item => ufSelecionadaCorte(item.uf) && temMedicao(item[campoAbateCorte()]));
+    if (!registros.length) return mostrarSemDadosChart("chartAbateBovinos", "Não há dados de abate para os estados escolhidos.");
+    const temAnoParcial = filtrosCorte.trimestre === "all" && registros.some(item => dentroPeriodo(item.ano));
+    const mensagem = temAnoParcial ? "O total anual precisa dos dados dos quatro trimestres. Escolha um trimestre ou outro período."
+      : "Não há dados de abate para o período e o trimestre escolhidos.";
+    return mostrarSemDadosChart("chartAbateBovinos", mensagem);
+  }
   criarLinhas("chartAbateBovinos", acumulado, "ano", ufs, sufixo);
 }
 
@@ -214,12 +237,8 @@ function seriesAbateCorte(trimestre, campo, limitarPeriodo = true) {
 }
 
 function valoresUfsCorte() {
-  const { indicador } = filtrosCorte;
-  const rebanho = indicador === "all" || indicador === "rebanho"
-    ? DADOS_CORTE.rebanhoCorte : [];
-  const abate = indicador === "all" || indicador === "abate"
-    ? DADOS_CORTE.abateBovinos : [];
-  return [...new Set([...rebanho, ...abate].map(item => codigoUfPainel(item.uf)))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const dados = [...DADOS_CORTE.rebanhoCorte, ...DADOS_CORTE.abateBovinos];
+  return [...new Set(dados.map(item => codigoUfPainel(item.uf)))].sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
 // Resume uma seleção múltipla no texto curto exibido pelo botão do dropdown.
@@ -278,13 +297,14 @@ function renderizarFiltrosMultiselect() {
 // Mantém o período escolhido quando ele ainda existe no indicador ativo.
 function sincronizarAnosCorte() {
   const anos = anosDisponiveisCorte();
-  const noIntervalo = anos.filter(dentroPeriodo);
-  filtrosCorte.anoInicio = noIntervalo[0] ?? anos[0] ?? null;
-  filtrosCorte.anoFim = noIntervalo.at(-1) ?? anos.at(-1) ?? null;
+  filtrosCorte.anoInicio ??= anos[0] ?? null;
+  filtrosCorte.anoFim ??= anos.at(-1) ?? null;
+  const opcoes = [...new Set([...anos, filtrosCorte.anoInicio, filtrosCorte.anoFim].filter(Number.isInteger))]
+    .sort((a, b) => a - b);
   ["filtroAnoInicioCorte", "filtroAnoFimCorte"].forEach((id, indice) => {
     const select = porId(id);
-    select.innerHTML = anos.map(ano => `<option value="${ano}">${ano}</option>`).join("");
-    select.disabled = !anos.length;
+    select.innerHTML = opcoes.map(ano => `<option value="${ano}">${ano}</option>`).join("");
+    select.disabled = !opcoes.length;
     select.value = indice === 0 ? filtrosCorte.anoInicio : filtrosCorte.anoFim;
   });
 }
@@ -303,11 +323,14 @@ function atualizarChipsFiltros() {
   el.innerHTML = chips.map(chip => `<span class="filter-chip">${chip}</span>`).join("");
 }
 
-// Exibe somente os cards compatíveis com o indicador selecionado.
+// Atualiza os destaques e tabelas do indicador selecionado.
 function atualizarVisibilidadeIndicador() {
   document.querySelectorAll('[data-filter-group="indicador"] .filter-btn').forEach(btn => btn.classList.toggle("active", btn.dataset.filter === filtrosCorte.indicador));
   document.querySelectorAll("[data-category]").forEach(el => {
-    el.classList.toggle("is-filter-hidden", filtrosCorte.indicador !== "all" && el.dataset.category !== filtrosCorte.indicador);
+    if (el.querySelector(".chart-area")) return;
+    const indicadorOk = filtrosCorte.indicador === "all" || el.dataset.category === filtrosCorte.indicador;
+    const trimestreOk = filtrosCorte.indicador === "rebanho" || filtrosCorte.trimestre === "all" || el.dataset.category !== "rebanho";
+    el.classList.toggle("is-filter-hidden", !indicadorOk || !trimestreOk);
   });
 }
 
@@ -335,6 +358,7 @@ function atualizarDashboardCorte() {
   });
   porId("filtroTrimestreCorte")?.closest(".filter-cluster").classList
     .toggle("is-filter-hidden", !abaDados || filtrosCorte.indicador === "rebanho");
+  porId("filtroMetricaAbate").disabled = filtrosCorte.indicador === "rebanho";
   porId("filtrosAtivosCorte").classList.toggle("is-filter-hidden", !abaDados);
   atualizarVisibilidadeIndicador();
   if (!abaDados) return;

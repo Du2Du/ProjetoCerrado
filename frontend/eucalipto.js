@@ -145,8 +145,7 @@ function fontesEucalipto() {
 }
 
 function sincronizarAnosEucalipto() {
-  const anos = [...new Set(fontesEucalipto().map(item => String(item.ano)).filter(ano => /^\d{4}$/.test(ano)))]
-    .sort((a, b) => Number(a) - Number(b));
+  const anos = anosDisponiveis;
   const noIntervalo = anos.filter(ano => Number(ano) >= Number(filtrosAtivos.anoInicio) && Number(ano) <= Number(filtrosAtivos.anoFim));
   filtrosAtivos.anoInicio = noIntervalo[0] || anos[0] || "";
   filtrosAtivos.anoFim = noIntervalo.at(-1) || anos.at(-1) || "";
@@ -165,7 +164,7 @@ function produtosDisponiveisEucalipto() {
   return produtosEucalipto.filter(produto => filtrosAtivos.produtos.includes(produto.campo)
     || series.some(item => temMedicao(item[produto.campo]))
     || ((indicador === "all" || indicador === "ranking") && produto.campo === "papelCelulose"
-      && dadosRankingNoPeriodo().length));
+      && dadosRankingProducao.length));
 }
 
 function dadosRankingNoPeriodo() {
@@ -196,11 +195,17 @@ function anoFinalSelecionado() {
 }
 
 // Alterna entre o gráfico e sua mensagem de ausência de dados.
-function alternarEstadoVazio(containerId, vazio) {
-  const chart = document.getElementById(containerId);
-  const empty = document.getElementById(`empty${containerId.replace(/^chart/, "")}`);
-  if (chart) chart.style.display = vazio ? "none" : "";
-  if (empty) empty.style.display = vazio ? "flex" : "none";
+function atualizarAvisoEucalipto(id, temDados) {
+  let mensagem = avisoIndicadorGrafico(id, filtrosAtivos.indicador);
+  if (!mensagem && id !== "chartRankingProducaoEucalipto" && (filtrosAtivos.ufs.length || filtrosAtivos.municipios.length)) {
+    mensagem = "Este gráfico só tem dados para o Centro-Oeste inteiro.";
+  }
+  if (!mensagem && !temDados && id === "chartRankingProducaoEucalipto") {
+    mensagem = "Nenhum município do ranking atende aos filtros escolhidos.";
+    if (!produtoCompativelComRanking()) mensagem = "O ranking só inclui madeira para papel e celulose.";
+    else if (!dadosRankingNoPeriodo().length) mensagem = "Não há dados do ranking no período escolhido.";
+  }
+  mostrarAvisoGrafico(id, mensagem || (temDados ? "" : avisoSemDadosGrafico));
 }
 
 // Cria um gráfico de linhas reutilizável para os diferentes produtos.
@@ -243,7 +248,7 @@ function criarGraficoLinhasProdutos(containerId, dataSource, unidadePadrao) {
         serie.set("forceHidden", !visivel);
       });
       legenda.data.setAll([...ativos].map(campo => series[campo]));
-      alternarEstadoVazio(containerId, !ativos.size);
+      atualizarAvisoEucalipto(containerId, ativos.size > 0);
     }
   };
   graficos[containerId].update(filtrarPeriodo(dataSource), produtosSelecionados());
@@ -289,7 +294,7 @@ function criarGraficoValorProducao() {
         serie.set("forceHidden", !visivel);
       });
       legenda.data.setAll([...ativos].map(campo => series[campo]));
-      alternarEstadoVazio(containerId, !ativos.size);
+      atualizarAvisoEucalipto(containerId, ativos.size > 0);
     }
   };
   graficos[containerId].update(filtrarPeriodo(dadosValorProducao), produtosSelecionados());
@@ -323,10 +328,7 @@ function criarGraficoRankingProducao() {
       const dados = [...data].reverse();
       eixoY.data.setAll(dados);
       serie.data.setAll(dados);
-      alternarEstadoVazio(containerId, !dados.length);
-      document.getElementById("emptyRankingProducaoEucalipto").textContent = produtoCompativelComRanking()
-        ? "Nenhum município atende aos filtros do ranking."
-        : "O ranking está disponível para madeira para papel e celulose.";
+      atualizarAvisoEucalipto(containerId, dados.length > 0);
     }
   };
   graficos[containerId].update(dadosRankingFiltrados());
@@ -360,7 +362,7 @@ function criarGraficoParticipacaoValor() {
       const dados = [...data].reverse();
       eixoY.data.setAll(dados);
       serie.data.setAll(dados);
-      alternarEstadoVazio(containerId, !dados.length);
+      atualizarAvisoEucalipto(containerId, dados.length > 0);
     }
   };
   graficos[containerId].update(dadosParticipacaoFiltrados());
@@ -447,11 +449,14 @@ function atualizarGraficos() {
   atualizarVisibilidadeCards();
 }
 
-// Oculta cards que não pertencem ao indicador selecionado.
+// Mantém os destaques alinhados com os filtros do painel.
 function atualizarVisibilidadeCards() {
-  document.querySelectorAll("[data-category]").forEach(card => {
-    const categoriaOk = filtrosAtivos.indicador === "all" || card.dataset.category === filtrosAtivos.indicador;
-    card.classList.toggle("is-filter-hidden", !categoriaOk);
+  const filtroLocal = filtrosAtivos.ufs.length || filtrosAtivos.municipios.length;
+  document.querySelectorAll("[data-category] > .kpi-card").forEach(card => {
+    const coluna = card.parentElement;
+    const categoriaOk = filtrosAtivos.indicador === "all" || coluna.dataset.category === filtrosAtivos.indicador;
+    const localidadeOk = !filtroLocal || coluna.dataset.category === "ranking";
+    coluna.classList.toggle("is-filter-hidden", !categoriaOk || !localidadeOk);
   });
 }
 
@@ -498,10 +503,11 @@ function atualizarLabelsDropdowns() {
   atualizarLabelDropdown("filtroMunicipioEucaliptoBtn", filtrosAtivos.municipios, "Todos");
 }
 
-// Restringe municípios às UFs selecionadas e remove escolhas inválidas.
+// Atualiza os controles do ranking e preserva filtros já selecionados.
 function atualizarOpcoesRankingEucalipto() {
-  const ranking = filtrosAtivos.indicador === "all" || filtrosAtivos.indicador === "ranking" ? dadosRankingNoPeriodo() : [];
-  const filtrarRanking = ranking.length > 0 && produtoCompativelComRanking();
+  const ranking = dadosRankingProducao;
+  const filtrarRanking = (filtrosAtivos.indicador === "all" || filtrosAtivos.indicador === "ranking")
+    && dadosRankingNoPeriodo().length > 0 && produtoCompativelComRanking();
   const ufs = [...new Set(ranking.map(item => item.uf).filter(Boolean))].sort();
   filtrosAtivos.ufs = filtrosAtivos.ufs.filter(uf => ufs.includes(uf));
   setDropdownOptions("filtroUfEucaliptoMenu", ufs);
@@ -514,7 +520,7 @@ function atualizarOpcoesRankingEucalipto() {
     ["Produto", produtos], ["Uf", ufs],
     ["Municipio", document.querySelectorAll("#filtroMunicipioEucaliptoMenu input")]
   ].forEach(([nome, opcoes]) => {
-    document.getElementById(`filtro${nome}EucaliptoBtn`).disabled = !opcoes.length || (nome !== "Produto" && !filtrarRanking);
+    document.getElementById(`filtro${nome}EucaliptoBtn`).disabled = !opcoes.length;
     document.getElementById(`busca${nome}Eucalipto`)?.dispatchEvent(new Event("input"));
   });
   ["filtroTopRankingEucalipto", "filtroFaixaRankingEucalipto"].forEach(id => {
@@ -523,10 +529,10 @@ function atualizarOpcoesRankingEucalipto() {
 }
 
 function atualizarMunicipiosDisponiveis(ranking) {
-  // Município depende da UF: opções e seleções que deixaram de ser válidas são
-  // removidas sempre que o filtro de estado muda.
+  // As escolhas atuais continuam disponíveis para desmarcar mesmo fora da UF selecionada.
   const municipiosDisponiveis = [...new Set(ranking
-    .filter(item => !filtrosAtivos.ufs.length || filtrosAtivos.ufs.includes(item.uf))
+    .filter(item => !filtrosAtivos.ufs.length || filtrosAtivos.ufs.includes(item.uf)
+      || filtrosAtivos.municipios.includes(item.municipio))
     .map(item => item.municipio).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b, "pt-BR"));
   filtrosAtivos.municipios = filtrosAtivos.municipios.filter(municipio => municipiosDisponiveis.includes(municipio));
@@ -699,7 +705,7 @@ async function carregarDadosEucalipto() {
 
   anosDisponiveis = Array.from(new Set([
     ...dadosQuantidadeProduzida, ...dadosValorProducao, ...dadosParticipacaoValor, ...dadosRankingProducao
-  ].map(item => String(item.ano)))).sort((a, b) => Number(a) - Number(b));
+  ].map(item => String(item.ano)).filter(ano => /^\d{4}$/.test(ano)))).sort((a, b) => Number(a) - Number(b));
   filtrosAtivos.anoInicio = anosDisponiveis[0] || "";
   filtrosAtivos.anoFim = anosDisponiveis.at(-1) || "";
   atualizarTextosPeriodo();

@@ -664,6 +664,25 @@
         height: 300px;
     }
 
+    .chart-empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 180px;
+        border: 1px dashed var(--cinza-claro);
+        border-radius: 8px;
+        color: var(--cinza-med);
+        font-family: var(--font-d);
+        font-size: .84rem;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .chart-area[hidden],
+    .chart-empty[hidden] {
+        display: none;
+    }
+
     .chart-area--tall {
         height: 370px;
     }

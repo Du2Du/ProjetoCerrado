@@ -67,6 +67,35 @@ function containerDeDados(id) {
     return elemento.closest(".chart-card, .table-card, .kpi-card");
 }
 
+const avisoSemDadosGrafico = "Não há dados para os filtros escolhidos.";
+
+function avisoIndicadorGrafico(id, indicador) {
+    const grafico = document.getElementById(id);
+    const categoria = grafico?.closest("[data-category]")?.dataset.category;
+    const categorias = grafico?.dataset.indicadores?.split(" ") || [categoria];
+    return indicador !== "all" && categoria && !categorias.includes(indicador)
+        ? "Este gráfico mostra outro indicador." : "";
+}
+
+function mostrarAvisoGrafico(id, mensagem = "") {
+    const grafico = document.getElementById(id);
+    const card = grafico?.closest(".chart-card");
+    if (!card) return;
+    const texto = card.matches(".data-card--loading, .data-card--error, .data-card--empty") ? "" : mensagem;
+    let aviso = card.querySelector(":scope > .chart-empty");
+    if (texto && !aviso) {
+        aviso = document.createElement("div");
+        aviso.className = "chart-empty";
+        aviso.setAttribute("role", "status");
+        grafico.after(aviso);
+    }
+    grafico.hidden = Boolean(texto);
+    if (aviso) {
+        aviso.hidden = !texto;
+        if (aviso.textContent !== texto) aviso.textContent = texto;
+    }
+}
+
 // Substitui o estado visual anterior dos componentes indicados.
 function definirEstadoDeDados(ids, estado, mensagem = "") {
     // Remove o estado anterior antes de aplicar o próximo; isso impede sobrepor
