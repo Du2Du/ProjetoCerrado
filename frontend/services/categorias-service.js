@@ -19,6 +19,7 @@ function categoryBody({ name, description }) {
 }
 
 export const categoriasService = Object.freeze({
+  // O filtro pede categorias com documentos e o editor pede todas as disponíveis.
   async listPublic(usage = "todas") {
     const query = new URLSearchParams({ uso: usage });
     const response = await apiRequest(`/api/categorias?${query}`, { notifyOnUnauthorized: false });

@@ -65,15 +65,15 @@ export function renderPagination(container, pagination, onPageChange) {
   container.append(label, controls);
 }
 
-export function setButtonLoading(button, loading, loadingLabel = "Aguarde…") {
-  // Preserva o rótulo original no próprio botão para restaurá-lo após a operação.
+export function setButtonLoading(button, loading, loadingLabel = "Aguarde…", label = button) {
+  // Um rótulo separado permite trocar o texto durante a operação sem remover ícones.
   if (loading) {
-    button.dataset.defaultLabel = button.textContent;
-    button.textContent = loadingLabel;
+    button.dataset.defaultLabel = label.textContent;
+    label.textContent = loadingLabel;
     button.disabled = true;
     button.setAttribute("aria-busy", "true");
   } else {
-    button.textContent = button.dataset.defaultLabel || button.textContent;
+    label.textContent = button.dataset.defaultLabel || label.textContent;
     button.disabled = false;
     button.removeAttribute("aria-busy");
   }
@@ -147,6 +147,7 @@ export function scrollToResults(element) {
   element.scrollIntoView({ behavior: reducedMotion ? "instant" : "smooth", block: "start" });
 }
 
+// Permite ignorar respostas antigas após uma nova busca ou a limpeza da tela.
 export function createListRequest() {
   let current = 0;
   return {

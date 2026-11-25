@@ -13,6 +13,7 @@ function toFormData(values) {
   const formData = new FormData();
   formData.append("titulo", values.title.trim());
   formData.append("descricao", values.description.trim());
+  // Envia [] quando o formulário limpa os vínculos e omite o campo se ele não foi fornecido.
   if (values.categoryIds !== undefined) {
     formData.append("categorias", JSON.stringify(values.categoryIds));
   }

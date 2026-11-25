@@ -1,4 +1,5 @@
 import { createCategoryAdmin } from "./admin-categorias.js";
+import { createTableAction } from "./admin-table-actions.js";
 import { categoriasService } from "../../services/categorias-service.js";
 import { categoryTags, createCategoryFilter, createCategoryPicker, setupAdminTabs } from "../../components/categorias-ui.js";
 import { authService } from "../../services/auth-service.js";
@@ -149,6 +150,7 @@ async function loadCategoryFilter() {
 
 async function loadPicker() {
   const isCurrent = pickerRequest.start();
+  // Aguarda as opções antes de permitir o envio dos vínculos do documento.
   pickerReady = false;
   pickerStatus.textContent = "Carregando categorias…";
   pickerRetry.hidden = true;
@@ -247,18 +249,6 @@ function setListView(view) {
   if (view !== "ready") elements.pagination.replaceChildren();
 }
 
-// Cria um botão de ação de tabela com rótulo acessível e callback próprio.
-function actionButton(label, symbol, className, handler) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = className;
-  button.setAttribute("aria-label", label);
-  button.title = label;
-  button.textContent = symbol;
-  button.addEventListener("click", handler);
-  return button;
-}
-
 // Constrói uma linha da tabela e conecta suas ações de editar e excluir.
 function createTableRow(documentData) {
   const row = document.createElement("tr");
@@ -283,8 +273,8 @@ function createTableRow(documentData) {
   const actions = document.createElement("div");
   actions.className = "admin-table__actions";
   actions.append(
-    actionButton(`Editar ${documentData.title}`, "✎", "icon-button", () => openEdit(documentData)),
-    actionButton(`Excluir ${documentData.title}`, "⌫", "icon-button icon-button--danger", () => openDelete(documentData))
+    createTableAction(`Editar ${documentData.title}`, "edit", () => openEdit(documentData)),
+    createTableAction(`Excluir ${documentData.title}`, "delete", () => openDelete(documentData))
   );
   actionsCell.append(actions);
   row.append(coverCell, titleCell, dateCell, actionsCell);

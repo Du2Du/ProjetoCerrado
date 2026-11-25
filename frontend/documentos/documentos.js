@@ -85,11 +85,11 @@ function downloadFileName(documentData) {
 }
 
 // Obtém o PDF, dispara o download local e controla loading e retorno de erro.
-async function downloadDocument(documentData, button, feedback) {
+async function downloadDocument(documentData, button, label, feedback) {
   // Cria uma URL temporária para o Blob e dispara o download sem navegar para
   // fora da página. A URL é revogada logo depois para liberar memória.
   feedback.textContent = "";
-  setButtonLoading(button, true, "Baixando…");
+  setButtonLoading(button, true, "Baixando…", label);
   try {
     const blob = await documentosService.download(documentData.id);
     const objectUrl = URL.createObjectURL(blob);
@@ -103,7 +103,7 @@ async function downloadDocument(documentData, button, feedback) {
   } catch (error) {
     feedback.textContent = downloadErrorMessage(error);
   } finally {
-    setButtonLoading(button, false);
+    setButtonLoading(button, false, undefined, label);
   }
 }
 
@@ -147,11 +147,17 @@ function createDocumentCard(documentData) {
   download.type = "button";
   download.className = "app-button app-button--primary document-card__action";
   download.setAttribute("aria-label", `Baixar PDF: ${documentData.title}`);
-  download.textContent = "Baixar PDF ↓";
+  const downloadLabel = document.createElement("span");
+  downloadLabel.textContent = "Baixar PDF";
+  const downloadIcon = document.createElement("span");
+  downloadIcon.className = "material-symbol";
+  downloadIcon.setAttribute("aria-hidden", "true");
+  downloadIcon.textContent = "download";
+  download.append(downloadLabel, downloadIcon);
   const downloadFeedback = document.createElement("span");
   downloadFeedback.className = "field-error";
   downloadFeedback.setAttribute("role", "alert");
-  download.addEventListener("click", () => downloadDocument(documentData, download, downloadFeedback));
+  download.addEventListener("click", () => downloadDocument(documentData, download, downloadLabel, downloadFeedback));
 
   body.append(tag, title, description);
   if (documentData.categories?.length) body.append(categoryTags(documentData.categories));

@@ -64,6 +64,7 @@ export function categoryTags(categories = []) {
 }
 
 export function categoryFilterState(categories, selected, expanded) {
+  // As escolhas fora do trecho visível continuam aplicadas ao filtro.
   const visible = expanded ? categories : categories.slice(0, 10);
   const hiddenCount = categories.slice(visible.length)
     .filter(({ id }) => selected.has(id)).length;
@@ -81,6 +82,7 @@ export function createCategoryFilter(root, { counts = false, onChange }) {
     panel.hidden = !panel.hidden;
     toggle.setAttribute("aria-expanded", String(!panel.hidden));
   });
+  toggle.className = "category-filter__toggle";
   toggle.setAttribute("aria-expanded", "true");
   toggle.setAttribute("aria-controls", panel.id);
 
@@ -136,6 +138,7 @@ export function createCategoryFilter(root, { counts = false, onChange }) {
   return {
     setCategories(items) {
       categories = sortCategories(items.filter(({ documentCount }) => documentCount > 0));
+      // Descarta seleções que perderam todos os documentos ou foram removidas.
       const available = new Set(categories.map(({ id }) => id));
       const previousSize = selected.size;
       for (const id of selected) {
@@ -159,6 +162,7 @@ export function createCategoryFilter(root, { counts = false, onChange }) {
 
 export function createCategoryPicker({ search, options, tags, status, onChange }) {
   let categories = [];
+  // Guarda as categorias selecionadas para exibir suas etiquetas durante a busca.
   let selected = new Map();
 
   function render() {
@@ -194,6 +198,7 @@ export function createCategoryPicker({ search, options, tags, status, onChange }
   }
 
   search.addEventListener("input", render);
+  // Enter na busca interna não deve enviar o formulário de documento.
   search.addEventListener("keydown", (event) => {
     if (event.key === "Enter") event.preventDefault();
   });

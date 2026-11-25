@@ -1,3 +1,4 @@
+import { createTableAction } from "./admin-table-actions.js";
 import { sortCategories, validateCategory } from "../../components/categorias-ui.js";
 import {
   createListRequest,
@@ -8,6 +9,7 @@ import {
   showToast
 } from "../../components/documentos-ui.js";
 
+// Gerencia o cadastro de categorias e avisa a listagem de documentos após cada alteração.
 export function createCategoryAdmin({ list, create, update, remove, onChanged, errorMessage }) {
   const element = (id) => document.getElementById(id);
   const search = element("category-admin-search");
@@ -68,15 +70,10 @@ export function createCategoryAdmin({ list, create, update, remove, onChanged, e
     const actions = document.createElement("td");
     const controls = document.createElement("div");
     controls.className = "admin-table__actions";
-    for (const [label, action] of [["Editar", openEditor], ["Excluir", openDelete]]) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "app-button app-button--secondary";
-      button.textContent = label;
-      button.setAttribute("aria-label", `${label} categoria ${category.name}`);
-      button.addEventListener("click", () => action(category));
-      controls.append(button);
-    }
+    controls.append(
+      createTableAction(`Editar categoria ${category.name}`, "edit", () => openEditor(category)),
+      createTableAction(`Excluir categoria ${category.name}`, "delete", () => openDelete(category))
+    );
     actions.append(controls);
     row.append(actions);
     return row;
@@ -105,6 +102,7 @@ export function createCategoryAdmin({ list, create, update, remove, onChanged, e
       const result = await list({ page, search: search.value.trim() });
       if (!isCurrent()) return;
       const lastPage = Math.max(1, result.pagination.totalPages);
+      // Ao excluir o último item da página, volta para a última página disponível.
       if (page > lastPage) {
         page = lastPage;
         return load(focusPage);
