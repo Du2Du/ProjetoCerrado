@@ -217,12 +217,6 @@
 .icon-button:hover { border-color: var(--verde); background: #f2f8f0; }
 .icon-button--danger { color: #962f2f; }
 .icon-button--danger:hover { border-color: #962f2f; background: #fff4f4; }
-.material-symbol {
-  font-family: "Material Symbols Outlined";
-  font-size: 20px;
-  font-variant-ligatures: normal;
-  line-height: 1;
-}
 
 .app-modal {
   position: fixed;
@@ -296,7 +290,7 @@
 .login-submit { width: 100%; margin-top: .45rem; }
 .login-feedback { min-height: 1.5rem; margin: .4rem 0; color: #922b2b; font-size: .8rem; }
 .login-note { margin: 1.2rem 0 0; padding-top: 1rem; border-top: 1px solid var(--cinza-claro); color: var(--cinza-med); font-size: .73rem; line-height: 1.5; }
-.login-back { display: inline-flex; margin-top: 1rem; font-size: .78rem; font-weight: 700; }
+.login-back { display: inline-flex; align-items: center; gap: .3rem; margin-top: 1rem; font-size: .78rem; font-weight: 700; }
 
 @media (max-width: 991px) {
   .documents-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -362,15 +356,7 @@
   text-align: left;
   cursor: pointer;
 }
-.category-filter__toggle::after {
-  content: "";
-  width: .5rem;
-  height: .5rem;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(45deg);
-}
-.category-filter__toggle[aria-expanded="true"]::after { transform: rotate(225deg); }
+.category-filter__toggle[aria-expanded="true"] .material-symbol { transform: rotate(180deg); }
 .category-filter__toggle:hover { text-decoration: underline; }
 .category-options {
   display: grid;
@@ -408,6 +394,8 @@
   font-size: .8rem;
   overflow-wrap: anywhere;
 }
+.category-tag--removable { display: inline-flex; align-items: center; gap: .25rem; }
+.category-tag--removable .material-symbol { font-size: .9rem; }
 .category-tags__toggle {
   display: inline-flex;
   align-items: center;

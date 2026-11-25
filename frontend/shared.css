@@ -1,3 +1,19 @@
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&icon_names=agriculture,arrow_back,arrow_drop_down,arrow_drop_up,arrow_forward,assignment,bar_chart,chevron_left,chevron_right,close,computer,delete,description,download,eco,edit,error,expand_more,forest,groups,handshake,humidity_percentage,info,language,menu,play_arrow,rainy,restaurant,schedule,school,search,thermostat,warning,water_drop&display=block");
+
+.material-symbol {
+    display: inline-block;
+    font-family: "Material Symbols Outlined";
+    font-size: 20px;
+    font-style: normal;
+    font-weight: normal;
+    font-variant-ligatures: normal;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
     /* ── DESIGN TOKENS — CERRADO ─────────────────────────── */
     :root {
         --verde: #4a7c3f;
@@ -305,31 +321,7 @@
     }
 
     .filter-bar__toggle-icon {
-        position: relative;
-        width: .75rem;
-        height: .5rem;
-    }
-
-    .filter-bar__toggle-icon::before,
-    .filter-bar__toggle-icon::after {
-        content: "";
-        position: absolute;
-        top: .2rem;
-        width: .48rem;
-        height: 2px;
-        border-radius: 2px;
-        background: currentColor;
-        transition: transform .2s ease;
-    }
-
-    .filter-bar__toggle-icon::before {
-        left: 0;
-        transform: rotate(-42deg);
-    }
-
-    .filter-bar__toggle-icon::after {
-        right: 0;
-        transform: rotate(42deg);
+        transform: rotate(180deg);
     }
 
     .filter-bar__content {
@@ -349,12 +341,8 @@
         margin-bottom: 0;
     }
 
-    .filter-bar.is-collapsed .filter-bar__toggle-icon::before {
-        transform: rotate(42deg);
-    }
-
-    .filter-bar.is-collapsed .filter-bar__toggle-icon::after {
-        transform: rotate(-42deg);
+    .filter-bar.is-collapsed .filter-bar__toggle-icon {
+        transform: none;
     }
 
     .filter-bar--analitica,
@@ -436,10 +424,13 @@
     }
 
     .filter-dropdown-btn::after {
-        content: "▾";
+        content: "expand_more" / "";
         flex: 0 0 auto;
         color: var(--cinza-med);
-        font-size: .7rem;
+        font-family: "Material Symbols Outlined";
+        font-size: 18px;
+        font-weight: normal;
+        line-height: 1;
     }
 
     .filter-dropdown-menu {
@@ -615,6 +606,10 @@
     .kpi-badge--up {
         background: #e6f4e3;
         color: #2e7226;
+    }
+
+    .kpi-badge .material-symbol {
+        font-size: 1rem;
     }
 
     .kpi-badge--down {

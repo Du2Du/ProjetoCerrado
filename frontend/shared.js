@@ -3,7 +3,7 @@
  * Centraliza estados de carregamento/erro, KPIs, filtros recolhíveis e abas para
  * que cada página de cadeia produtiva cuide apenas de seus próprios dados.
  */
-function atualizarKpiComApi(id, { label, value, unit = "", badge = "", tone = "neutral", state = "ready" } = {}) {
+function atualizarKpiComApi(id, { label, value, unit = "", badge = "", badgeIcon = "", tone = "neutral", state = "ready" } = {}) {
     const card = document.getElementById(id);
     if (!card) return;
 
@@ -26,6 +26,13 @@ function atualizarKpiComApi(id, { label, value, unit = "", badge = "", tone = "n
         badgeEl.classList.remove("kpi-badge--up", "kpi-badge--neutral", "kpi-badge--down");
         badgeEl.classList.add(`kpi-badge--${state === "ready" ? tone : "down"}`);
         badgeEl.textContent = state === "ready" ? badge : "Dados indisponíveis";
+        if (state === "ready" && badgeIcon) {
+            const icon = document.createElement("span");
+            icon.className = "material-symbol";
+            icon.setAttribute("aria-hidden", "true");
+            icon.textContent = badgeIcon;
+            badgeEl.prepend(icon);
+        }
     }
 
     card.dataset.apiState = state;
@@ -114,9 +121,9 @@ function definirEstadoDeDados(ids, estado, mensagem = "") {
         status.className = "data-state";
         status.setAttribute("role", estado === "error" ? "alert" : "status");
         const icone = document.createElement("span");
-        icone.className = estado === "loading" ? "data-state__spinner" : "data-state__icon";
+        icone.className = estado === "loading" ? "data-state__spinner" : "data-state__icon material-symbol";
         icone.setAttribute("aria-hidden", "true");
-        if (estado !== "loading") icone.textContent = estado === "empty" ? "○" : "!";
+        if (estado !== "loading") icone.textContent = estado === "empty" ? "info" : "error";
         const texto = document.createElement("span");
         texto.textContent = mensagem || (estado === "loading" ? "Carregando dados…" : "Dados indisponíveis.");
         status.append(icone, texto);
@@ -179,7 +186,8 @@ document.addEventListener("DOMContentLoaded", () => {
         toggleText.textContent = "Recolher filtros";
 
         const toggleIcon = document.createElement("span");
-        toggleIcon.className = "filter-bar__toggle-icon";
+        toggleIcon.className = "filter-bar__toggle-icon material-symbol";
+        toggleIcon.textContent = "expand_more";
         toggleIcon.setAttribute("aria-hidden", "true");
         toggle.append(toggleText, toggleIcon);
         toolbar.append(title, toggle);

@@ -76,9 +76,9 @@ function definirEstadoVisualizacao(ids, estado, mensagem = "") {
     status.className = "data-state";
     status.setAttribute("role", estado === "error" ? "alert" : "status");
     const icone = document.createElement("span");
-    icone.className = estado === "loading" ? "data-state__spinner" : "data-state__icon";
+    icone.className = estado === "loading" ? "data-state__spinner" : "data-state__icon material-symbol";
     icone.setAttribute("aria-hidden", "true");
-    if (estado !== "loading") icone.textContent = estado === "empty" ? "○" : "!";
+    if (estado !== "loading") icone.textContent = estado === "empty" ? "info" : "error";
     const texto = document.createElement("span");
     texto.textContent = mensagem || (estado === "loading" ? "Carregando dados…" : "Dados indisponíveis.");
     status.append(icone, texto);
@@ -234,7 +234,8 @@ function variacaoKpiSeringueira(serie) {
   }
   const percentual = (atual.valor - inicial.valor) / inicial.valor * 100;
   return {
-    badge: `${percentual >= 0 ? "▲" : "▼"} ${percentual > 0 ? "+" : ""}${formatarNumeroKpi(percentual, 1)}% vs ${inicial.ano}`,
+    badgeIcon: percentual >= 0 ? "arrow_drop_up" : "arrow_drop_down",
+    badge: `${percentual > 0 ? "+" : ""}${formatarNumeroKpi(percentual, 1)}% vs ${inicial.ano}`,
     tone: percentual >= 0 ? "up" : "down"
   };
 }
@@ -575,14 +576,14 @@ function renderizarChips() {
   const chips = [];
 
   if (estadoFiltros.anoInicio !== periodoPadrao.inicio || estadoFiltros.anoFim !== periodoPadrao.fim) {
-    chips.push(`<span class="filter-chip">Período: ${estadoFiltros.anoInicio}–${estadoFiltros.anoFim}<button class="filter-chip__x" data-clear="periodo" aria-label="Remover filtro de período">×</button></span>`);
+    chips.push(`<span class="filter-chip">Período: ${estadoFiltros.anoInicio}–${estadoFiltros.anoFim}<button class="filter-chip__x" data-clear="periodo" aria-label="Remover filtro de período"><span class="material-symbol" aria-hidden="true">close</span></button></span>`);
   }
   estadoFiltros.ufs.forEach(uf => {
-    chips.push(`<span class="filter-chip">${uf}<button class="filter-chip__x" data-clear="uf" data-value="${uf}" aria-label="Remover ${uf}">×</button></span>`);
+    chips.push(`<span class="filter-chip">${uf}<button class="filter-chip__x" data-clear="uf" data-value="${uf}" aria-label="Remover ${uf}"><span class="material-symbol" aria-hidden="true">close</span></button></span>`);
   });
   estadoFiltros.produto.forEach(p => {
     const label = p.replace("Borracha (", "").replace(")", "");
-    chips.push(`<span class="filter-chip">${label}<button class="filter-chip__x" data-clear="produto" data-value="${p}" aria-label="Remover ${p}">×</button></span>`);
+    chips.push(`<span class="filter-chip">${label}<button class="filter-chip__x" data-clear="produto" data-value="${p}" aria-label="Remover ${p}"><span class="material-symbol" aria-hidden="true">close</span></button></span>`);
   });
 
   container.innerHTML = chips.length

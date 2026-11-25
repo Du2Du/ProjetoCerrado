@@ -104,6 +104,11 @@ export function createCategoryFilter(root, { counts = false, onChange }) {
     toggle.setAttribute("aria-expanded", String(!panel.hidden));
   });
   toggle.className = "category-filter__toggle";
+  const icon = document.createElement("span");
+  icon.className = "material-symbol";
+  icon.setAttribute("aria-hidden", "true");
+  icon.textContent = "expand_more";
+  toggle.append(icon);
   toggle.setAttribute("aria-expanded", "true");
   toggle.setAttribute("aria-controls", panel.id);
 
@@ -206,13 +211,18 @@ export function createCategoryPicker({ search, options, tags, status, onChange }
 
   function renderTags() {
     tags.replaceChildren(...sortCategories(selected.values()).map((category) => {
-      const remove = button(`${category.name} ×`, () => {
+      const remove = button(category.name, () => {
         selected.delete(category.id);
         render();
         search.focus();
         onChange();
       });
-      remove.className = "category-tag";
+      remove.className = "category-tag category-tag--removable";
+      const icon = document.createElement("span");
+      icon.className = "material-symbol";
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = "close";
+      remove.append(icon);
       remove.setAttribute("aria-label", `Remover categoria ${category.name}`);
       return remove;
     }));

@@ -116,9 +116,9 @@ function definirEstadoVisualizacao(ids, estado, mensagem = "") {
     status.setAttribute("role", estado === "error" ? "alert" : "status");
 
     const icone = document.createElement("span");
-    icone.className = estado === "loading" ? "data-state__spinner" : "data-state__icon";
+    icone.className = estado === "loading" ? "data-state__spinner" : "data-state__icon material-symbol";
     icone.setAttribute("aria-hidden", "true");
-    if (estado !== "loading") icone.textContent = estado === "empty" ? "○" : "!";
+    if (estado !== "loading") icone.textContent = estado === "empty" ? "info" : "error";
 
     const texto = document.createElement("span");
     texto.textContent = mensagem || (estado === "loading" ? "Carregando dados do Servidor…" : "Dados indisponíveis.");
@@ -402,10 +402,10 @@ function variacaoKpi(atual, inicial, anoInicial) {
     return { badge: "Série disponível no SIDRA", tone: "neutral" };
   }
   const percentual = (atual - inicial) / inicial * 100;
-  const seta = percentual >= 0 ? "▲" : "▼";
   const sinal = percentual > 0 ? "+" : "";
   return {
-    badge: `${seta} ${sinal}${formatarNumeroKpi(percentual, 1)}% vs ${anoInicial}`,
+    badgeIcon: percentual >= 0 ? "arrow_drop_up" : "arrow_drop_down",
+    badge: `${sinal}${formatarNumeroKpi(percentual, 1)}% vs ${anoInicial}`,
     tone: percentual >= 0 ? "up" : "down"
   };
 }

@@ -7,7 +7,6 @@
   <title>Gerenciar Documentos — Projeto Cerrado</title>
   <link rel="icon" href="../../public/favicon.ico">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&amp;icon_names=delete,edit,expand_more,search" rel="stylesheet">
   <link rel="stylesheet" href="../../shared.css">
   <link rel="stylesheet" href="../../documentos.css">
 </head>
@@ -60,12 +59,12 @@
           <span>Carregando documentos…</span>
         </div>
         <div id="admin-empty" class="app-state" hidden>
-          <span class="app-state__icon" aria-hidden="true">▤</span>
+          <span class="material-symbol app-state__icon" aria-hidden="true">description</span>
           <strong id="admin-empty-title">Nenhum documento cadastrado</strong>
           <span id="admin-empty-message">Adicione o primeiro documento para iniciar a biblioteca.</span>
         </div>
         <div id="admin-error" class="app-state" role="alert" hidden>
-          <span class="app-state__icon" aria-hidden="true">!</span>
+          <span class="material-symbol app-state__icon" aria-hidden="true">error</span>
           <strong>Não foi possível carregar a área administrativa</strong>
           <span id="admin-error-message">Não foi possível verificar a sessão ou carregar os documentos. Verifique sua conexão e tente novamente.</span>
           <button id="admin-retry" class="app-button app-button--secondary" type="button">Tentar novamente</button>
@@ -130,7 +129,7 @@
           <h2 id="document-modal-title">Adicionar documento</h2>
           <p id="document-modal-subtitle">Preencha os dados e selecione os arquivos.</p>
         </div>
-        <button class="app-modal__close" type="button" data-modal-close aria-label="Fechar modal">×</button>
+        <button class="app-modal__close" type="button" data-modal-close aria-label="Fechar modal"><span class="material-symbol" aria-hidden="true">close</span></button>
       </div>
       <form id="document-form" novalidate>
         <div class="app-modal__body">
@@ -193,7 +192,7 @@
           <h2 id="delete-modal-title">Excluir documento?</h2>
           <p>Esta ação removerá o item da biblioteca pública.</p>
         </div>
-        <button class="app-modal__close" type="button" data-modal-close aria-label="Fechar modal">×</button>
+        <button class="app-modal__close" type="button" data-modal-close aria-label="Fechar modal"><span class="material-symbol" aria-hidden="true">close</span></button>
       </div>
       <div class="app-modal__body">
         <p id="delete-modal-description">Confirme a exclusão do documento <strong id="delete-document-title"></strong>. Não será possível restaurá-lo nesta interface.</p>
@@ -210,7 +209,7 @@
     <div class="app-modal__dialog">
       <div class="app-modal__header">
         <h2 id="category-modal-title">Adicionar categoria</h2>
-        <button class="app-modal__close" type="button" data-modal-close aria-label="Fechar modal">×</button>
+        <button class="app-modal__close" type="button" data-modal-close aria-label="Fechar modal"><span class="material-symbol" aria-hidden="true">close</span></button>
       </div>
       <form id="category-form" novalidate>
         <div class="app-modal__body">
@@ -237,7 +236,7 @@
     <div class="app-modal__dialog app-modal__dialog--small">
       <div class="app-modal__header">
         <h2 id="category-delete-title">Excluir categoria?</h2>
-        <button class="app-modal__close" type="button" data-modal-close aria-label="Fechar modal">×</button>
+        <button class="app-modal__close" type="button" data-modal-close aria-label="Fechar modal"><span class="material-symbol" aria-hidden="true">close</span></button>
       </div>
       <div class="app-modal__body">
         <p id="category-delete-description"></p>

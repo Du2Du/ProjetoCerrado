@@ -32,11 +32,18 @@ export function renderPagination(container, pagination, onPageChange) {
   const controls = document.createElement("div");
   controls.className = "pagination__controls";
 
-  const addButton = (text, page, disabled, current = false, ariaLabel = "") => {
+  const addButton = (text, page, disabled, current = false, ariaLabel = "", iconName = "") => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "pagination__button";
     button.textContent = text;
+    if (iconName) {
+      const icon = document.createElement("span");
+      icon.className = "material-symbol";
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = iconName;
+      button.append(icon);
+    }
     button.disabled = disabled;
     if (current) {
       button.classList.add("is-current");
@@ -47,7 +54,7 @@ export function renderPagination(container, pagination, onPageChange) {
     controls.append(button);
   };
 
-  addButton("‹", pagination.page - 1, pagination.page === 1, false, "Página anterior");
+  addButton("", pagination.page - 1, pagination.page === 1, false, "Página anterior", "chevron_left");
   for (let page = 1; page <= pagination.totalPages; page += 1) {
     if (pagination.totalPages > 7 && Math.abs(page - pagination.page) > 2 && page !== 1 && page !== pagination.totalPages) {
       if (page === 2 || page === pagination.totalPages - 1) {
@@ -60,7 +67,7 @@ export function renderPagination(container, pagination, onPageChange) {
     }
     addButton(String(page), page, false, page === pagination.page, `Ir para a página ${page}`);
   }
-  addButton("›", pagination.page + 1, pagination.page === pagination.totalPages, false, "Próxima página");
+  addButton("", pagination.page + 1, pagination.page === pagination.totalPages, false, "Próxima página", "chevron_right");
 
   container.append(label, controls);
 }

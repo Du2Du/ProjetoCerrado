@@ -68,9 +68,9 @@ document.addEventListener('DOMContentLoaded', () => {
         toast.setAttribute('role', 'alert');
 
         const icon = document.createElement('span');
-        icon.className = 'app-toast__icon';
+        icon.className = 'app-toast__icon material-symbol';
         icon.setAttribute('aria-hidden', 'true');
-        icon.textContent = type === 'warning' ? '!' : '×';
+        icon.textContent = type === 'warning' ? 'warning' : 'error';
 
         const content = document.createElement('div');
         const titleEl = document.createElement('p');
@@ -83,9 +83,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const close = document.createElement('button');
         close.type = 'button';
-        close.className = 'app-toast__close';
+        close.className = 'app-toast__close material-symbol';
         close.setAttribute('aria-label', 'Fechar notificação');
-        close.textContent = '×';
+        close.textContent = 'close';
 
         let timeout;
         const dismiss = () => {
@@ -359,18 +359,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Converte o objeto climático em pequenos cartões de indicadores atuais.
     function displayClimateData(climate) {
         const items = [
-            { label: 'Precipitação', value: `${climate.current_precipitation} mm`, icon: 'fa-droplet' },
-            { label: 'Chuva', value: `${climate.current_rain} mm`, icon: 'fa-cloud-rain' },
-            { label: 'Umidade', value: `${Math.round(climate.current_relative_humidity_2m)}%`, icon: 'fa-wind' },
-            { label: 'Temp. Solo', value: `${Math.round(climate.current_soil_temperature_0cm)}°C`, icon: 'fa-mountain-sun' },
-            { label: 'Temp. Ambiente', value: `${Math.round(climate.current_temperature_2m)}°C`, icon: 'fa-temperature-half' }
+            { label: 'Precipitação', value: `${climate.current_precipitation} mm`, icon: 'water_drop' },
+            { label: 'Chuva', value: `${climate.current_rain} mm`, icon: 'rainy' },
+            { label: 'Umidade', value: `${Math.round(climate.current_relative_humidity_2m)}%`, icon: 'humidity_percentage' },
+            { label: 'Temp. Solo', value: `${Math.round(climate.current_soil_temperature_0cm)}°C`, icon: 'thermostat' },
+            { label: 'Temp. Ambiente', value: `${Math.round(climate.current_temperature_2m)}°C`, icon: 'thermostat' }
         ];
 
         elements.climateData.innerHTML = items.map(item => `
             <div class="col-6 col-md-4 col-lg-2">
                 <div class="kpi-card text-center" style="padding: 1rem;">
                     <div class="mb-2" style="color: var(--verde); font-size: 1.2rem;">
-                        <i class="fa-solid ${item.icon}"></i>
+                        <span class="material-symbol" aria-hidden="true">${item.icon}</span>
                     </div>
                     <div class="kpi-label">${item.label}</div>
                     <div class="kpi-value" style="font-size: 1.2rem;">${item.value}</div>
