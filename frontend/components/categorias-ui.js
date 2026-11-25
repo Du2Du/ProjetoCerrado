@@ -40,6 +40,8 @@ function checkbox(category, checked, labelText, onChange) {
 export function categoryTags(categories = []) {
   const tags = document.createElement("div");
   tags.className = "category-tags";
+  const preview = document.createElement("div");
+  preview.className = "category-tags__list";
   const ordered = sortCategories(categories);
   const tag = ({ name }) => {
     const element = document.createElement("span");
@@ -47,18 +49,37 @@ export function categoryTags(categories = []) {
     element.textContent = name;
     return element;
   };
-  tags.append(...ordered.slice(0, 3).map(tag));
+  preview.append(...ordered.slice(0, 3).map(tag));
+  tags.append(preview);
 
   if (ordered.length > 3) {
-    const more = document.createElement("details");
-    const summary = document.createElement("summary");
-    summary.textContent = `+${ordered.length - 3}`;
-    summary.setAttribute("aria-label", `${ordered.length - 3} categorias adicionais`);
+    const count = ordered.length - 3;
+    const description = count === 1 ? "1 categoria adicional" : `${count} categorias adicionais`;
     const extra = document.createElement("div");
-    extra.className = "category-tags";
-    extra.append(...ordered.slice(3).map(tag));
-    more.append(summary, extra);
-    tags.append(more);
+    extra.className = "category-tags__extra";
+    extra.inert = true;
+    const list = document.createElement("div");
+    list.className = "category-tags__list";
+    list.append(...ordered.slice(3).map(tag));
+    extra.append(list);
+
+    const toggle = button(`+${count}`, () => {
+      const expanded = tags.classList.toggle("category-tags--expanded");
+      toggle.setAttribute("aria-expanded", String(expanded));
+      toggle.setAttribute("aria-label", `${expanded ? "Ocultar" : "Mostrar"} ${description}`);
+      // Retira as etiquetas recolhidas da navegação assistiva sem interromper a animação.
+      extra.inert = !expanded;
+    });
+    toggle.className = "category-tag category-tags__toggle";
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-label", `Mostrar ${description}`);
+    const icon = document.createElement("span");
+    icon.className = "material-symbol";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = "expand_more";
+    toggle.append(icon);
+    preview.append(toggle);
+    tags.append(extra);
   }
   return tags;
 }
