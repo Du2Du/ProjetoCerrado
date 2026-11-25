@@ -49,6 +49,7 @@ test("normaliza a listagem pública e constrói URLs sem expor paths do servidor
     createdAt: apiItem.created_at,
     updatedAt: apiItem.updated_at,
     active: true,
+    categories: [],
     coverUrl: `/api/documentos/${apiItem.uuid}/imagem?v=${encodeURIComponent(apiItem.updated_at)}`,
     pdfUrl: `/api/documentos/${apiItem.uuid}/download`
   });
@@ -209,4 +210,64 @@ test("rejeita respostas incompatíveis sem inventar propriedades", async () => {
     documentosService.listPublic(),
     (error) => error.status === 502 && error.details?.code === "invalid_documents_contract"
   );
+});
+
+test("serializa exatamente os UUIDs selecionados e permite limpar as associações", async () => {
+  apiClient.setCsrfToken("csrf-documentos");
+  const requests = [];
+  globalThis.fetch = async (_url, { body }) => {
+    requests.push(body);
+    return jsonResponse({ success: true });
+  };
+  const categoryIds = [apiItem.uuid, "9e91c09b-e4ae-442e-9058-58d183f25936"];
+  const values = { title: "Documento", description: "Descrição", categoryIds };
+  await documentosService.create(values);
+  await documentosService.update(apiItem.uuid, { ...values, categoryIds: [] });
+  assert.deepEqual(JSON.parse(requests[0].get("categorias")), categoryIds);
+  assert.equal(requests[1].get("categorias"), "[]");
+});
+
+test("combina UUIDs separados por vírgula com busca e paginação nas duas listagens", async () => {
+  const first = "9e91c09b-e4ae-442e-9058-58d183f25936";
+  const second = "170b64fc-9d5e-423b-a8db-4ee2270de55e";
+  const documents = [
+    { ...apiItem, categorias: [{ uuid: first, nome: "Solos" }] },
+    { ...apiItem, titulo: "Outro relatório", categorias: [{ uuid: second, nome: "Água" }] },
+    { ...apiItem, titulo: "Cerrado", categorias: [] }
+  ];
+  const paths = [];
+  globalThis.fetch = async (url) => {
+    const { pathname, searchParams } = new URL(url, "http://localhost");
+    paths.push(pathname);
+    assert.equal(searchParams.get("categorias"), `${first},${second}`);
+    assert.equal(searchParams.get("search"), "relatório");
+    assert.equal(searchParams.get("page"), "2");
+    assert.equal(searchParams.get("limit"), "1");
+    const selected = searchParams.get("categorias").split(",");
+    const matches = documents.filter((item) => item.titulo.toLowerCase().includes(searchParams.get("search"))
+      && item.categorias.some(({ uuid }) => selected.includes(uuid)));
+    return jsonResponse({ items: matches.slice(1, 2), pagination: { page: 2, limit: 1, total: matches.length, totalPages: 2 } });
+  };
+  for (const list of [documentosService.listPublic, documentosService.listAdmin]) {
+    const result = await list({ page: 2, limit: 1, search: "relatório", categoryIds: [first, second] });
+    assert.equal(result.pagination.totalItems, 2);
+    assert.deepEqual(result.items[0].categories, [{ id: second, name: "Água" }]);
+  }
+  assert.deepEqual(paths, ["/api/documentos", "/api/admin/documentos"]);
+});
+
+test("omitir filtros vazios e preservar a mensagem de categoria inválida", async () => {
+  apiClient.setCsrfToken("csrf-documentos");
+  globalThis.fetch = async (url, { method, body }) => {
+    if (method === "PUT") {
+      assert.equal(body.get("categorias"), JSON.stringify([apiItem.uuid]));
+      return jsonResponse({ message: "Categoria excluída ou inválida." }, 400);
+    }
+    assert.equal(new URL(url, "http://localhost").searchParams.has("categorias"), false);
+    return jsonResponse({ items: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } });
+  };
+  await documentosService.listAdmin({ categoryIds: [] });
+  await assert.rejects(documentosService.update(apiItem.uuid, {
+    title: "Documento", description: "Descrição", categoryIds: [apiItem.uuid]
+  }), { status: 400, message: "Categoria excluída ou inválida." });
 });

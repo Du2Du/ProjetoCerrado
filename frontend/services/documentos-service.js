@@ -13,6 +13,9 @@ function toFormData(values) {
   const formData = new FormData();
   formData.append("titulo", values.title.trim());
   formData.append("descricao", values.description.trim());
+  if (values.categoryIds !== undefined) {
+    formData.append("categorias", JSON.stringify(values.categoryIds));
+  }
   if (values.coverFile) formData.append("imagem", values.coverFile);
   if (values.pdfFile) formData.append("pdf", values.pdfFile);
   return formData;
@@ -54,6 +57,7 @@ function normalizeDocument(item) {
     createdAt: item.created_at || null,
     updatedAt: item.updated_at || null,
     active: item.active,
+    categories: (item.categorias ?? []).map(({ uuid, nome }) => ({ id: uuid, name: nome })),
     coverUrl,
     pdfUrl: `/api/documentos/${encodedId}/download`
   };
@@ -92,11 +96,13 @@ function normalizeListResponse(response) {
 
 // Serializa busca e paginação para as rotas pública e administrativa.
 function listQuery(params) {
-  return new URLSearchParams({
+  const query = new URLSearchParams({
     page: String(params.page || 1),
     limit: String(params.limit || 10),
     search: params.search || ""
   });
+  if (params.categoryIds?.length) query.set("categorias", params.categoryIds.join(","));
+  return query;
 }
 
 // Solicita o PDF como Blob preservando cookies e status de erro.

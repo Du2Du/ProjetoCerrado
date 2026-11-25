@@ -1,5 +1,7 @@
+import { categoriasService } from "../services/categorias-service.js";
+import { categoryTags, createCategoryFilter } from "../components/categorias-ui.js";
 import { documentosService } from "../services/documentos-service.js";
-import { debounce, renderPagination, setButtonLoading } from "../components/documentos-ui.js";
+import { createListRequest, debounce, renderPagination, scrollToResults, setButtonLoading } from "../components/documentos-ui.js";
 
 /**
  * Página pública da biblioteca.
@@ -23,7 +25,28 @@ const elements = {
   pagination: document.querySelector("#documents-pagination")
 };
 
-const state = { search: "", page: 1, limit: 12 };
+const listRequest = createListRequest();
+const state = { search: "", page: 1, limit: 12, categoryIds: [] };
+const filterRequest = createListRequest();
+const filter = createCategoryFilter(document.querySelector("#public-category-filter"), {
+  onChange(ids) {
+    state.categoryIds = ids;
+    state.page = 1;
+    loadDocuments();
+  }
+});
+
+async function loadCategoryFilter() {
+  const isCurrent = filterRequest.start();
+  const status = document.querySelector("#public-category-status");
+  status.textContent = "";
+  try {
+    const categories = await categoriasService.listPublic("filtro");
+    if (isCurrent()) filter.setCategories(categories);
+  } catch {
+    if (isCurrent()) status.textContent = "Não foi possível carregar os filtros de categorias.";
+  }
+}
 
 // Substitui uma capa indisponível pela imagem padrão, evitando repetição do erro.
 function applyCoverFallback(image) {
@@ -130,7 +153,9 @@ function createDocumentCard(documentData) {
   downloadFeedback.setAttribute("role", "alert");
   download.addEventListener("click", () => downloadDocument(documentData, download, downloadFeedback));
 
-  body.append(tag, title, description, download, downloadFeedback);
+  body.append(tag, title, description);
+  if (documentData.categories?.length) body.append(categoryTags(documentData.categories));
+  body.append(download, downloadFeedback);
   article.append(cover, body);
   return article;
 }
@@ -141,16 +166,20 @@ async function loadDocuments({ focusResults = false } = {}) {
   // configura paginação e converte exceções em uma mensagem pública segura.
   setView("loading");
   elements.summary.textContent = "";
+  const isCurrent = listRequest.start();
   try {
     const response = await documentosService.listPublic(state);
+    if (!isCurrent()) return;
     state.page = response.pagination.page;
     elements.grid.replaceChildren(...response.items.map(createDocumentCard));
 
     if (!response.items.length) {
-      elements.emptyTitle.textContent = state.search ? "Nenhum resultado encontrado" : "Nenhum documento disponível";
+      const filtered = state.search || state.categoryIds.length;
+      elements.emptyTitle.textContent = filtered ? "Nenhum resultado encontrado" : "Nenhum documento disponível";
       elements.emptyMessage.textContent = state.search
         ? `Não encontramos documentos para “${state.search}”. Tente outros termos.`
-        : "Novos materiais serão publicados em breve.";
+        : filtered ? "Nenhum documento corresponde às categorias selecionadas."
+          : "Novos materiais serão publicados em breve.";
       setView("empty");
       elements.summary.textContent = "0 documentos encontrados";
       return;
@@ -164,20 +193,38 @@ async function loadDocuments({ focusResults = false } = {}) {
       loadDocuments({ focusResults: true });
     });
     if (focusResults) {
-      document.querySelector("#main-content").scrollIntoView({ behavior: "smooth", block: "start" });
+      scrollToResults(document.querySelector("#main-content"));
     }
   } catch (error) {
+    if (!isCurrent()) return;
     elements.errorMessage.textContent = publicErrorMessage(error);
     setView("error");
   }
 }
 
-elements.search.addEventListener("input", debounce(() => {
-  // Busca somente após uma pausa na digitação e sempre recomeça pela página 1.
+const searchDocuments = debounce(() => loadDocuments(), 350);
+elements.search.addEventListener("input", () => {
+  listRequest.invalidate();
   state.search = elements.search.value.trim();
   state.page = 1;
+  searchDocuments();
+});
+elements.retry.addEventListener("click", () => {
   loadDocuments();
-}, 350));
-elements.retry.addEventListener("click", () => loadDocuments());
+  loadCategoryFilter();
+});
+window.addEventListener("pageshow", (event) => {
+  if (!event.persisted) return;
+  elements.search.value = "";
+  state.search = "";
+  state.page = 1;
+  if (state.categoryIds.length) filter.reset();
+  else {
+    filter.reset();
+    loadDocuments();
+  }
+  loadCategoryFilter();
+});
 
 loadDocuments();
+loadCategoryFilter();

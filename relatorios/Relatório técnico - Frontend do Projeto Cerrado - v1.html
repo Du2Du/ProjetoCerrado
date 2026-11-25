@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Relatório técnico — Frontend do Projeto Cerrado</title>
+  <style>
+    :root{--verde:#2f6428;--verde2:#4a7c3f;--ouro:#c8943a;--texto:#253028;--suave:#f2f6f0;--linha:#c9d4c6;--cinza:#5a655c;--alerta:#9b4e16}
+    @page{size:A4;margin:16mm 15mm 17mm}
+    *{box-sizing:border-box}
+    html{font-family:Arial,Helvetica,sans-serif;color:var(--texto);font-size:10.5pt;line-height:1.43}
+    body{margin:0;background:#fff}
+    h1{font-size:25pt;line-height:1.28;color:var(--verde);margin:13mm 0 0;padding-bottom:3mm;border-bottom:2.5px solid var(--ouro);letter-spacing:.1px}
+    h2{font-size:18pt;line-height:1.2;color:var(--verde);margin:9mm 0 4mm;padding-bottom:2mm;border-bottom:1px solid #c8cfda;break-after:avoid}
+    h3{font-size:14pt;color:#437b38;margin:6mm 0 3mm;break-after:avoid}
+    h4{font-size:11pt;margin:4mm 0 2mm;break-after:avoid}
+    p{margin:0 0 3.2mm}
+    ul,ol{margin:2mm 0 4mm;padding-left:8mm}
+    li{margin:1mm 0}
+    a{color:var(--verde);text-decoration:underline}
+    strong{font-weight:700}
+    code{font:9.3pt Consolas,"Courier New",monospace;background:#eef2ec;border-radius:3px;padding:.15em .35em;overflow-wrap:anywhere}
+    pre{font:8.7pt/1.45 Consolas,"Courier New",monospace;background:var(--suave);border:1px solid var(--linha);padding:4mm;white-space:pre-wrap;break-inside:avoid;margin:3mm 0 5mm}
+    table{width:100%;border-collapse:collapse;margin:3mm 0 5mm;font-size:9.2pt;break-inside:auto}
+    thead{display:table-header-group}
+    tr{break-inside:avoid}
+    th{background:var(--verde);color:#fff;text-align:left;font-weight:700;padding:2.1mm 2.4mm;border:1px solid var(--verde)}
+    td{padding:2mm 2.4mm;border:1px solid var(--linha);vertical-align:top}
+    tbody tr:nth-child(even) td{background:var(--suave)}
+    .meta{font-size:11pt;font-weight:700;margin:5mm 0}
+    .lead{font-size:10.8pt}
+    .note{border-left:4px solid var(--ouro);background:#fbf7ed;padding:3mm 4mm;margin:4mm 0;break-inside:avoid}
+    .callout{border:1px solid var(--linha);background:var(--suave);padding:3mm 4mm;margin:3mm 0 5mm;break-inside:avoid}
+    .status{display:inline-block;font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.3px;border-radius:10px;padding:.5mm 2mm;color:#fff;white-space:nowrap}
+    .ok{background:#397235}
+    .small{font-size:8.8pt;color:var(--cinza)}
+    .avoid{break-inside:avoid}
+    .page-break{break-before:page}
+    .cols{display:grid;grid-template-columns:1fr 1fr;gap:4mm}
+    .kpi{border-top:4px solid var(--verde2);background:var(--suave);padding:3mm;break-inside:avoid}
+    .kpi b{display:block;font-size:15pt;color:var(--verde)}
+    .footer-note{margin-top:9mm;padding-top:3mm;border-top:1px solid var(--linha);font-size:8.5pt;color:var(--cinza)}
+    @media print{a{color:inherit}.page-break{break-before:page}}
+  </style>
+</head>
+<body>
+  <h1>Relatório técnico — Frontend do Projeto Cerrado</h1>
+  <p class="meta">Versão 1.1 · 14/11/2026</p>
+  <p><strong>Escopo:</strong> diretório <code>frontend/</code> do Projeto Cerrado, sua integração com as APIs, a biblioteca de documentos, a área administrativa e os arquivos de implantação que afetam a entrega da interface.</p>
+  <p><strong>Base do levantamento:</strong> leitura direta do código local, branch <code>main</code>, commit <code>6d3b1073e9f8</code> (“refactor: comentando código”), além da execução da suíte automatizada disponível. O documento apresenta exclusivamente os recursos implementados no frontend.</p>
+
+  <h2>Como ler este documento</h2>
+  <table>
+    <thead><tr><th>Se você é…</th><th>Leia</th></tr></thead>
+    <tbody>
+      <tr><td>Gestor ou pessoa não técnica</td><td>Seções 1, 3, 5, 12 e 13. Os quadros “Propósito simples” resumem cada bloco funcional.</td></tr>
+      <tr><td>Técnico de TI</td><td>Todo o documento, em especial as seções 4, 6 a 11 e os anexos.</td></tr>
+      <tr><td>Equipe de desenvolvimento</td><td>Todo o documento, em especial as seções 6 a 12 e os anexos técnicos.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>1. Resumo executivo</h2>
+  <p class="lead">O frontend do Projeto Cerrado é uma aplicação web multipágina, construída com <strong>HTML, CSS e JavaScript puro</strong>. Ela reúne o portal institucional, quatro painéis de dados agropecuários, capacitações, diagnóstico inteligente, biblioteca pública de documentos e uma área administrativa.</p>
+  <p>Não há compilação ou framework de componentes. Os arquivos são copiados diretamente para uma imagem Nginx e servidos como conteúdo estático. Os painéis usam amCharts; o diagnóstico usa Leaflet, Chart.js, Axios, jsPDF e html2canvas; a responsividade geral é apoiada por Bootstrap 5.</p>
+
+  <h3>Números principais</h3>
+  <table>
+    <thead><tr><th>Item</th><th>Quantidade / situação</th></tr></thead>
+    <tbody>
+      <tr><td>Páginas HTML</td><td><strong>10</strong>: 8 públicas e 2 administrativas</td></tr>
+      <tr><td>Painéis de cadeias produtivas</td><td><strong>4</strong>: leite, corte, eucalipto e seringueira</td></tr>
+      <tr><td>Endpoints n8n consumidos pelos painéis</td><td><strong>14</strong> (6 + 2 + 4 + 2)</td></tr>
+      <tr><td>Áreas de gráficos alimentadas pelas APIs dos painéis</td><td><strong>31</strong> (16 + 3 + 4 + 8)</td></tr>
+      <tr><td>Linhas nos arquivos HTML, CSS, JS e testes</td><td>Aproximadamente <strong>13,3 mil</strong></td></tr>
+      <tr><td>Testes automatizados executados</td><td><strong>19/19 aprovados</strong>, concentrados em autenticação e documentos</td></tr>
+      <tr><td>Dependências de runtime</td><td>Carregadas principalmente por CDN; não há bundler nem lockfile</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Situação em cinco pontos</h3>
+  <ol>
+    <li><strong>A arquitetura é simples de publicar.</strong> O frontend é estático, sem etapa de build; o contêiner Nginx apenas copia os arquivos.</li>
+    <li><strong>Os painéis tratam falhas parciais.</strong> Requisições independentes têm limite de 15 segundos e usam <code>Promise.allSettled</code>, preservando os blocos que carregaram com sucesso.</li>
+    <li><strong>A biblioteca e a administração têm uma camada de serviços mais madura.</strong> Há normalização de contratos, erros tipados, cookies de sessão, CSRF em memória, paginação, estados de interface e validação de arquivos.</li>
+    <li><strong>A interface compartilha identidade e comportamentos.</strong> Cabeçalho, rodapé, cores, tipografia, filtros, abas e estados de dados são reutilizados entre as páginas.</li>
+    <li><strong>A entrega contempla o ciclo completo de documentos.</strong> O público pesquisa e baixa materiais; o administrador autentica-se e pode cadastrar, editar e excluir documentos com imagem de capa e PDF.</li>
+  </ol>
+
+  <h2>2. Glossário</h2>
+  <table>
+    <thead><tr><th>Termo</th><th>Significado simples</th></tr></thead>
+    <tbody>
+      <tr><td>Frontend</td><td>Parte do sistema executada no navegador e vista pelo usuário.</td></tr>
+      <tr><td>SPA / multipágina</td><td>SPA troca telas dentro de uma aplicação; este projeto é multipágina, com um HTML por rota principal.</td></tr>
+      <tr><td>CDN</td><td>Servidor externo que entrega bibliotecas como Bootstrap, amCharts e Leaflet.</td></tr>
+      <tr><td>API / endpoint</td><td>Contrato e endereço usados pelo navegador para pedir ou enviar dados.</td></tr>
+      <tr><td>Cookie de sessão</td><td>Identificador enviado automaticamente pelo navegador para manter a autenticação.</td></tr>
+      <tr><td>CSRF</td><td>Proteção contra requisições administrativas forjadas por outro site.</td></tr>
+      <tr><td>CORS</td><td>Regra do navegador para chamadas entre domínios diferentes.</td></tr>
+      <tr><td>Estado de interface</td><td>Situação apresentada ao usuário: carregando, pronto, vazio ou com erro.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. Visão geral da arquitetura</h2>
+  <p>O navegador usa três caminhos de integração: conteúdo estático, APIs no mesmo domínio e webhooks n8n em domínio separado.</p>
+  <pre>USUÁRIO / NAVEGADOR
+        │
+        ├──► Nginx externo ──► frontend:80
+        │                     HTML · CSS · JS · imagens
+        │
+        ├──► /api/* ─────────► backend:8000
+        │                     diagnóstico · autenticação · documentos
+        │
+        ├──► api.projetocerradoifg.org/webhook/*
+        │                     14 endpoints dos quatro painéis (n8n)
+        │
+        └──► Serviços externos
+              CDNs · OpenStreetMap/Nominatim · IFG Virtual · widget de voz</pre>
+  <table>
+    <thead><tr><th>Camada</th><th>Responsabilidade</th><th>Implementação</th></tr></thead>
+    <tbody>
+      <tr><td>Apresentação</td><td>Páginas, navegação, formulários, gráficos e tabelas</td><td>HTML5, CSS3, JavaScript</td></tr>
+      <tr><td>Componentes compartilhados</td><td>Cabeçalho, rodapé, filtros, abas, estados, paginação e modais</td><td><code>components/</code>, <code>shared.js</code>, <code>shared.css</code></td></tr>
+      <tr><td>Dados da biblioteca/admin</td><td>HTTP, sessão, CSRF, contratos e uploads</td><td><code>services/</code> com módulos ES</td></tr>
+      <tr><td>Dados dos painéis</td><td>Consulta e transformação das séries estatísticas</td><td>Scripts globais por cadeia</td></tr>
+      <tr><td>Entrega</td><td>Servir arquivos e encaminhar <code>/api/</code></td><td>Nginx + Docker Compose</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><strong>Consequência operacional:</strong> as páginas institucionais continuam disponíveis sem a API; já os gráficos dinâmicos, o diagnóstico, a biblioteca e a administração dependem de seus respectivos serviços. Os painéis chamam o n8n diretamente por URL absoluta, enquanto diagnóstico e documentos passam por <code>/api/</code>.</div>
+
+  <h2>4. Tecnologias e organização do código</h2>
+  <table>
+    <thead><tr><th>Tecnologia</th><th>Uso</th><th>Observação</th></tr></thead>
+    <tbody>
+      <tr><td>HTML5 + CSS3 + JavaScript</td><td>Base de todas as páginas</td><td>Sem React, Vue, Angular ou jQuery</td></tr>
+      <tr><td>Bootstrap 5.3.3</td><td>Grid, utilitários, responsividade e collapse do menu</td><td>Versão fixada por URL</td></tr>
+      <tr><td>amCharts 5</td><td>Gráficos dos quatro painéis</td><td>Carregado por CDN</td></tr>
+      <tr><td>Leaflet 1.9.4</td><td>Mapa do diagnóstico</td><td>Com tiles do OpenStreetMap</td></tr>
+      <tr><td>Axios 1.17.0</td><td>Chamada <code>/api/recommendations</code></td><td>Cookies habilitados</td></tr>
+      <tr><td>Chart.js</td><td>Quatro séries climáticas do diagnóstico</td><td>URL sem versão fixada</td></tr>
+      <tr><td>jsPDF 2.5.1 + html2canvas 1.4.1</td><td>Geração de PDF do diagnóstico no navegador</td><td>Captura o relatório como imagem longa</td></tr>
+      <tr><td>Node test runner</td><td>Testes de serviços</td><td>Sem dependências npm adicionais</td></tr>
+      <tr><td>Nginx Alpine</td><td>Servidor estático do contêiner</td><td><code>COPY . /usr/share/nginx/html</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Design system</h3>
+  <p>O arquivo <code>shared.css</code> centraliza a identidade Cerrado: verde <code>#4a7c3f</code>, verde-claro, dourado, terra, areia, creme e cinzas. Define tipografia Arial, raios de 10/18 px, sombras, navegação, KPIs, cartões, filtros, estados e rodapé. Páginas específicas ainda mantêm estilos próprios, alguns embutidos no HTML.</p>
+
+  <h3>Organização funcional</h3>
+  <table>
+    <thead><tr><th>Grupo</th><th>Arquivos principais</th><th>Característica</th></tr></thead>
+    <tbody>
+      <tr><td>Portal e painéis</td><td><code>index.html</code>, <code>leite.*</code>, <code>corte.*</code>, <code>eucalipto.*</code>, <code>seringueira.*</code></td><td>Scripts globais e amCharts</td></tr>
+      <tr><td>Conteúdo e ferramenta</td><td><code>cursos.html</code>, <code>diagnostico.*</code></td><td>Conteúdo fixo e integração própria</td></tr>
+      <tr><td>Documentos</td><td><code>documentos/</code>, <code>admin/</code>, <code>services/</code></td><td>Módulos ES e separação entre tela e dados</td></tr>
+      <tr><td>Compartilhados</td><td><code>components/</code>, <code>shared.*</code>, <code>documentos.css</code></td><td>Layout, interação e estilos comuns</td></tr>
+    </tbody>
+  </table>
+
+  <h2>5. Inventário das páginas</h2>
+  <table>
+    <thead><tr><th>Rota</th><th>Propósito simples</th><th>Recursos implementados</th><th>Entrega</th></tr></thead>
+    <tbody>
+      <tr><td><code>/index.html</code></td><td>Apresentar o projeto, cadeias, histórico, parceiros e atalhos.</td><td>Conteúdo fixo, imagens e widget externo de voz.</td><td><span class="status ok">Implementado</span></td></tr>
+      <tr><td><code>/leite.html</code></td><td>Explorar indicadores da bovinocultura leiteira e plano de intervenção.</td><td>6 endpoints n8n; 16 áreas gráficas.</td><td><span class="status ok">Implementado</span></td></tr>
+      <tr><td><code>/corte.html</code></td><td>Explorar rebanho, abate, pastagens e ações estratégicas.</td><td>2 endpoints n8n; 3 áreas gráficas dinâmicas.</td><td><span class="status ok">Implementado</span></td></tr>
+      <tr><td><code>/eucalipto.html</code></td><td>Apresentar produção, valor, participação, ranking e intervenção.</td><td>4 endpoints n8n; 4 áreas gráficas.</td><td><span class="status ok">Implementado</span></td></tr>
+      <tr><td><code>/seringueira.html</code></td><td>Apresentar produção, área, produtividade, valor, estabelecimentos e plano.</td><td>2 endpoints n8n; 8 áreas gráficas.</td><td><span class="status ok">Implementado</span></td></tr>
+      <tr><td><code>/cursos.html</code></td><td>Divulgar seis capacitações e orientar o acesso.</td><td>Links para o IFG Virtual.</td><td><span class="status ok">Implementado</span></td></tr>
+      <tr><td><code>/diagnostico.html</code></td><td>Receber localização e problema produtivo; gerar recomendações e relatório.</td><td><code>/api/recommendations</code>, Nominatim, OSM, Chart.js e PDF.</td><td><span class="status ok">Implementado</span></td></tr>
+      <tr><td><code>/documentos/</code></td><td>Pesquisar, paginar e baixar relatórios públicos.</td><td>API própria de documentos.</td><td><span class="status ok">Implementado</span></td></tr>
+      <tr><td><code>/admin/login/</code></td><td>Autenticar o administrador.</td><td>Sessão por cookie e captura de CSRF.</td><td><span class="status ok">Implementado</span></td></tr>
+      <tr><td><code>/admin/documentos/</code></td><td>Cadastrar, editar, listar e excluir documentos.</td><td>Rotas administrativas, multipart, imagem e PDF.</td><td><span class="status ok">Implementado</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2>6. Painéis de dados</h2>
+  <p>Os quatro painéis seguem um padrão comum: carregam recursos independentes, derivam opções de filtro dos dados retornados, atualizam KPIs/gráficos/tabelas e marcam a fonte como SIDRA/IBGE. Falhas viram estados visuais por componente; o botão “Tentar novamente” recarrega a página.</p>
+  <table>
+    <thead><tr><th>Painel</th><th>Endpoints</th><th>Tratamento e filtros</th><th>Dependência</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Leite</strong></td><td><code>producao-uf</code>, <code>regioes</code>, <code>centro-oeste</code>, <code>goias-meso</code>, <code>goias-municipios</code>, <code>ranking-consumo</code></td><td>Período, escala, indicador, regiões, UFs, municípios e produtos. 16 áreas gráficas e tabelas relacionadas.</td><td>Cada conjunto afeta somente seus alvos.</td></tr>
+      <tr><td><strong>Corte</strong></td><td><code>rebanho</code>, <code>abate</code></td><td>Período, UFs, trimestre e métrica de abate. Omite total anual quando faltam trimestres.</td><td>3 gráficos; blocos independentes.</td></tr>
+      <tr><td><strong>Eucalipto</strong></td><td><code>quantidade</code>, <code>ranking</code>, <code>valor</code>, <code>participacao</code></td><td>Período, produtos, localidades e indicador. Atualiza textos e KPIs conforme a série.</td><td>4 gráficos; arrays históricos embutidos são esvaziados antes da API.</td></tr>
+      <tr><td><strong>Seringueira</strong></td><td><code>pam</code>, <code>censo</code></td><td>Período, UFs e produto. Reaproveita a Promise de cada endpoint para evitar chamada duplicada.</td><td>Falha do Censo afeta apenas estabelecimentos.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Padrão de resiliência</h3>
+  <ol>
+    <li>O card entra em <em>loading</em> e recebe <code>aria-busy="true"</code>.</li>
+    <li>Cada chamada usa <code>AbortController</code> com limite de 15 segundos.</li>
+    <li><code>Promise.allSettled</code> mantém disponíveis os componentes cujas requisições foram concluídas.</li>
+    <li>Resposta HTTP inválida, JSON vazio ou transformação incompatível gera estado de erro/vazio.</li>
+    <li>Erros técnicos são registrados no console; a tela mostra mensagem pública.</li>
+  </ol>
+
+  <div class="note"><strong>Ponto de arquitetura:</strong> as URLs dos quatro painéis estão codificadas como <code>https://api.projetocerradoifg.org/webhook/...</code>. Isso acopla o mesmo código a produção e exige CORS. Uma configuração externa por ambiente reduziria esse acoplamento.</div>
+
+  <h2 id="biblioteca-admin">7. Biblioteca de documentos e área administrativa</h2>
+  <p>Foi implementado um conjunto integrado de três telas: a Biblioteca Pública, o Login Administrativo e o Gerenciador de Documentos. As telas compartilham componentes visuais, serviços de dados e tratamento de estados.</p>
+
+  <h3>7.1 Tela pública — Biblioteca de Documentos</h3>
+  <p><strong>Propósito simples:</strong> permitir que qualquer visitante localize e baixe relatórios, estudos e materiais técnicos publicados pelo projeto.</p>
+  <table>
+    <thead><tr><th>Recurso implementado</th><th>Funcionamento</th></tr></thead>
+    <tbody>
+      <tr><td>Campo de pesquisa</td><td>Pesquisa por título e descrição, iniciada 350 ms após a pausa na digitação.</td></tr>
+      <tr><td>Cards de documentos</td><td>Exibem capa, identificação de PDF, título, descrição e botão de download.</td></tr>
+      <tr><td>Paginação</td><td>Mostra página atual, total de páginas, anterior, próxima e páginas próximas.</td></tr>
+      <tr><td>Resumo da listagem</td><td>Informa a quantidade total de documentos encontrados.</td></tr>
+      <tr><td>Estados da tela</td><td>Possui apresentações específicas para carregamento, lista pronta, busca vazia e erro de conexão.</td></tr>
+      <tr><td>Capa alternativa</td><td>Substitui automaticamente uma imagem indisponível pela identidade visual do projeto.</td></tr>
+      <tr><td>Download do PDF</td><td>Recebe o arquivo como <code>Blob</code> e gera um nome legível a partir do título.</td></tr>
+      <tr><td>Retentativa</td><td>Permite solicitar novamente a listagem quando ocorre falha.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.2 Tela administrativa — Login</h3>
+  <p><strong>Propósito simples:</strong> autenticar o responsável pela manutenção da biblioteca.</p>
+  <table>
+    <thead><tr><th>Recurso implementado</th><th>Funcionamento</th></tr></thead>
+    <tbody>
+      <tr><td>Formulário de acesso</td><td>Campos de usuário e senha com preenchimento automático compatível com o navegador.</td></tr>
+      <tr><td>Validação</td><td>Confere os campos obrigatórios e posiciona o foco no primeiro campo inválido.</td></tr>
+      <tr><td>Exibição da senha</td><td>Botão acessível alterna entre mostrar e ocultar a senha.</td></tr>
+      <tr><td>Autenticação</td><td>Envia as credenciais para <code>POST /api/auth/login</code> com cookies de sessão.</td></tr>
+      <tr><td>Retorno ao destino</td><td>Após o login, encaminha o usuário para a área administrativa solicitada.</td></tr>
+      <tr><td>Mensagens de retorno</td><td>Apresenta credenciais inválidas, indisponibilidade do servidor e estado de envio.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.3 Tela administrativa — Gerenciar Documentos</h3>
+  <p><strong>Propósito simples:</strong> cadastrar, consultar, editar e excluir os materiais exibidos na biblioteca pública.</p>
+  <table>
+    <thead><tr><th>Recurso implementado</th><th>Funcionamento</th></tr></thead>
+    <tbody>
+      <tr><td>Verificação de sessão</td><td>Consulta <code>GET /api/auth/me</code> antes de liberar a listagem e exibe o nome do administrador.</td></tr>
+      <tr><td>Listagem administrativa</td><td>Tabela paginada com capa, título, descrição, data e ações por documento.</td></tr>
+      <tr><td>Pesquisa por título</td><td>Filtra a relação administrativa e reinicia a paginação.</td></tr>
+      <tr><td>Cadastro</td><td>Modal recebe título, descrição, imagem de capa e PDF; envia <code>multipart/form-data</code>.</td></tr>
+      <tr><td>Edição</td><td>Reutiliza o mesmo formulário, preenche os dados atuais e permite preservar ou substituir os arquivos.</td></tr>
+      <tr><td>Exclusão</td><td>Modal próprio apresenta o título do documento e solicita confirmação antes da operação.</td></tr>
+      <tr><td>Pré-visualização</td><td>Mostra a imagem escolhida e o nome do PDF antes do envio.</td></tr>
+      <tr><td>Validação de imagem</td><td>Aceita JPG, PNG e WebP com até 5 MB.</td></tr>
+      <tr><td>Validação de PDF</td><td>Aceita arquivo PDF com até 20 MB.</td></tr>
+      <tr><td>Proteção CSRF</td><td>Inclui automaticamente o token nas operações de cadastro, edição, exclusão e logout.</td></tr>
+      <tr><td>Modais acessíveis</td><td>Suportam Escape, contenção do foco, retorno ao controle de origem e fechamento controlado.</td></tr>
+      <tr><td>Notificações</td><td>Toasts confirmam cadastro, edição, exclusão e encerramento de sessão.</td></tr>
+      <tr><td>Logout</td><td>Encerra a sessão por <code>POST /api/auth/logout</code> e retorna à tela de acesso.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.4 Serviços compartilhados</h3>
+  <p><code>services/api-client.js</code> centraliza requisições HTTP, cookies, leitura das respostas, erros <code>ApiError</code>, CSRF e evento de sessão expirada. <code>auth-service.js</code> concentra login, sessão e logout. <code>documentos-service.js</code> traduz o contrato do backend para o modelo das telas, cria as URLs de capa/download pelo UUID e executa o CRUD.</p>
+  <table>
+    <thead><tr><th>Fluxo</th><th>Contrato</th><th>Entrega do frontend</th></tr></thead>
+    <tbody>
+      <tr><td>Listagem pública</td><td><code>GET /api/documentos</code></td><td>Busca, paginação e normalização dos itens.</td></tr>
+      <tr><td>Imagem</td><td><code>GET /api/documentos/{uuid}/imagem</code></td><td>URL versionada pela data de atualização ou criação.</td></tr>
+      <tr><td>Download</td><td><code>GET /api/documentos/{uuid}/download</code></td><td>Tratamento binário e download local.</td></tr>
+      <tr><td>Listagem administrativa</td><td><code>GET /api/admin/documentos</code></td><td>Busca autenticada e paginação.</td></tr>
+      <tr><td>Cadastro</td><td><code>POST /api/admin/documentos</code></td><td>Envio multipart com título, descrição, imagem e PDF.</td></tr>
+      <tr><td>Edição</td><td><code>PUT /api/admin/documentos/{uuid}</code></td><td>Atualização de metadados e substituição opcional dos arquivos.</td></tr>
+      <tr><td>Exclusão</td><td><code>DELETE /api/admin/documentos/{uuid}</code></td><td>Remoção do item selecionado após confirmação.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>8. Diagnóstico inteligente</h2>
+  <p>O diagnóstico permite buscar um endereço ou selecionar um ponto no mapa, informar cultura, estágio produtivo e problema, e enviar os dados para <code>POST /api/recommendations</code>. A resposta alimenta recomendações, clima atual, quatro gráficos horários, solo e vegetação. O relatório pode ser impresso ou convertido em PDF no navegador.</p>
+  <table>
+    <thead><tr><th>Etapa</th><th>Implementação</th><th>Observação</th></tr></thead>
+    <tbody>
+      <tr><td>Localização</td><td>Leaflet + tiles OSM; geocodificação Nominatim</td><td>O texto do endereço é transmitido a serviço externo.</td></tr>
+      <tr><td>Validação</td><td>Campos obrigatórios e ponto no mapa</td><td>Mensagens junto aos controles.</td></tr>
+      <tr><td>Recomendação</td><td>Axios no mesmo domínio, com cookies</td><td>Aceita objeto ou resposta textual legada com <code>NaN</code>.</td></tr>
+      <tr><td>Visualização</td><td>Cartões, texto e Chart.js</td><td>Distribui recomendações, clima, solo e vegetação no relatório.</td></tr>
+      <tr><td>PDF</td><td>html2canvas + jsPDF</td><td>Captura o relatório e distribui a imagem em páginas A4.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>9. Acessibilidade e responsividade implementadas</h2>
+  <h3>Recursos implementados</h3>
+  <ul>
+    <li>Skip link nas 10 páginas HTML.</li>
+    <li>Landmarks, títulos, textos alternativos e identificação da página atual.</li>
+    <li>Abas com <code>role="tab"</code>, <code>aria-selected</code> e painéis associados.</li>
+    <li>Resumos de filtro e mensagens com <code>aria-live</code>.</li>
+    <li>Estados de dados com <code>role="status"</code> ou <code>role="alert"</code>.</li>
+    <li>Modais administrativos com retorno de foco, Escape e contenção de Tab.</li>
+    <li>Estilos de <code>:focus-visible</code> em controles críticos e suporte a <code>prefers-reduced-motion</code>.</li>
+    <li>Breakpoints próprios e grid Bootstrap para celular, tablet e desktop.</li>
+  </ul>
+
+  <h2>10. Controles de sessão e integridade de dados</h2>
+  <table>
+    <thead><tr><th>Controle implementado</th><th>Funcionamento</th></tr></thead>
+    <tbody>
+      <tr><td>Cookie de sessão</td><td>Requisições autenticadas usam <code>credentials: include</code>.</td></tr>
+      <tr><td>CSRF administrativo</td><td>Token guardado em memória e anexado automaticamente a POST, PUT, PATCH e DELETE administrativos.</td></tr>
+      <tr><td>Expiração da sessão</td><td>Respostas 401 publicam um evento centralizado que encaminha a interface ao login.</td></tr>
+      <tr><td>Contrato de documentos</td><td>Valida UUID, título, descrição, paginação e estrutura da resposta antes da renderização.</td></tr>
+      <tr><td>URLs de arquivos</td><td>Capas e PDFs são derivados do UUID, mantendo o caminho interno do servidor fora da interface.</td></tr>
+      <tr><td>Renderização dos cards</td><td>Título e descrição usam APIs do DOM e <code>textContent</code>.</td></tr>
+      <tr><td>Uploads</td><td>Validação local de tipo e tamanho ocorre antes do envio da imagem e do PDF.</td></tr>
+      <tr><td>Erros HTTP</td><td>O cliente diferencia falha de conexão, sessão expirada e respostas 400, 403, 404 e 500.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>11. Testes e qualidade</h2>
+  <p>A suíte local usa o test runner nativo do Node. Em 02/11/2026, os dois arquivos foram executados em ambiente compatível e produziram <strong>19 testes aprovados, nenhuma falha</strong>.</p>
+  <table>
+    <thead><tr><th>Arquivo</th><th>Cobertura funcional</th></tr></thead>
+    <tbody>
+      <tr><td><code>auth-integration.test.mjs</code></td><td>Configuração real, login, sessão, CSRF, logout, 401, falha de rede, HTTP 500 e mutação administrativa.</td></tr>
+      <tr><td><code>documentos-service.test.mjs</code></td><td>Normalização, paginação, URLs, multipart, edição, exclusão, download, status HTTP e contrato inválido.</td></tr>
+    </tbody>
+  </table>
+  <p>Os testes confirmam os contratos utilizados pelas telas pública e administrativa, incluindo o comportamento de sessão, CSRF, uploads, download e normalização dos dados.</p>
+
+  <h2>12. Implantação e operação</h2>
+  <h3>12.1 Empacotamento</h3>
+  <pre>FROM nginx:alpine
+COPY . /usr/share/nginx/html
+EXPOSE 80</pre>
+  <p>O frontend é publicado diretamente como aplicação estática. A imagem utiliza Nginx Alpine, copia os arquivos para o diretório público e expõe a porta 80.</p>
+
+  <h3>12.2 Publicação</h3>
+  <p>O GitHub Actions é disparado em push para <code>main</code>, acessa a VPS por SSH, executa <code>git pull</code>, reconstrói os contêineres e sobe o Compose. O Nginx externo encaminha <code>/</code> para o frontend na porta 8080 e <code>/api/</code> para o backend na porta 8000.</p>
+
+  <h3>12.3 Recursos operacionais implementados</h3>
+  <table>
+    <thead><tr><th>Recurso</th><th>Funcionamento</th></tr></thead>
+    <tbody>
+      <tr><td>Implantação automática</td><td>Push em <code>main</code> aciona o workflow de deploy na VPS.</td></tr>
+      <tr><td>Reconstrução dos serviços</td><td>O workflow executa <code>docker compose build</code> e <code>docker compose up -d --remove-orphans</code>.</td></tr>
+      <tr><td>Separação de rotas</td><td>O Nginx encaminha páginas para o contêiner frontend e <code>/api/</code> para o backend.</td></tr>
+      <tr><td>Simulação de falha</td><td>Os painéis aceitam <code>?simularErroApi=1</code> para exercitar os estados de erro e retentativa.</td></tr>
+      <tr><td>Reinício independente</td><td>O Compose permite reiniciar apenas frontend, backend ou banco.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>13. Inventário consolidado das entregas</h2>
+  <table>
+    <thead><tr><th>Área entregue</th><th>Componentes e funcionalidades</th></tr></thead>
+    <tbody>
+      <tr><td>Portal institucional</td><td>Página inicial, navegação compartilhada, rodapé, identidade visual, parceiros, cadeias e atalhos.</td></tr>
+      <tr><td>Painel de Leite</td><td>6 integrações, 16 áreas gráficas, KPIs, tabelas, filtros e plano de intervenção.</td></tr>
+      <tr><td>Painel de Corte</td><td>2 integrações, gráficos de rebanho e abate, filtros, tabelas, pastagens e plano.</td></tr>
+      <tr><td>Painel de Eucalipto</td><td>4 integrações, produção, ranking, valor, participação, filtros e plano.</td></tr>
+      <tr><td>Painel de Seringueira</td><td>2 integrações, 8 áreas gráficas, filtros, indicadores, cenário mundial e plano.</td></tr>
+      <tr><td>Capacitações</td><td>Apresentação e acesso a seis cursos publicados no IFG Virtual.</td></tr>
+      <tr><td>Diagnóstico inteligente</td><td>Mapa, geocodificação, formulário, recomendações, clima, solo, vegetação, gráficos, impressão e PDF.</td></tr>
+      <tr><td>Biblioteca pública</td><td>Pesquisa, cards, paginação, capas, estados de tela e download de documentos.</td></tr>
+      <tr><td>Login administrativo</td><td>Credenciais, validação, exibição da senha, sessão e redirecionamento.</td></tr>
+      <tr><td>Gestão de documentos</td><td>Listagem, pesquisa, cadastro, edição, exclusão, uploads, previews, validações e logout.</td></tr>
+      <tr><td>Serviços de frontend</td><td>Cliente HTTP, autenticação, documentos, erros padronizados, cookies e CSRF.</td></tr>
+      <tr><td>Acessibilidade e responsividade</td><td>Skip links, ARIA, regiões ao vivo, foco em modais, redução de movimento e layouts adaptáveis.</td></tr>
+      <tr><td>Testes</td><td>19 testes aprovados para autenticação, sessão, CSRF, contratos e operações de documentos.</td></tr>
+      <tr><td>Implantação</td><td>Contêiner Nginx, Docker Compose, proxy reverso e deploy automatizado por GitHub Actions.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-break"></div>
+  <h2>Anexo A — Contratos HTTP do frontend</h2>
+  <table>
+    <thead><tr><th>Grupo</th><th>Método e rota</th><th>Uso</th></tr></thead>
+    <tbody>
+      <tr><td>Diagnóstico</td><td><code>POST /api/recommendations</code></td><td>Recomendações e dados ambientais.</td></tr>
+      <tr><td>Autenticação</td><td><code>POST /api/auth/login</code></td><td>Iniciar sessão.</td></tr>
+      <tr><td>Autenticação</td><td><code>GET /api/auth/me</code></td><td>Validar sessão e obter CSRF.</td></tr>
+      <tr><td>Autenticação</td><td><code>POST /api/auth/logout</code></td><td>Encerrar sessão.</td></tr>
+      <tr><td>Documentos</td><td><code>GET /api/documentos</code></td><td>Busca e paginação pública.</td></tr>
+      <tr><td>Documentos</td><td><code>GET /api/documentos/{uuid}/imagem</code></td><td>Capa.</td></tr>
+      <tr><td>Documentos</td><td><code>GET /api/documentos/{uuid}/download</code></td><td>PDF binário.</td></tr>
+      <tr><td>Admin</td><td><code>GET/POST /api/admin/documentos</code></td><td>Listar e cadastrar.</td></tr>
+      <tr><td>Admin</td><td><code>PUT/DELETE /api/admin/documentos/{uuid}</code></td><td>Editar e excluir.</td></tr>
+      <tr><td>Externo</td><td><code>GET https://nominatim.openstreetmap.org/search</code></td><td>Geocodificação de endereço.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Endpoints n8n dos painéis</h3>
+  <p><strong>Base:</strong> <code>https://api.projetocerradoifg.org/webhook/</code></p>
+  <table>
+    <thead><tr><th>Painel</th><th>Caminhos</th></tr></thead>
+    <tbody>
+      <tr><td>Leite</td><td><code>leite/producao-uf</code>, <code>leite/regioes</code>, <code>leite/centro-oeste</code>, <code>leite/goias-meso</code>, <code>leite/goias-municipios</code>, <code>leite/ranking-consumo</code></td></tr>
+      <tr><td>Corte</td><td><code>corte/rebanho</code>, <code>corte/abate</code></td></tr>
+      <tr><td>Eucalipto</td><td><code>eucalipto/quantidade</code>, <code>eucalipto/ranking</code>, <code>eucalipto/valor</code>, <code>eucalipto/participacao</code></td></tr>
+      <tr><td>Seringueira</td><td><code>seringueira/pam</code>, <code>seringueira/censo</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Anexo B — Mapa de arquivos</h2>
+  <table>
+    <thead><tr><th>Arquivo / pasta</th><th>Responsabilidade</th></tr></thead>
+    <tbody>
+      <tr><td><code>frontend/shared.css</code></td><td>Tokens, layout, componentes, estados, responsividade e acessibilidade compartilhada.</td></tr>
+      <tr><td><code>frontend/shared.js</code></td><td>KPIs, estados de dados, filtros recolhíveis, abas e filtros genéricos.</td></tr>
+      <tr><td><code>frontend/components/site-layout.js</code></td><td>Injeção do cabeçalho/rodapé e destaque da rota atual.</td></tr>
+      <tr><td><code>frontend/components/documentos-ui.js</code></td><td>Debounce, datas, paginação, loading, modais e toast.</td></tr>
+      <tr><td><code>frontend/services/api-client.js</code></td><td>HTTP comum, cookies, CSRF e erros.</td></tr>
+      <tr><td><code>frontend/services/auth-service.js</code></td><td>Login, sessão, logout e normalização do usuário.</td></tr>
+      <tr><td><code>frontend/services/documentos-service.js</code></td><td>Contrato, normalização, CRUD, download e mocks desativados.</td></tr>
+      <tr><td><code>frontend/{leite,corte,eucalipto,seringueira}.js</code></td><td>Carga, transformação, filtros e gráficos de cada cadeia.</td></tr>
+      <tr><td><code>frontend/diagnostico.js</code></td><td>Mapa, formulário, API, relatório, gráficos e PDF.</td></tr>
+      <tr><td><code>frontend/admin/</code></td><td>Login e gestão autenticada de documentos.</td></tr>
+      <tr><td><code>frontend/tests/</code></td><td>Testes de autenticação e documentos.</td></tr>
+      <tr><td><code>frontend/Dockerfile</code></td><td>Imagem Nginx estática.</td></tr>
+      <tr><td><code>nginx.conf</code></td><td>Proxy externo de <code>/</code> e <code>/api/</code>.</td></tr>
+      <tr><td><code>.github/workflows/deploy.yml</code></td><td>Deploy por SSH após push em <code>main</code>.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Anexo C — Registro da entrega documentada</h2>
+  <table>
+    <thead><tr><th>Item</th><th>Registro</th></tr></thead>
+    <tbody>
+      <tr><td>Data da revisão</td><td>14/11/2026, fuso America/Sao_Paulo.</td></tr>
+      <tr><td>Snapshot</td><td>Branch <code>main</code>, commit <code>6d3b1073e9f898fdebf587bcb8da453633fc90d9</code>.</td></tr>
+      <tr><td>Teste executado</td><td>Node v26.3.0; 19 aprovados; 0 falhas; duração reportada de 95,94 ms.</td></tr>
+      <tr><td>Escopo documentado</td><td>10 páginas HTML, 4 painéis, 14 endpoints n8n, diagnóstico, biblioteca, login, administração, testes e implantação.</td></tr>
+      <tr><td>Formato do documento</td><td>HTML editável e PDF A4.</td></tr>
+    </tbody>
+  </table>
+
+  <p class="footer-note">Relatório gerado a partir do código-fonte do Projeto Cerrado. O conteúdo registra os recursos implementados no snapshot indicado.</p>
+</body>
+</html>

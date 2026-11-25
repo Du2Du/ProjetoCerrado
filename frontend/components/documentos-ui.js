@@ -107,7 +107,7 @@ export function createModalController(element, { onRequestClose = () => true } =
     window.requestAnimationFrame(() => element.querySelector(focusableSelector)?.focus());
   };
 
-  element.addEventListener("mousedown", (event) => {
+  element.addEventListener("click", (event) => {
     if (event.target === element || event.target.closest("[data-modal-close]")) requestClose();
   });
   element.addEventListener("keydown", (event) => {
@@ -116,7 +116,8 @@ export function createModalController(element, { onRequestClose = () => true } =
       requestClose();
     }
     if (event.key !== "Tab") return;
-    const focusable = Array.from(element.querySelectorAll(focusableSelector));
+    const focusable = Array.from(element.querySelectorAll(focusableSelector))
+      .filter((control) => control.getClientRects().length > 0);
     if (!focusable.length) return;
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
@@ -139,4 +140,22 @@ export function showToast(element, message, tone = "success") {
   element.setAttribute("role", tone === "error" ? "alert" : "status");
   window.clearTimeout(showToast.timeout);
   showToast.timeout = window.setTimeout(() => element.classList.remove("is-visible"), 4200);
+}
+
+export function scrollToResults(element) {
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  element.scrollIntoView({ behavior: reducedMotion ? "instant" : "smooth", block: "start" });
+}
+
+export function createListRequest() {
+  let current = 0;
+  return {
+    start() {
+      const request = ++current;
+      return () => request === current;
+    },
+    invalidate() {
+      current += 1;
+    }
+  };
 }

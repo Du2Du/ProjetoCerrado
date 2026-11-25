@@ -1,11 +1,16 @@
+import { createCategoryAdmin } from "./admin-categorias.js";
+import { categoriasService } from "../../services/categorias-service.js";
+import { categoryTags, createCategoryFilter, createCategoryPicker, setupAdminTabs } from "../../components/categorias-ui.js";
 import { authService } from "../../services/auth-service.js";
 import { AUTH_UNAUTHORIZED_EVENT } from "../../services/api-client.js";
 import { documentosService } from "../../services/documentos-service.js";
 import {
+  createListRequest,
   createModalController,
   debounce,
   formatDate,
   renderPagination,
+  scrollToResults,
   setButtonLoading,
   showToast
 } from "../../components/documentos-ui.js";
@@ -63,11 +68,13 @@ const elements = {
   toast: document.querySelector("#app-toast")
 };
 
+const listRequest = createListRequest();
 const state = {
   search: "",
   page: 1,
   limit: 10,
   items: [],
+  categoryIds: [],
   editing: null,
   deleting: null,
   formDirty: false,
@@ -87,6 +94,95 @@ const deleteModal = createModalController(elements.deleteModal, {
   onRequestClose: () => !elements.confirmDelete.disabled
 });
 
+const byId = (id) => document.getElementById(id);
+const tabs = byId("library-admin-tabs");
+const pickerGroup = byId("document-categories");
+const pickerSearch = byId("document-category-search");
+const pickerStatus = byId("document-category-status");
+const pickerError = byId("document-category-error");
+const pickerRetry = byId("document-category-retry");
+const pickerRequest = createListRequest();
+const filterRequest = createListRequest();
+let pickerReady = false;
+let sessionReady = false;
+
+const filter = createCategoryFilter(byId("admin-category-filter"), {
+  counts: true,
+  onChange(ids) {
+    state.categoryIds = ids;
+    state.page = 1;
+    if (sessionReady) loadDocuments();
+  }
+});
+const picker = createCategoryPicker({
+  search: pickerSearch,
+  options: byId("document-category-options"),
+  tags: byId("document-category-selected"),
+  status: pickerStatus,
+  onChange() {
+    state.formDirty = true;
+    pickerSearch.removeAttribute("aria-invalid");
+    pickerError.textContent = "";
+  }
+});
+const categoryAdmin = createCategoryAdmin({
+  list: categoriasService.listAdmin,
+  create: categoriasService.create,
+  update: categoriasService.update,
+  remove: categoriasService.remove,
+  errorMessage: operationErrorMessage,
+  onChanged() {
+    loadCategoryFilter();
+    loadDocuments();
+  }
+});
+
+async function loadCategoryFilter() {
+  const isCurrent = filterRequest.start();
+  try {
+    const categories = await categoriasService.listPublic("filtro");
+    if (isCurrent()) filter.setCategories(categories);
+  } catch (error) {
+    if (isCurrent()) showToast(elements.toast, operationErrorMessage(error, "carregar os filtros de categorias"), "error");
+  }
+}
+
+async function loadPicker() {
+  const isCurrent = pickerRequest.start();
+  pickerReady = false;
+  pickerStatus.textContent = "Carregando categorias…";
+  pickerRetry.hidden = true;
+  pickerGroup.setAttribute("aria-busy", "true");
+  elements.save.disabled = true;
+  try {
+    const categories = await categoriasService.listPublic("todas");
+    if (!isCurrent()) return;
+    picker.setAvailable(categories);
+    pickerReady = true;
+  } catch (error) {
+    if (!isCurrent()) return;
+    pickerStatus.textContent = operationErrorMessage(error, "carregar as categorias");
+    pickerRetry.hidden = false;
+  } finally {
+    if (isCurrent()) {
+      pickerGroup.removeAttribute("aria-busy");
+      elements.save.disabled = !pickerReady || state.submitting;
+    }
+  }
+}
+
+function preparePicker(categories) {
+  picker.reset([], categories);
+  pickerSearch.removeAttribute("aria-invalid");
+  pickerError.textContent = "";
+  loadPicker();
+}
+
+pickerRetry.addEventListener("click", loadPicker);
+setupAdminTabs(tabs, (id) => {
+  if (id === "categories-tab") categoryAdmin.load();
+});
+
 let redirectingToLogin = false;
 
 // Substitui imagens quebradas pela capa padrão e evita ciclos de fallback.
@@ -104,8 +200,8 @@ function operationErrorMessage(error, operation) {
     return "A API não forneceu o token CSRF necessário. Atualize a página e tente novamente.";
   }
   if (error.status === 0) return "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.";
-  if (error.status === 400) return error.message || `Os dados enviados para ${operation} são inválidos.`;
-  if (error.status === 403) return "Acesso negado. Sua sessão não permite realizar esta operação.";
+  if ([400, 409, 422].includes(error.status)) return error.message || `Os dados enviados para ${operation} são inválidos.`;
+  if (error.status === 403) return error.message;
   if (error.status === 404) return "O documento não foi encontrado. Atualize a listagem e tente novamente.";
   if (error.status >= 500) return "O servidor não conseguiu concluir a operação. Tente novamente em alguns instantes.";
   return `Não foi possível ${operation}. Tente novamente.`;
@@ -178,6 +274,7 @@ function createTableRow(documentData) {
   const titleCell = document.createElement("td");
   titleCell.className = "admin-table__title";
   titleCell.textContent = documentData.title;
+  if (documentData.categories?.length) titleCell.append(categoryTags(documentData.categories));
 
   const dateCell = document.createElement("td");
   dateCell.textContent = formatDate(documentData.createdAt);
@@ -200,17 +297,21 @@ async function loadDocuments({ focusTable = false } = {}) {
   // mudança de página.
   setListView("loading");
   elements.summary.textContent = "";
+  const isCurrent = listRequest.start();
   try {
     const response = await documentosService.listAdmin(state);
+    if (!isCurrent()) return;
     state.page = response.pagination.page;
     state.items = response.items;
     elements.tableBody.replaceChildren(...state.items.map(createTableRow));
 
     if (!state.items.length) {
-      elements.emptyTitle.textContent = state.search ? "Nenhum resultado encontrado" : "Nenhum documento cadastrado";
+      const filtered = state.search || state.categoryIds.length;
+      elements.emptyTitle.textContent = filtered ? "Nenhum resultado encontrado" : "Nenhum documento cadastrado";
       elements.emptyMessage.textContent = state.search
         ? `Não há documentos com o título “${state.search}”.`
-        : "Adicione o primeiro documento para iniciar a biblioteca.";
+        : filtered ? "Nenhum documento corresponde às categorias selecionadas."
+          : "Adicione o primeiro documento para iniciar a biblioteca.";
       setListView("empty");
       elements.summary.textContent = "0 documentos encontrados";
       return;
@@ -223,9 +324,9 @@ async function loadDocuments({ focusTable = false } = {}) {
       state.page = page;
       loadDocuments({ focusTable: true });
     });
-    if (focusTable) elements.tableCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (focusTable) scrollToResults(elements.tableCard);
   } catch (error) {
-    if (error.status === 401) return;
+    if (!isCurrent() || error.status === 401) return;
     elements.errorMessage.textContent = operationErrorMessage(error, "carregar os documentos");
     setListView("error");
   }
@@ -265,6 +366,7 @@ function openCreate() {
   elements.pdfRequired.hidden = false;
   elements.cover.required = true;
   elements.pdf.required = true;
+  preparePicker([]);
   documentModal.open(elements.add);
 }
 
@@ -288,6 +390,7 @@ function openEdit(documentData) {
   elements.pdfPreviewName.textContent = documentData.pdfName || "PDF atual";
   elements.pdfPreview.hidden = false;
   state.formDirty = false;
+  preparePicker(documentData.categories);
   documentModal.open();
 }
 
@@ -391,7 +494,7 @@ async function saveDocument(event) {
   // A presença de `state.editing` escolhe entre criar e atualizar, mantendo um
   // único formulário e o mesmo tratamento de loading/erro para os dois fluxos.
   event.preventDefault();
-  if (state.submitting) return;
+  if (state.submitting || !pickerReady) return;
   if (!validateForm()) {
     elements.form.querySelector('[aria-invalid="true"]')?.focus();
     return;
@@ -404,7 +507,8 @@ async function saveDocument(event) {
       title: elements.title.value,
       description: elements.description.value,
       coverFile: elements.cover.files[0],
-      pdfFile: elements.pdf.files[0]
+      pdfFile: elements.pdf.files[0],
+      categoryIds: picker.getIds()
     };
     if (state.editing) {
       await documentosService.update(state.editing.id, values);
@@ -416,13 +520,23 @@ async function saveDocument(event) {
     documentModal.close();
     showToast(elements.toast, message);
     state.page = 1;
-    await loadDocuments();
+    await Promise.all([loadDocuments(), loadCategoryFilter()]);
   } catch (error) {
     if (error.status === 401) return;
     elements.formFeedback.textContent = operationErrorMessage(error, "salvar o documento");
+    if ([400, 422].includes(error.status)) {
+      if (/categor/i.test(error.message)) {
+        pickerSearch.setAttribute("aria-invalid", "true");
+        pickerError.textContent = error.message;
+        elements.formFeedback.textContent = "";
+        pickerSearch.focus();
+      }
+      await loadPicker();
+    }
   } finally {
     state.submitting = false;
     setButtonLoading(elements.save, false);
+    elements.save.disabled = !pickerReady;
   }
 }
 
@@ -445,23 +559,25 @@ async function deleteDocument() {
     deleteModal.close();
     showToast(elements.toast, "Documento excluído da biblioteca.");
     if (state.items.length === 1 && state.page > 1) state.page -= 1;
-    await loadDocuments();
+    state.deleting = null;
+    await Promise.all([loadDocuments(), loadCategoryFilter()]);
   } catch (error) {
     if (error.status === 401) return;
     elements.deleteFeedback.textContent = operationErrorMessage(error, "excluir o documento");
   } finally {
     setButtonLoading(elements.confirmDelete, false);
-    state.deleting = null;
   }
 }
 
 elements.add.addEventListener("click", openCreate);
 elements.retry.addEventListener("click", () => initialize());
-elements.search.addEventListener("input", debounce(() => {
+const searchDocuments = debounce(() => loadDocuments(), 350);
+elements.search.addEventListener("input", () => {
+  listRequest.invalidate();
   state.search = elements.search.value.trim();
   state.page = 1;
-  loadDocuments();
-}, 350));
+  searchDocuments();
+});
 elements.form.addEventListener("submit", saveDocument);
 elements.cover.addEventListener("change", previewCover);
 elements.pdf.addEventListener("change", previewPdf);
@@ -496,7 +612,27 @@ applyCoverFallback(elements.coverPreviewImage);
 async function initialize() {
   // A listagem é carregada apenas quando a verificação de sessão termina com êxito.
   setListView("loading");
-  if (await ensureSession()) await loadDocuments();
+  elements.add.disabled = true;
+  elements.search.disabled = true;
+  if (!await ensureSession()) return;
+  sessionReady = true;
+  tabs.hidden = false;
+  pickerGroup.hidden = false;
+  elements.add.disabled = false;
+  elements.search.disabled = false;
+  await Promise.all([loadDocuments(), loadCategoryFilter()]);
 }
+
+window.addEventListener("pageshow", (event) => {
+  if (!event.persisted) return;
+  sessionReady = false;
+  elements.search.value = "";
+  state.search = "";
+  state.page = 1;
+  filter.reset();
+  categoryAdmin.reset();
+  byId("documents-tab").click();
+  initialize();
+});
 
 initialize();

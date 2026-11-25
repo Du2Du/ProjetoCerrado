@@ -29,57 +29,93 @@
 
   <main id="main-content" class="admin-main">
     <div class="container">
-      <div class="admin-toolbar">
-        <div>
-          <h1>Gerenciar documentos</h1>
-          <p>Cadastre e mantenha os materiais disponíveis na biblioteca pública.</p>
+      <div id="library-admin-tabs" class="admin-tabs" role="tablist" aria-label="Gerenciar biblioteca" hidden>
+        <button id="documents-tab" class="app-button app-button--secondary" type="button" role="tab" aria-selected="true" aria-controls="documents-panel">Documentos</button>
+        <button id="categories-tab" class="app-button app-button--secondary" type="button" role="tab" aria-selected="false" aria-controls="categories-panel" tabindex="-1">Categorias</button>
+      </div>
+      <div id="documents-panel" role="tabpanel" aria-labelledby="documents-tab">
+        <div class="admin-toolbar">
+          <div>
+            <h1>Gerenciar documentos</h1>
+            <p>Cadastre e mantenha os materiais disponíveis na biblioteca pública.</p>
+          </div>
+          <div class="admin-actions">
+            <button id="add-document" class="app-button app-button--primary" type="button">＋ Adicionar documento</button>
+          </div>
         </div>
-        <div class="admin-actions">
-          <button id="add-document" class="app-button app-button--primary" type="button">＋ Adicionar documento</button>
+
+        <div class="admin-filter search-field">
+          <label for="admin-search">Pesquisar pelo título</label>
+          <div class="search-field__control">
+            <span class="search-field__icon" aria-hidden="true">⌕</span>
+            <input id="admin-search" type="search" placeholder="Digite o título…" autocomplete="off">
+          </div>
         </div>
+        <div id="admin-category-filter" class="category-filter" hidden></div>
+        <div id="admin-summary" class="documents-summary" aria-live="polite"></div>
+
+        <div id="admin-loading" class="app-state" role="status">
+          <span class="app-spinner" aria-hidden="true"></span>
+          <span>Carregando documentos…</span>
+        </div>
+        <div id="admin-empty" class="app-state" hidden>
+          <span class="app-state__icon" aria-hidden="true">▤</span>
+          <strong id="admin-empty-title">Nenhum documento cadastrado</strong>
+          <span id="admin-empty-message">Adicione o primeiro documento para iniciar a biblioteca.</span>
+        </div>
+        <div id="admin-error" class="app-state" role="alert" hidden>
+          <span class="app-state__icon" aria-hidden="true">!</span>
+          <strong>Não foi possível carregar a área administrativa</strong>
+          <span id="admin-error-message">Não foi possível verificar a sessão ou carregar os documentos. Verifique sua conexão e tente novamente.</span>
+          <button id="admin-retry" class="app-button app-button--secondary" type="button">Tentar novamente</button>
+        </div>
+
+        <section id="admin-table-card" class="admin-table-card" aria-label="Documentos cadastrados" aria-busy="true" hidden>
+          <div class="admin-table-scroll">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th scope="col">Capa</th>
+                  <th scope="col">Título</th>
+                  <th scope="col">Data de cadastro</th>
+                  <th scope="col">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="documents-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+        <nav id="admin-pagination" class="pagination" aria-label="Paginação dos documentos"></nav>
       </div>
 
-      <div class="admin-filter search-field">
-        <label for="admin-search">Pesquisar pelo título</label>
-        <div class="search-field__control">
-          <span class="search-field__icon" aria-hidden="true">⌕</span>
-          <input id="admin-search" type="search" placeholder="Digite o título…" autocomplete="off">
+      <div id="categories-panel" role="tabpanel" aria-labelledby="categories-tab" hidden>
+        <div class="admin-toolbar">
+          <div class="search-field">
+            <label for="category-admin-search">Pesquisar por nome ou descrição</label>
+            <input id="category-admin-search" type="search" autocomplete="off">
+          </div>
+          <button id="category-add" class="app-button app-button--primary" type="button">Adicionar categoria</button>
         </div>
-      </div>
-      <div id="admin-summary" class="documents-summary" aria-live="polite"></div>
-
-      <div id="admin-loading" class="app-state" role="status">
-        <span class="app-spinner" aria-hidden="true"></span>
-        <span>Carregando documentos…</span>
-      </div>
-      <div id="admin-empty" class="app-state" hidden>
-        <span class="app-state__icon" aria-hidden="true">▤</span>
-        <strong id="admin-empty-title">Nenhum documento cadastrado</strong>
-        <span id="admin-empty-message">Adicione o primeiro documento para iniciar a biblioteca.</span>
-      </div>
-      <div id="admin-error" class="app-state" role="alert" hidden>
-        <span class="app-state__icon" aria-hidden="true">!</span>
-        <strong>Não foi possível carregar a área administrativa</strong>
-        <span id="admin-error-message">Não foi possível verificar a sessão ou carregar os documentos. Verifique sua conexão e tente novamente.</span>
-        <button id="admin-retry" class="app-button app-button--secondary" type="button">Tentar novamente</button>
-      </div>
-
-      <section id="admin-table-card" class="admin-table-card" aria-label="Documentos cadastrados" aria-busy="true" hidden>
-        <div class="admin-table-scroll">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th scope="col">Capa</th>
-                <th scope="col">Título</th>
-                <th scope="col">Data de cadastro</th>
+        <div id="category-summary" class="documents-summary" role="status"></div>
+        <div id="category-list-error" class="app-state" hidden>
+          <p id="category-list-error-message" role="alert"></p>
+          <button id="category-retry" class="app-button app-button--secondary" type="button">Tentar novamente</button>
+        </div>
+        <section id="category-table" class="admin-table-card" aria-label="Categorias cadastradas" hidden>
+          <div class="admin-table-scroll">
+            <table class="admin-table">
+              <thead><tr>
+                <th scope="col">Nome</th>
+                <th scope="col">Descrição</th>
+                <th scope="col">Documentos ativos</th>
                 <th scope="col">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="documents-table-body"></tbody>
-          </table>
-        </div>
-      </section>
-      <nav id="admin-pagination" class="pagination" aria-label="Paginação dos documentos"></nav>
+              </tr></thead>
+              <tbody id="category-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+        <nav id="category-pagination" class="pagination" aria-label="Paginação das categorias"></nav>
+      </div>
     </div>
   </main>
 
@@ -105,6 +141,16 @@
               <textarea id="document-description" name="description" maxlength="600" required aria-describedby="document-description-error"></textarea>
               <span id="document-description-error" class="field-error"></span>
             </div>
+            <fieldset id="document-categories" class="form-field form-field--full" hidden>
+              <legend>Categorias</legend>
+              <label for="document-category-search">Pesquisar categoria pelo nome</label>
+              <input id="document-category-search" type="search" autocomplete="off" aria-describedby="document-category-error">
+              <div id="document-category-selected" class="category-tags" aria-label="Categorias selecionadas"></div>
+              <div id="document-category-options" class="category-options"></div>
+              <span id="document-category-status" role="status"></span>
+              <button id="document-category-retry" class="app-button app-button--secondary" type="button" hidden>Tentar carregar categorias novamente</button>
+              <span id="document-category-error" class="field-error" role="alert"></span>
+            </fieldset>
             <div class="form-field">
               <label for="document-cover">Imagem de capa <span id="cover-required" aria-hidden="true">*</span></label>
               <input id="document-cover" name="cover" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="document-cover-help document-cover-error">
@@ -152,6 +198,50 @@
       <div class="app-modal__footer">
         <button class="app-button app-button--secondary" type="button" data-modal-close>Cancelar</button>
         <button id="confirm-delete" class="app-button app-button--danger" type="button">Excluir documento</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="category-modal" class="app-modal" role="dialog" aria-modal="true" aria-labelledby="category-modal-title" aria-hidden="true">
+    <div class="app-modal__dialog">
+      <div class="app-modal__header">
+        <h2 id="category-modal-title">Adicionar categoria</h2>
+        <button class="app-modal__close" type="button" data-modal-close aria-label="Fechar modal">×</button>
+      </div>
+      <form id="category-form" novalidate>
+        <div class="app-modal__body">
+          <div class="form-field">
+            <label for="category-name">Nome</label>
+            <input id="category-name" required maxlength="100" aria-describedby="category-name-error">
+            <span id="category-name-error" class="field-error" role="alert"></span>
+          </div>
+          <div class="form-field">
+            <label for="category-description">Descrição (opcional)</label>
+            <textarea id="category-description" maxlength="500" aria-describedby="category-description-error"></textarea>
+            <span id="category-description-error" class="field-error" role="alert"></span>
+          </div>
+          <div id="category-form-error" class="modal-feedback" role="alert"></div>
+        </div>
+        <div class="app-modal__footer">
+          <button class="app-button app-button--secondary" type="button" data-modal-close>Cancelar</button>
+          <button id="category-save" class="app-button app-button--primary" type="submit">Salvar categoria</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div id="category-delete-modal" class="app-modal" role="dialog" aria-modal="true" aria-labelledby="category-delete-title" aria-describedby="category-delete-description" aria-hidden="true">
+    <div class="app-modal__dialog app-modal__dialog--small">
+      <div class="app-modal__header">
+        <h2 id="category-delete-title">Excluir categoria?</h2>
+        <button class="app-modal__close" type="button" data-modal-close aria-label="Fechar modal">×</button>
+      </div>
+      <div class="app-modal__body">
+        <p id="category-delete-description"></p>
+        <div id="category-delete-error" class="modal-feedback" role="alert"></div>
+      </div>
+      <div class="app-modal__footer">
+        <button class="app-button app-button--secondary" type="button" data-modal-close>Cancelar</button>
+        <button id="category-delete-confirm" class="app-button app-button--danger" type="button">Excluir categoria</button>
       </div>
     </div>
   </div>
