@@ -369,7 +369,7 @@ function criarGraficoParticipacaoValor() {
 function dadosRankingFiltrados() {
   if (!produtoCompativelComRanking()) return [];
   return dadosRankingNoPeriodo()
-    .filter(item => !filtrosAtivos.ufs.length || filtrosAtivos.ufs.includes(item.uf))
+    .filter(item => !filtrosAtivos.ufs.length || filtrosAtivos.ufs.includes(item.estado))
     .filter(item => !filtrosAtivos.municipios.length || filtrosAtivos.municipios.includes(item.municipio))
     .filter(item => item.quantidadeProduzida >= filtrosAtivos.minimoRanking)
     .sort((a, b) => b.quantidadeProduzida - a.quantidadeProduzida)
@@ -388,7 +388,7 @@ function dadosParticipacaoFiltrados() {
       percentualParticipacaoValor: itemAno[produto.campo],
       cor: produto.cor,
       ano,
-      uf: itemAno.uf
+      estado: itemAno.estado
     }))
     .filter(item => item.percentualParticipacaoValor !== null && item.percentualParticipacaoValor !== undefined);
 }
@@ -502,7 +502,7 @@ function atualizarOpcoesRankingEucalipto() {
   const ranking = dadosRankingProducao;
   const filtrarRanking = (filtrosAtivos.indicador === "all" || filtrosAtivos.indicador === "ranking")
     && dadosRankingNoPeriodo().length > 0 && produtoCompativelComRanking();
-  const ufs = [...new Set(ranking.map(item => item.uf).filter(Boolean))].sort();
+  const ufs = [...new Set(ranking.map(item => item.estado).filter(Boolean))].sort();
   filtrosAtivos.ufs = filtrosAtivos.ufs.filter(uf => ufs.includes(uf));
   setDropdownOptions("filtroUfEucaliptoMenu", ufs);
   marcarDropdown("filtroUfEucaliptoMenu", filtrosAtivos.ufs);
@@ -525,7 +525,7 @@ function atualizarOpcoesRankingEucalipto() {
 function atualizarMunicipiosDisponiveis(ranking) {
   // As escolhas atuais continuam disponíveis para desmarcar mesmo fora da UF selecionada.
   const municipiosDisponiveis = [...new Set(ranking
-    .filter(item => !filtrosAtivos.ufs.length || filtrosAtivos.ufs.includes(item.uf)
+    .filter(item => !filtrosAtivos.ufs.length || filtrosAtivos.ufs.includes(item.estado)
       || filtrosAtivos.municipios.includes(item.municipio))
     .map(item => item.municipio).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b, "pt-BR"));
@@ -628,7 +628,7 @@ async function buscarEndpointEucalipto(nome) {
     if (!resposta.ok) throw new Error(`${nome}: HTTP ${resposta.status}`);
     const dados = await resposta.json();
     if (!Array.isArray(dados) || !dados.length) throw new Error(`${nome}: resposta vazia`);
-    return dados;
+    return normalizarEstadoDaApi(dados);
   } finally {
     window.clearTimeout(timeout);
   }

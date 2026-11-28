@@ -151,9 +151,9 @@ function criarPizza(id, dados, categoria, valor) {
 function criarGraficoRebanho() {
   // Converte a resposta "larga" (um campo para cada ano) no formato esperado
   // pelas séries do amCharts e usa o último ano na pizza de participação.
-  const dadosBase = DADOS_CORTE.rebanhoCorte.filter(item => ufSelecionadaCorte(item.uf));
+  const dadosBase = DADOS_CORTE.rebanhoCorte.filter(item => ufSelecionadaCorte(item.estado));
   const anos = anosDeObjetoSerie(dadosBase).filter(dentroPeriodo);
-  const estados = dadosBase.map(item => item.uf);
+  const estados = dadosBase.map(item => item.estado);
   atualizarTexto("subRebanhoCorte", `Milhões de cabeças (${periodoLabel()})`);
   if (!anos.length) {
     atualizarTexto("tituloRebanhoPartic", "Participação no Rebanho das UFs Exibidas");
@@ -162,16 +162,16 @@ function criarGraficoRebanho() {
     mostrarSemDadosChart("chartRebanhoPartic", mensagem);
     return;
   }
-  criarLinhas("chartRebanhoCorte", dadosSeriePorAno(dadosBase, "uf", anos, formatarMilhoes), "ano", estados, " mi cab.");
+  criarLinhas("chartRebanhoCorte", dadosSeriePorAno(dadosBase, "estado", anos, formatarMilhoes), "ano", estados, " mi cab.");
 
   const anoFinal = Math.max(...anos);
   atualizarTexto("tituloRebanhoPartic", `Participação no Rebanho das UFs Exibidas (${anoFinal || filtrosCorte.anoFim})`);
-  const ufsParticipacao = dadosBase.filter(item => !["Brasil", "Centro-Oeste"].includes(item.uf));
+  const ufsParticipacao = dadosBase.filter(item => !["Brasil", "Centro-Oeste"].includes(item.estado));
   if (!ufsParticipacao.length) {
     mostrarSemDadosChart("chartRebanhoPartic", "Selecione um estado para ver a participação no rebanho.");
     return;
   }
-  criarPizza("chartRebanhoPartic", ufsParticipacao.filter(item => item[String(anoFinal)]).map(item => ({ uf: item.uf, quantidadeCabecas: item[String(anoFinal)] })), "uf", "quantidadeCabecas");
+  criarPizza("chartRebanhoPartic", ufsParticipacao.filter(item => item[String(anoFinal)]).map(item => ({ estado: item.estado, quantidadeCabecas: item[String(anoFinal)] })), "estado", "quantidadeCabecas");
 }
 
 // Agrega os registros trimestrais de abate segundo a métrica selecionada.
@@ -179,15 +179,15 @@ function criarGraficoAbate() {
   // Quando todos os trimestres estão selecionados, anos incompletos são omitidos
   // para que a comparação anual não misture totais parciais com totais fechados.
   const series = seriesAbateCorte(filtrosCorte.trimestre, campoAbateCorte());
-  const ufs = series.filter(item => ufSelecionadaCorte(item.uf)).map(item => item.uf);
-  const dados = series.filter(item => ufs.includes(item.uf));
+  const ufs = series.filter(item => ufSelecionadaCorte(item.estado)).map(item => item.estado);
+  const dados = series.filter(item => ufs.includes(item.estado));
   const anos = anosDeObjetoSerie(dados);
-  const acumulado = dadosSeriePorAno(dados, "uf", anos, formatarMilhoes);
+  const acumulado = dadosSeriePorAno(dados, "estado", anos, formatarMilhoes);
   const sufixo = filtrosCorte.metricaAbate === "peso" ? " mil t" : " mi cab.";
   const trimestre = filtrosCorte.trimestre === "all" ? "todos os trimestres" : `${filtrosCorte.trimestre} trimestre`;
   atualizarTexto("subAbateBovinos", `${filtrosCorte.metricaAbate === "peso" ? "Peso total das carcaças" : "Cabeças abatidas"} · ${trimestre} · ${periodoLabel()}`);
   if (!anos.length) {
-    const registros = DADOS_CORTE.abateBovinos.filter(item => ufSelecionadaCorte(item.uf) && temMedicao(item[campoAbateCorte()]));
+    const registros = DADOS_CORTE.abateBovinos.filter(item => ufSelecionadaCorte(item.estado) && temMedicao(item[campoAbateCorte()]));
     if (!registros.length) return mostrarSemDadosChart("chartAbateBovinos", "Não há dados de abate para os estados escolhidos.");
     const temAnoParcial = filtrosCorte.trimestre === "all" && registros.some(item => dentroPeriodo(item.ano));
     const mensagem = temAnoParcial ? "O total anual precisa dos dados dos quatro trimestres. Escolha um trimestre ou outro período."
@@ -210,13 +210,13 @@ function seriesAbateCorte(trimestre, campo, limitarPeriodo = true) {
   for (const item of DADOS_CORTE.abateBovinos) {
     if ((limitarPeriodo && !dentroPeriodo(item.ano)) || !temMedicao(item[campo])) continue;
     if (trimestre !== "all" && item.trimestre !== trimestre) continue;
-    if (!porUf.has(item.uf)) porUf.set(item.uf, new Map());
-    const anos = porUf.get(item.uf);
+    if (!porUf.has(item.estado)) porUf.set(item.estado, new Map());
+    const anos = porUf.get(item.estado);
     if (!anos.has(item.ano)) anos.set(item.ano, new Map());
     anos.get(item.ano).set(item.trimestre, Number(item[campo]));
   }
-  return [...porUf].map(([uf, anos]) => {
-    const linha = { uf };
+  return [...porUf].map(([estado, anos]) => {
+    const linha = { estado };
     for (const [ano, trimestres] of anos) {
       if (trimestre !== "all" || trimestres.size === 4) {
         linha[ano] = [...trimestres.values()].reduce((total, valor) => total + valor, 0);
@@ -228,7 +228,7 @@ function seriesAbateCorte(trimestre, campo, limitarPeriodo = true) {
 
 function valoresUfsCorte() {
   const dados = [...DADOS_CORTE.rebanhoCorte, ...DADOS_CORTE.abateBovinos];
-  return [...new Set(dados.map(item => codigoUfPainel(item.uf)))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  return [...new Set(dados.map(item => codigoUfPainel(item.estado)))].sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
 // Resume uma seleção múltipla no texto curto exibido pelo botão do dropdown.
@@ -439,7 +439,7 @@ async function buscarEndpointCorte(nome) {
     if (!resposta.ok) throw new Error(`${nome}: HTTP ${resposta.status}`);
     const dados = await resposta.json();
     if (!Array.isArray(dados) || !dados.length) throw new Error(`${nome}: resposta vazia`);
-    return dados;
+    return normalizarEstadoDaApi(dados);
   } finally {
     window.clearTimeout(timeout);
   }
@@ -449,9 +449,9 @@ async function buscarEndpointCorte(nome) {
 function montarRebanhoLargo(linhas) {
   const series = new Map();
   for (const linha of linhas) {
-    if (!linha.uf || !/^\d{4}$/.test(linha.ano) || !temMedicao(linha.quantidadeCabecas)) continue;
-    if (!series.has(linha.uf)) series.set(linha.uf, { uf: linha.uf });
-    series.get(linha.uf)[linha.ano] = Number(linha.quantidadeCabecas);
+    if (!linha.estado || !/^\d{4}$/.test(linha.ano) || !temMedicao(linha.quantidadeCabecas)) continue;
+    if (!series.has(linha.estado)) series.set(linha.estado, { estado: linha.estado });
+    series.get(linha.estado)[linha.ano] = Number(linha.quantidadeCabecas);
   }
   return [...series.values()];
 }
@@ -488,34 +488,34 @@ function atualizarKpiSerieCorte(id, titulo, serie, sufixo = "", compararCobertur
 
 function serieRecorteCorte(series) {
   const selecionadas = [...filtrosCorte.ufs];
-  const oficial = series.find(item => item.uf === "Centro-Oeste");
+  const oficial = series.find(item => item.estado === "Centro-Oeste");
   if (!selecionadas.length && oficial) return oficial;
   if (selecionadas.length === 1) {
-    return series.find(item => ufSelecionadaCorte(item.uf)) || { uf: selecionadas[0] };
+    return series.find(item => ufSelecionadaCorte(item.estado)) || { estado: selecionadas[0] };
   }
 
   const regional = !selecionadas.length;
-  const localidades = series.filter(item => regional ? localidadeCentroOeste(item.uf)
-    : !["Brasil", "Centro-Oeste"].includes(item.uf) && ufSelecionadaCorte(item.uf));
-  const resumo = { uf: regional ? "Centro-Oeste" : "UFs selecionadas", cobertura: {} };
+  const localidades = series.filter(item => regional ? localidadeCentroOeste(item.estado)
+    : !["Brasil", "Centro-Oeste"].includes(item.estado) && ufSelecionadaCorte(item.estado));
+  const resumo = { estado: regional ? "Centro-Oeste" : "UFs selecionadas", cobertura: {} };
   anosDeObjetoSerie(localidades).forEach(ano => {
     const fontes = localidades.filter(item => Number.isFinite(item[ano]));
     if (!regional && fontes.length !== selecionadas.length) return;
     resumo[ano] = fontes.reduce((total, item) => total + item[ano], 0);
-    if (regional) resumo.cobertura[ano] = fontes.map(item => codigoUfPainel(item.uf)).sort().join(", ");
+    if (regional) resumo.cobertura[ano] = fontes.map(item => codigoUfPainel(item.estado)).sort().join(", ");
   });
   return resumo;
 }
 
 function atualizarRebanhoCorte() {
   const series = DADOS_CORTE.rebanhoCorte;
-  atualizarKpiSerieCorte("kpiCorteRebanhoBrasil", "Rebanho Brasil", series.find(item => item.uf === "Brasil") || {});
+  atualizarKpiSerieCorte("kpiCorteRebanhoBrasil", "Rebanho Brasil", series.find(item => item.estado === "Brasil") || {});
   const recorte = serieRecorteCorte(series);
-  atualizarKpiSerieCorte("kpiCorteRebanhoRecorte", `Rebanho ${recorte.uf}`, recorte, "", true);
+  atualizarKpiSerieCorte("kpiCorteRebanhoRecorte", `Rebanho ${recorte.estado}`, recorte, "", true);
 
   const tabela = document.querySelector("#tabelaRebanhoCorte table");
   if (!tabela) return;
-  const dados = series.filter(uf => ufSelecionadaCorte(uf.uf));
+  const dados = series.filter(item => ufSelecionadaCorte(item.estado));
   const anos = anosDeObjetoSerie(dados).filter(dentroPeriodo);
   const primeiro = anos[0];
   const ultimo = anos.at(-1);
@@ -529,7 +529,7 @@ function atualizarRebanhoCorte() {
     const variacao = item[primeiro] > 0 && Number.isFinite(item[ultimo]) && primeiro !== ultimo
       ? percentualCorte((item[ultimo] / item[primeiro] - 1) * 100) : "—";
     const linha = tbody.insertRow();
-    linha.insertCell().textContent = item.uf;
+    linha.insertCell().textContent = item.estado;
     [...colunas.map(ano => Number.isFinite(item[ano]) ? numeroMiCorte(item[ano]) : "—"), variacao].forEach(valor => {
       const celula = linha.insertCell();
       celula.className = "text-end num";
@@ -543,13 +543,13 @@ function atualizarAbateCorte() {
   const series = seriesAbateCorte(trimestre, "quantidadeAbatida");
   const sufixo = trimestre === "all" ? "" : ` · ${trimestre} trimestre`;
   atualizarTexto("subTabelaAbateCorte", trimestre === "all" ? "Milhões de cabeças · totais anuais" : `Milhões de cabeças · ${trimestre} trimestre`);
-  atualizarKpiSerieCorte("kpiCorteAbateBrasil", "Abate Brasil", series.find(item => item.uf === "Brasil") || {}, sufixo);
+  atualizarKpiSerieCorte("kpiCorteAbateBrasil", "Abate Brasil", series.find(item => item.estado === "Brasil") || {}, sufixo);
   const recorte = serieRecorteCorte(series);
-  atualizarKpiSerieCorte("kpiCorteAbateRecorte", `Abate ${recorte.uf}`, recorte, sufixo, true);
+  atualizarKpiSerieCorte("kpiCorteAbateRecorte", `Abate ${recorte.estado}`, recorte, sufixo, true);
 
   const tabela = document.querySelector("#tabelaAbateCorte table");
   if (!tabela) return;
-  const dados = series.filter(item => ufSelecionadaCorte(item.uf));
+  const dados = series.filter(item => ufSelecionadaCorte(item.estado));
   const anos = anosDeObjetoSerie(dados);
   const exibidos = anos.filter((_ano, indice) => indice % 2 === 0);
   if (anos.length && exibidos.at(-1) !== anos.at(-1)) exibidos.push(anos.at(-1));
@@ -559,7 +559,7 @@ function atualizarAbateCorte() {
     const th = document.createElement("th");
     th.scope = "col";
     th.className = "text-end";
-    th.textContent = item.uf;
+    th.textContent = item.estado;
     cabecalho.append(th);
   });
   const tbody = tabela.querySelector("tbody");
@@ -593,7 +593,7 @@ async function carregarDadosCorte() {
       if (nome === "rebanho") {
         DADOS_CORTE.rebanhoCorte = montarRebanhoLargo(resultado.value);
       } else {
-        DADOS_CORTE.abateBovinos = resultado.value.filter(item => item.uf && temMedicao(item.ano))
+        DADOS_CORTE.abateBovinos = resultado.value.filter(item => item.estado && temMedicao(item.ano))
           .map(item => ({ ...item, ano: Number(item.ano) }));
       }
       window.dashboardDataUi.definirEstado(ALVOS_API_CORTE[nome], "ready");

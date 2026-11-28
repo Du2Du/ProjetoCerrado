@@ -45,6 +45,15 @@ function temMedicao(valor) {
         && Number.isFinite(Number(valor));
 }
 
+// Dá prioridade a estado e aceita o campo anterior durante a transição das APIs.
+function normalizarEstadoDaApi(registros) {
+    return registros.map(registro => {
+        if (!registro || !Object.hasOwn(registro, "uf")) return registro;
+        const { uf, ...dados } = registro;
+        return { ...dados, estado: dados.estado ?? uf };
+    });
+}
+
 const codigosUfPainel = new Map([
     ["Acre", "AC"], ["Alagoas", "AL"], ["Amapá", "AP"], ["Amazonas", "AM"],
     ["Bahia", "BA"], ["Ceará", "CE"], ["Distrito Federal", "DF"], ["Espírito Santo", "ES"],

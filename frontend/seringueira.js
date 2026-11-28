@@ -110,7 +110,7 @@ async function buscarEndpointSeringueira(nome) {
       if (!resposta.ok) throw new Error(`${nome}: HTTP ${resposta.status}`);
       const payload = await resposta.json();
       if (!Array.isArray(payload) || !payload.length) throw new ErroDadosVazios("O Servidor não retornou registros.");
-      return payload;
+      return normalizarEstadoDaApi(payload);
     } finally {
       window.clearTimeout(timeout);
     }
@@ -136,10 +136,10 @@ function seriePamDoRecorte(dados, campo) {
   const ufs = recortePam();
   const porAno = new Map();
   for (const item of dados) {
-    if (!ufs.includes(item.uf) || !produtoSelecionado(item.produto)
+    if (!ufs.includes(item.estado) || !produtoSelecionado(item.produto)
       || item.ano < estadoFiltros.anoInicio || item.ano > estadoFiltros.anoFim) continue;
     if (!porAno.has(item.ano)) porAno.set(item.ano, new Map());
-    porAno.get(item.ano).set(item.uf, item[campo]);
+    porAno.get(item.ano).set(item.estado, item[campo]);
   }
   return new Map([...porAno].filter(([, valores]) => valores.size === ufs.length)
     .map(([ano, valores]) => [ano, [...valores.values()].reduce((soma, valor) => soma + valor, 0)]));
@@ -288,9 +288,9 @@ async function carregarDadosApiSeringueira() {
     try {
       const pam = resposta.pam.value;
       const mapear = (campoOrigem, campoDestino, unidadeMedida) => pam
-        .filter(item => item.uf && temMedicao(item[campoOrigem]))
+        .filter(item => item.estado && temMedicao(item[campoOrigem]))
         .map(item => ({
-          ano: Number(item.ano), uf: item.uf, produto: PRODUTO_BORRACHA,
+          ano: Number(item.ano), estado: item.estado, produto: PRODUTO_BORRACHA,
           unidadeMedida, [campoDestino]: Number(item[campoOrigem])
         }));
       dadosProducao = mapear("producao", "quantidadeProduzidaToneladas", "Toneladas");
@@ -299,7 +299,7 @@ async function carregarDadosApiSeringueira() {
       dadosProdutividade = mapear("rendimento", "produtividadeKgPorHectare", "Quilogramas por Hectare");
       dadosValorProducao = mapear("valor", "valorProducaoMilReais", "Mil Reais");
       dadosAreaPerda = pam.filter(item => Number(item.areaDestinada) > 0 && temMedicao(item.areaColhida)).map(item => ({
-        ano: Number(item.ano), uf: item.uf, produto: PRODUTO_BORRACHA, unidadeMedida: "%",
+        ano: Number(item.ano), estado: item.estado, produto: PRODUTO_BORRACHA, unidadeMedida: "%",
         percentualPerdaArea: Math.max(0, (Number(item.areaDestinada) - Number(item.areaColhida)) / Number(item.areaDestinada) * 100)
       }));
       const alvosPam = [...ALVOS_API.producao, ...ALVOS_API.areas, ...ALVOS_API.produtividade, ...ALVOS_API.valor, ...ALVOS_API.indicadores];
@@ -331,10 +331,10 @@ async function carregarDadosApiSeringueira() {
 function buildDadosUF(dados, campoValor) {
   const porAno = new Map();
   for (const item of dados) {
-    if (!produtoSelecionado(item.produto) || !ufSelecionada(item.uf)
+    if (!produtoSelecionado(item.produto) || !ufSelecionada(item.estado)
       || item.ano < estadoFiltros.anoInicio || item.ano > estadoFiltros.anoFim) continue;
     if (!porAno.has(item.ano)) porAno.set(item.ano, { ano: String(item.ano) });
-    porAno.get(item.ano)[item.uf] = item[campoValor];
+    porAno.get(item.ano)[item.estado] = item[campoValor];
   }
   return [...porAno.values()].sort((a, b) => Number(a.ano) - Number(b.ano));
 }
@@ -382,7 +382,7 @@ function criarGraficoLinhasUF(containerId, dados, campoValor, sufixoTooltip) {
   eixoX.data.setAll(dadosGrafico);
 
   const seriesMap = {};
-  [...new Set(dados.map(item => item.uf))].sort((a, b) => a.localeCompare(b, "pt-BR")).forEach((uf, indice) => {
+  [...new Set(dados.map(item => item.estado))].sort((a, b) => a.localeCompare(b, "pt-BR")).forEach((uf, indice) => {
     const cor = P[indice % P.length];
     const serie = chart.series.push(am5xy.LineSeries.new(root, {
       name: uf, xAxis: eixoX, yAxis: eixoY,
@@ -658,7 +658,7 @@ function atualizarOpcoesSeringueira() {
     select.value = indice === 0 ? estadoFiltros.anoInicio : estadoFiltros.anoFim;
     select.disabled = !anos.length;
   });
-  const localidades = dados.map(item => item.uf);
+  const localidades = dados.map(item => item.estado);
   const produtos = [...dados, ...dadosEstabelecimentos].map(item => item.produto);
   [
     ["Uf", "ufs", localidades, "Todas"],

@@ -61,8 +61,8 @@ const ENDPOINTS_LEITE = Object.freeze({
   producao: "producao-uf",
   regioes: "regioes",
   centroOeste: "centro-oeste",
-  mesorregioes: "goias-meso",
-  municipios: "goias-municipios",
+  mesorregioes: "mesorregioes",
+  municipios: "municipios",
   ranking: "ranking-consumo"
 });
 
@@ -207,7 +207,7 @@ async function buscarEndpointLeite(nome) {
     if (!resposta.ok) throw new Error(`${nome}: HTTP ${resposta.status}`);
     const dados = await resposta.json();
     if (!Array.isArray(dados) || !dados.length) throw new ErroDadosVazios(`${nome}: resposta vazia`);
-    return dados;
+    return normalizarEstadoDaApi(dados);
   } finally {
     window.clearTimeout(timeout);
   }
@@ -300,9 +300,9 @@ async function carregarDadosNovaApiLeite() {
   };
 
   processar("producao", linhas => {
-    linhas = linhas.filter(item => item.uf && temMedicao(item.producaoBilhoesLitros));
-    SERIES_PRODUCAO_UF = [...new Set(linhas.map(item => item.uf))];
-    DADOS_LEITE.producaoBilhoes = pivotarLeitePorAno(linhas, "uf", "producaoBilhoesLitros", "Ano");
+    linhas = linhas.filter(item => item.estado && temMedicao(item.producaoBilhoesLitros));
+    SERIES_PRODUCAO_UF = [...new Set(linhas.map(item => item.estado))];
+    DADOS_LEITE.producaoBilhoes = pivotarLeitePorAno(linhas, "estado", "producaoBilhoesLitros", "Ano");
     metadadosApi.anosProducao = ordenarAnos(linhas.map(item => item.ano));
     atualizarTextoVisualizacao("chartLeiteSeries", {
       subtitulo: `Bilhões de litros por ano (${periodoTexto(metadadosApi.anosProducao)})`
@@ -319,14 +319,13 @@ async function carregarDadosNovaApiLeite() {
 
   processar("centroOeste", linhas => {
     metadadosApi.centroOesteLinhas = linhas;
-    const linhasRebanho = linhas.filter(item => item.uf && temMedicao(item.rebanho));
-    DADOS_LEITE.rebanhoCO = pivotarLeitePorNome(linhasRebanho, "uf", "rebanho", "uf");
-    SERIES_UF_CO = DADOS_LEITE.rebanhoCO.map(item => item.uf).filter(uf => uf !== "Centro-Oeste");
+    const linhasRebanho = linhas.filter(item => item.estado && temMedicao(item.rebanho));
+    DADOS_LEITE.rebanhoCO = pivotarLeitePorNome(linhasRebanho, "estado", "rebanho", "estado");
+    SERIES_UF_CO = DADOS_LEITE.rebanhoCO.map(item => item.estado).filter(uf => uf !== "Centro-Oeste");
   });
 
   processar("mesorregioes", linhas => {
-    // Este endpoint só contém Goiás e não inclui UF no contrato atual.
-    linhasMesorregionais = linhas.map(item => ({ ...item, uf: item.uf || "GO" }));
+    linhasMesorregionais = linhas;
     SERIES_MESO = [...new Set(linhasMesorregionais.filter(item => temMedicao(item.producao)).map(item => item.mesorregiao))];
     SERIES_VACAS_MESO = [...new Set(linhasMesorregionais.filter(item => temMedicao(item.vacas)).map(item => item.mesorregiao))];
     const producaoMilhoes = linhasMesorregionais.filter(item => temMedicao(item.producao)).map(item => ({
@@ -337,8 +336,7 @@ async function carregarDadosNovaApiLeite() {
   });
 
   processar("municipios", linhas => {
-    // O endpoint atual oferece somente municípios selecionados de Goiás.
-    linhasMunicipais = linhas.map(item => ({ ...item, uf: item.uf || "GO" }));
+    linhasMunicipais = linhas;
     TODOS_MUNICIPIOS = [...new Set(linhasMunicipais.filter(item => temMedicao(item.producao)).map(item => item.municipio))];
     DADOS_LEITE.municipiosProducao = pivotarLeitePorAno(linhasMunicipais, "municipio", "producao");
     DADOS_LEITE.produtividadeMunicipios = pivotarLeitePorNome(
@@ -349,9 +347,9 @@ async function carregarDadosNovaApiLeite() {
   });
 
   processar("ranking", linhas => {
-    DADOS_LEITE.rankingConsumo = linhas.filter(item => item.uf && item.produto && temMedicao(item.posicao)).map(item => ({
-      produto: item.produto, uf: item.uf, melhorPosicao: Number(item.posicao), ano: Number(item.ano),
-      categoria: `${item.produto} — ${item.uf}`
+    DADOS_LEITE.rankingConsumo = linhas.filter(item => item.estado && item.produto && temMedicao(item.posicao)).map(item => ({
+      produto: item.produto, estado: item.estado, melhorPosicao: Number(item.posicao), ano: Number(item.ano),
+      categoria: `${item.produto} — ${item.estado}`
     }));
   });
 
@@ -417,7 +415,7 @@ function atualizarCardsLeite() {
     const codigo = codigoUfPainel(localidade);
     const nomeSerie = SERIES_PRODUCAO_UF.find(uf => codigoUfPainel(uf) === codigo);
     const regional = (metadadosApi.centroOesteLinhas || [])
-      .filter(item => codigoUfPainel(item.uf) === codigo && temMedicao(item.producao))
+      .filter(item => codigoUfPainel(item.estado) === codigo && temMedicao(item.producao))
       .map(item => ({ ano: item.ano, valor: Number(item.producao) / 1_000_000 }));
     const nacional = DADOS_LEITE.producaoBilhoes
       .filter(item => Number.isFinite(item[nomeSerie]))
@@ -710,8 +708,9 @@ function serieComparativa(anos, nomeInicio = "Início", nomeFim = "Fim") {
 }
 
 // Cria um gráfico de linhas reutilizável e registra seu método de atualização.
-function graficoLinhas(id, categoria, series, sufixo = "") {
-  if (!existe(id)) return;
+function graficoLinhas(id, categoria, series, sufixo = "", alturaSemLegenda = 0) {
+  const elemento = document.getElementById(id);
+  if (!elemento) return;
   const root = criarRoot(id);
   const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
   const xA = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: categoria, renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 35 }), tooltip: am5.Tooltip.new(root, {}) }));
@@ -728,7 +727,16 @@ function graficoLinhas(id, categoria, series, sufixo = "") {
     s.bullets.push(() => am5.Bullet.new(root, { sprite: am5.Circle.new(root, { radius: 3, fill: s.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2 }) }));
     seriesMap[nome] = s;
   });
-  criarLegenda(chart, root).data.setAll(chart.series.values);
+  const legenda = criarLegenda(chart, root);
+  if (alturaSemLegenda) {
+    const ajustarAltura = () => {
+      // Reserva espaço para as linhas quando a legenda ocupa várias fileiras.
+      elemento.style.height = `${Math.ceil(alturaSemLegenda + legenda.height())}px`;
+    };
+    ajustarAltura();
+    legenda.events.on("boundschanged", ajustarAltura);
+  }
+  legenda.data.setAll(chart.series.values);
   graficos[id] = {
     // Substitui dados e alterna apenas as séries selecionadas no filtro.
     update(data, seriesAtivas = series) {
@@ -746,7 +754,7 @@ function graficoLinhas(id, categoria, series, sufixo = "") {
   chart.appear(800, 80);
 }
 // Cria barras verticais ou horizontais para uma única medida.
-function graficoBarras(id, categoria, valor, horizontal = false, sufixo = "") {
+function graficoBarras(id, categoria, valor, horizontal = false, sufixo = "", quebrarRotulos = false) {
   if (!existe(id)) return;
   const root = criarRoot(id);
   const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
@@ -756,7 +764,13 @@ function graficoBarras(id, categoria, valor, horizontal = false, sufixo = "") {
   }));
   const vA = (horizontal ? chart.xAxes : chart.yAxes).push(am5xy.ValueAxis.new(root, { renderer: horizontal ? am5xy.AxisRendererX.new(root, {}) : am5xy.AxisRendererY.new(root, {}) }));
   eixo(cA); eixo(vA);
-  cA.get("renderer").labels.template.setAll({ oversizedBehavior: "truncate", maxWidth: horizontal ? 130 : 90 });
+  const rotulos = cA.get("renderer").labels.template;
+  if (quebrarRotulos) {
+    rotulos.setAll({ oversizedBehavior: "wrap", textAlign: "center" });
+    cA.onPrivate("cellWidth", largura => rotulos.set("maxWidth", largura));
+  } else {
+    rotulos.setAll({ oversizedBehavior: "truncate", maxWidth: horizontal ? 130 : 90 });
+  }
   const s = chart.series.push(am5xy.ColumnSeries.new(root, {
     xAxis: horizontal ? vA : cA, yAxis: horizontal ? cA : vA,
     valueXField: horizontal ? valor : undefined, valueYField: horizontal ? undefined : valor,
@@ -777,28 +791,46 @@ function graficoBarras(id, categoria, valor, horizontal = false, sufixo = "") {
   chart.appear(800, 80);
 }
 // Cria barras lado a lado para comparar várias séries por categoria.
-function graficoBarrasAgrupadas(id, categoria, series, sufixo = "") {
-  if (!existe(id)) return;
+function graficoBarrasAgrupadas(id, categoria, series, sufixo = "", horizontal = false) {
+  const elemento = document.getElementById(id);
+  if (!elemento) return;
   const root = criarRoot(id);
   const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
-  const xA = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: categoria, renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 12 }) }));
-  const yA = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
-  eixo(xA); eixo(yA);
-  xA.get("renderer").labels.template.setAll({ oversizedBehavior: "truncate", maxWidth: 100 });
+  const rendererCategoria = horizontal ? am5xy.AxisRendererY.new(root, { minGridDistance: 24, inversed: true })
+    : am5xy.AxisRendererX.new(root, { minGridDistance: 12 });
+  const rendererValor = horizontal ? am5xy.AxisRendererX.new(root, {}) : am5xy.AxisRendererY.new(root, {});
+  const eixoCategoria = (horizontal ? chart.yAxes : chart.xAxes).push(am5xy.CategoryAxis.new(root, { categoryField: categoria, renderer: rendererCategoria }));
+  const eixoValor = (horizontal ? chart.xAxes : chart.yAxes).push(am5xy.ValueAxis.new(root, { renderer: rendererValor }));
+  eixo(eixoCategoria); eixo(eixoValor);
+  if (horizontal) {
+    rendererCategoria.labels.template.setAll({ oversizedBehavior: "wrap", maxWidth: 260 });
+    chart.events.on("boundschanged", () => {
+      const largura = Math.floor(elemento.clientWidth * 0.45);
+      if (largura > 0) rendererCategoria.labels.template.set("maxWidth", Math.min(260, largura));
+    });
+  } else {
+    rendererCategoria.labels.template.setAll({ oversizedBehavior: "truncate", maxWidth: 100 });
+  }
   const seriesMap = {};
   series.forEach((cfg, idx) => {
     const s = chart.series.push(am5xy.ColumnSeries.new(root, {
-      name: cfg.nome, xAxis: xA, yAxis: yA, valueYField: cfg.campo, categoryXField: categoria, clustered: true,
-      tooltip: am5.Tooltip.new(root, { labelText: `${cfg.nome}: {valueY}${sufixo}` })
+      name: cfg.nome, xAxis: horizontal ? eixoValor : eixoCategoria, yAxis: horizontal ? eixoCategoria : eixoValor,
+      valueXField: horizontal ? cfg.campo : undefined, valueYField: horizontal ? undefined : cfg.campo,
+      categoryXField: horizontal ? undefined : categoria, categoryYField: horizontal ? categoria : undefined,
+      clustered: true,
+      tooltip: am5.Tooltip.new(root, { labelText: `${cfg.nome}: ${horizontal ? "{valueX}" : "{valueY}"}${sufixo}` })
     }));
-    s.columns.template.setAll({ width: am5.percent(55), cornerRadiusTL: 3, cornerRadiusTR: 3, fill: am5.color(P[idx]), stroke: am5.color(P[idx]) });
+    const formato = horizontal ? { height: am5.percent(55), cornerRadiusTR: 3, cornerRadiusBR: 3 }
+      : { width: am5.percent(55), cornerRadiusTL: 3, cornerRadiusTR: 3 };
+    s.columns.template.setAll({ ...formato, fill: am5.color(P[idx]), stroke: am5.color(P[idx]) });
     seriesMap[cfg.nome] = s;
   });
   criarLegenda(chart, root).data.setAll(chart.series.values);
   graficos[id] = {
     // Atualiza dados e mostra somente séries comparativas ainda aplicáveis.
     update(data, novasSeries = series) {
-      xA.data.setAll(data);
+      if (horizontal) elemento.style.height = `${Math.max(320, data.length * 48 + 80)}px`;
+      eixoCategoria.data.setAll(data);
       Object.entries(seriesMap).forEach(([nome, s]) => {
         const cfg = novasSeries.find(item => item.nome === nome);
         s.set("visible", !!cfg);
@@ -840,10 +872,10 @@ function inicializarEstruturaGraficos() {
   graficoLinhas("chartVacasRegiaoSerie", "ano", SERIES_REGIAO);
   graficoLinhas("chartGoiasMeso", "ano", SERIES_MESO);
   graficoPizza("chartGoiasMesoPie", "mesorregiao", "producao");
-  graficoBarrasAgrupadas("chartVacasGoias", "mesorregiao", [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }]);
-  graficoLinhas("chartVacasMesoSerie", "ano", SERIES_VACAS_MESO);
-  graficoBarras("chartLeiteProducaoCO", "uf", "producaoLeiteMilhoesLitros", false, " mil L");
-  graficoBarras("chartProducaoCentroOesteUf", "uf", "producaoLeiteMilhoesLitros", false, " mil L");
+  graficoBarrasAgrupadas("chartVacasGoias", "mesorregiao", [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }], "", true);
+  graficoLinhas("chartVacasMesoSerie", "ano", SERIES_VACAS_MESO, "", 370);
+  graficoBarras("chartLeiteProducaoCO", "estado", "producaoLeiteMilhoesLitros", false, " mil L");
+  graficoBarras("chartProducaoCentroOesteUf", "estado", "producaoLeiteMilhoesLitros", false, " mil L", true);
   graficoLinhas("chartRebanhoCO", "ano", SERIES_UF_CO);
   graficoLinhas("chartMunicipios", "ano", TODOS_MUNICIPIOS);
   graficoBarrasAgrupadas("chartMunicipiosBars", "municipio", [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }]);
@@ -867,7 +899,7 @@ function aplicarFiltros() {
   const regioes = estadoFiltros.ufs.length ? [] : seriesSelecionadas(SERIES_REGIAO, regioesSelecionadas);
   const retratoRegional = dados => dados.filter(item => regioes.includes(item.regiao));
   const mesorregioesComDados = new Set(filtrarLinhasPorAno(linhasMesorregionais)
-    .filter(item => ufSelecionadaLeite(item.uf)).map(item => item.mesorregiao));
+    .filter(item => ufSelecionadaLeite(item.estado)).map(item => item.mesorregiao));
   const mesorregioes = seriesSelecionadas(SERIES_MESO, regioesSelecionadas).filter(nome => mesorregioesComDados.has(nome));
   const mesorregioesVacas = seriesSelecionadas(SERIES_VACAS_MESO, regioesSelecionadas).filter(nome => mesorregioesComDados.has(nome));
   const ufsProducao = SERIES_PRODUCAO_UF.filter(uf => ufSelecionadaLeite(uf) && ufNoRecorteRegionalLeite(uf));
@@ -904,16 +936,16 @@ function aplicarFiltros() {
   graficos.chartVacasGoias?.update(dadosAgrupadosPorAnos(DADOS_LEITE.vacasMeso.filter(d => mesorregioesVacas.includes(d.mesorregiao)), "mesorregiao", comparacaoVacasMeso), [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }]);
   graficos.chartVacasMesoSerie?.update(dadosPorAno(DADOS_LEITE.vacasMeso, "mesorregiao", anosVacasMeso, mesorregioesVacas), mesorregioesVacas);
   const linhasCO = filtrarLinhasPorAno(metadadosApi.centroOesteLinhas || [])
-    .filter(item => !recorteSoMesorregioes && item.uf !== "Centro-Oeste" && temMedicao(item.producao));
-  const anoCO = ordenarAnos(linhasCO.filter(item => ufSelecionadaLeite(item.uf)).map(item => item.ano)).at(-1);
-  const producaoCO = linhasCO.filter(item => String(item.ano) === anoCO && ufSelecionadaLeite(item.uf))
-    .map(item => ({ uf: item.uf, producaoLeiteMilhoesLitros: Number(item.producao) }));
+    .filter(item => !recorteSoMesorregioes && item.estado !== "Centro-Oeste" && temMedicao(item.producao));
+  const anoCO = ordenarAnos(linhasCO.filter(item => ufSelecionadaLeite(item.estado)).map(item => item.ano)).at(-1);
+  const producaoCO = linhasCO.filter(item => String(item.ano) === anoCO && ufSelecionadaLeite(item.estado))
+    .map(item => ({ estado: item.estado, producaoLeiteMilhoesLitros: Number(item.producao) }));
   ["chartLeiteProducaoCO", "chartProducaoCentroOesteUf"].forEach(id => {
     atualizarTextoVisualizacao(id, { subtitulo: anoCO ? `Mil litros — ${anoCO}` : "Mil litros" });
   });
   graficos.chartLeiteProducaoCO?.update(producaoCO);
   graficos.chartProducaoCentroOesteUf?.update(producaoCO);
-  graficos.chartRebanhoCO?.update(dadosPorAno(DADOS_LEITE.rebanhoCO.filter(d => d.uf !== "Centro-Oeste"), "uf", anosRebanho, ufsCO), ufsCO);
+  graficos.chartRebanhoCO?.update(dadosPorAno(DADOS_LEITE.rebanhoCO.filter(d => d.estado !== "Centro-Oeste"), "estado", anosRebanho, ufsCO), ufsCO);
 
   graficos.chartMunicipios?.update(filtrarLinhasPorAno(DADOS_LEITE.municipiosProducao).map(d => ({ ...d, ano: String(d.ano) })), municipios);
   graficos.chartMunicipiosBars?.update(municipios.map(municipio => ({ municipio, "Início": DADOS_LEITE.municipiosProducao.find(d => String(d.ano) === anosMunicipios[0])?.[municipio], "Fim": DADOS_LEITE.municipiosProducao.find(d => String(d.ano) === anosMunicipios.at(-1))?.[municipio] })).filter(d => d.Início !== undefined || d.Fim !== undefined).sort((a, b) => (b.Fim || 0) - (a.Fim || 0)).slice(0, 10), [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }]);
@@ -935,7 +967,7 @@ function aplicarFiltros() {
 
   renderizarTabelaProdutividadeMunicipios(municipios);
   const ranking = filtrarLinhasPorAno(DADOS_LEITE.rankingConsumo)
-    .filter(item => temIntersecaoProduto(item.produto) && ufNoRankingLeite(item.uf));
+    .filter(item => temIntersecaoProduto(item.produto) && ufNoRankingLeite(item.estado));
   const anoRanking = ordenarAnos(ranking.map(item => item.ano)).at(-1);
   const recorteRanking = estadoFiltros.ufs.length ? "UFs selecionadas" : estadoFiltros.regioes.join(", ") || "Centro-Oeste";
   atualizarTextoVisualizacao("chartRankingConsumo", {
@@ -958,13 +990,15 @@ function atualizarVisibilidadeCards() {
   const temFiltroUf = estadoFiltros.ufs.length > 0;
   const centroOesteCompativel = !filtroMesorregiaoAtivo()
     && (!temFiltroUf || estadoFiltros.ufs.some(localidadeCentroOeste));
+  const mesorregioesCompativeis = !temFiltroUf || !linhasMesorregionais.length
+    || linhasMesorregionais.some(item => ufSelecionadaLeite(item.estado));
   document.querySelectorAll("[data-category]").forEach(coluna => {
     const grafico = coluna.querySelector(".chart-area");
     const id = grafico?.id;
     const produtoOk = !estadoFiltros.produtos.length
       || (grafico ? id === "chartRankingConsumo" : coluna.dataset.category === "mercado");
     const localidadeOk = (!ALVOS_API.regioes.includes(id) || !temFiltroUf)
-      && (!ALVOS_API.mesorregioes.includes(id) || ufSelecionadaLeite("GO"))
+      && (!ALVOS_API.mesorregioes.includes(id) || mesorregioesCompativeis)
       && (!ALVOS_API.centroOeste.includes(id) || centroOesteCompativel);
     coluna.classList.toggle("is-filter-hidden", !correspondeAoIndicador(coluna, estadoFiltros.indicador) || !produtoOk || !localidadeOk);
   });
@@ -1009,7 +1043,7 @@ function ufSelecionadaLeite(uf) {
 function municipiosDisponiveisLeite() {
   const produtividade = estadoFiltros.indicador === "produtividade";
   return [...new Set(filtrarLinhasPorAno(linhasMunicipais)
-    .filter(item => ufSelecionadaLeite(item.uf) && temMedicao(item.producao) && (!produtividade || Number(item.vacas) > 0))
+    .filter(item => ufSelecionadaLeite(item.estado) && temMedicao(item.producao) && (!produtividade || Number(item.vacas) > 0))
     .map(item => item.municipio))].sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
@@ -1051,11 +1085,11 @@ function atualizarOpcoesDependentesLeite() {
 
   const ufs = new Map();
   [
-    ...(fontes.ranking || []).map(item => item.uf),
-    ...(fontes.mesorregioes || []).map(item => item.uf),
-    ...(fontes.municipios || []).map(item => item.uf),
+    ...(fontes.ranking || []).map(item => item.estado),
+    ...(fontes.mesorregioes || []).map(item => item.estado),
+    ...(fontes.municipios || []).map(item => item.estado),
     ...(fontes.producao || []).flatMap(item => Object.keys(item).filter(chave => chave !== "Ano")),
-    ...(fontes.centroOeste || []).map(item => item.uf)
+    ...(fontes.centroOeste || []).map(item => item.estado)
   ].filter(uf => uf && uf !== "Centro-Oeste").forEach(uf => ufs.set(codigoUfPainel(uf), uf));
 
   const opcoesUf = [...ufs.values()];
@@ -1063,10 +1097,10 @@ function atualizarOpcoesDependentesLeite() {
   const mesorregioes = (fontes.mesorregioes || []).map(item => item.mesorregiao);
   const regioes = [
     ...(fontes.regioes || []).map(item => item.regiao),
-    ...(fontes.ranking || []).map(item => regiaoDaUfLeite(item.uf)).filter(Boolean)
+    ...(fontes.ranking || []).map(item => regiaoDaUfLeite(item.estado)).filter(Boolean)
   ];
   const produtos = (fontes.ranking || [])
-    .filter(item => ufNoRankingLeite(item.uf) || estadoFiltros.produtos.includes(item.produto))
+    .filter(item => ufNoRankingLeite(item.estado) || estadoFiltros.produtos.includes(item.produto))
     .map(item => item.produto);
   const municipios = (fontes.municipios || []).map(item => item.municipio);
   [

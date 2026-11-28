@@ -6,7 +6,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
-    content="Pecuária de Leite — indicadores de produção, produtividade e mercado no Brasil e no Centro-Oeste, com recortes de Goiás." />
+    content="Pecuária de Leite — indicadores de produção, produtividade e mercado no Brasil e no Centro-Oeste." />
   <title>Pecuária de Leite · Projeto Cerrado</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="shared.css" />
@@ -168,7 +168,7 @@
     <div class="container position-relative">
       <span class="page-hero__label">Pecuária de Leite</span>
       <h1>Bovinocultura Leiteira</h1>
-      <p>Produção, produtividade e rebanho leiteiro no Brasil e no Centro-Oeste, com recortes de Goiás,
+      <p>Produção, produtividade e rebanho leiteiro no Brasil e no Centro-Oeste,
         mesorregiões e municípios em destaque.</p>
       <p class="page-hero__meta">Fonte: IBGE — Pesquisa Pecuária Municipal (PPM)</p>
     </div>
@@ -248,7 +248,7 @@
 
   <div class="tab-nav" role="tablist" aria-label="Seções da pecuária de leite">
     <button class="tab-nav__btn active" role="tab" aria-selected="true" data-tab="lt-brasil" id="btn-lt-brasil">Brasil
-      &amp; Regiões</button>
+      &amp; Centro-Oeste</button>
     <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="lt-mesorregioes" id="btn-lt-mesorregioes">Mesorregiões</button>
     <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="lt-municipios" id="btn-lt-municipios">Municípios</button>
     <button class="tab-nav__btn" role="tab" aria-selected="false" data-tab="lt-plano" id="btn-lt-plano">Plano de
@@ -367,20 +367,20 @@
           </div>
         </div>
 
-        <!-- ══ TAB: GOIÁS ════════════════════════════════════ -->
+        <!-- ══ TAB: Mesorregiões ════════════════════════════════════ -->
         <div data-tab-content="lt-mesorregioes" role="tabpanel" id="lt-mesorregioes" aria-labelledby="btn-lt-mesorregioes">
           <div class="row mb-2">
             <div class="col-12">
-              <p class="section-label">Goiás</p>
-              <h2 class="section-title">Produção por Mesorregião — Goiás</h2>
+              <p class="section-label">Centro-Oeste</p>
+              <h2 class="section-title">Produção por Mesorregião — Centro-Oeste</h2>
               <div class="section-divider"></div>
             </div>
           </div>
-          <p>Os dados de mesorregiões disponíveis nesta fonte cobrem Goiás.</p>
+          <p>Os dados de mesorregiões disponíveis nesta fonte cobrem o Centro-Oeste.</p>
           <div class="row g-4">
             <div class="col-lg-8" data-category="producao">
-              <div class="chart-card" role="figure" aria-label="Gráfico: Produção por mesorregião de Goiás">
-                <div class="chart-card__title">Produção por Mesorregião — Goiás</div>
+              <div class="chart-card" role="figure" aria-label="Gráfico: Produção por mesorregião do Centro-Oeste">
+                <div class="chart-card__title">Produção por Mesorregião — Centro-Oeste</div>
                 <div class="chart-card__sub">Milhões de litros</div>
                 <div id="chartGoiasMeso" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
@@ -388,7 +388,7 @@
             <div class="col-lg-4" data-category="producao">
               <div class="chart-card" role="figure" aria-label="Gráfico: Distribuição mesorregiões">
                 <div class="chart-card__title">Distribuição Mesorregiões</div>
-                <div class="chart-card__sub">% da produção goiana</div>
+                <div class="chart-card__sub">% da produção do Centro-Oeste</div>
                 <div id="chartGoiasMesoPie" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
@@ -419,12 +419,12 @@
               </div>
             </div>
           </div>
-<div class="row g-4">
-            <div class="col-lg-6" data-category="producao">
+          <div class="row g-4">
+            <div class="col-12" data-category="producao">
               <div class="chart-card" role="figure" aria-label="Gráfico: Produção no Centro-Oeste por UF">
                 <div class="chart-card__title">Produção no Centro-Oeste por UF</div>
                 <div class="chart-card__sub">Produção de leite</div>
-                <div id="chartProducaoCentroOesteUf" class="chart-area" aria-hidden="true"></div>
+                <div id="chartProducaoCentroOesteUf" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
 
@@ -436,11 +436,11 @@
           <div class="row mb-2">
             <div class="col-12">
               <p class="section-label">Municípios</p>
-              <h2 class="section-title">Maiores Produtores Municipais — Goiás</h2>
+              <h2 class="section-title">Maiores Produtores Municipais — Centro-Oeste</h2>
               <div class="section-divider"></div>
             </div>
           </div>
-          <p>Os dados municipais disponíveis nesta fonte cobrem municípios selecionados de Goiás.</p>
+          <p>Os dados municipais disponíveis nesta fonte cobrem municípios selecionados do Centro-Oeste.</p>
           <div class="row g-4">
             <div class="col-lg-7" data-category="producao">
               <div class="chart-card" role="figure"
@@ -457,7 +457,7 @@
                   <div class="chart-card__sub">Litros / vaca / ano</div>
                 </div>
                 <div class="table-responsive">
-                  <table class="table table-obs" aria-label="Produtividade dos maiores municípios goianos">
+                  <table class="table table-obs" aria-label="Produtividade dos principais municípios do Centro-Oeste">
                     <thead>
                       <tr>
                         <th scope="col">#</th>
