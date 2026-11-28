@@ -624,15 +624,16 @@
 
     /* ── CHART CARDS ───────────────────────────────────────── */
     .is-filter-hidden,
-    .filter-content-row:not(.filter-content-row--visible) {
+    .is-filter-empty,
+    .row:has(> [data-category]):not(:has(> [data-category]:not(.is-filter-hidden, .is-filter-empty, .is-chart-empty))) {
         display: none !important;
     }
 
-    .tab-content-obs [data-tab-content]>.filter-content-row--visible {
+    .tab-content-obs [data-tab-content] > .row:has(> [data-category]) {
         margin-top: 1.5rem;
     }
 
-    .tab-content-obs [data-tab-content]>.row.mb-4+.filter-content-row--visible {
+    .tab-content-obs [data-tab-content] > .row.mb-4 + .row:has(> [data-category]) {
         margin-top: 1.75rem;
     }
 

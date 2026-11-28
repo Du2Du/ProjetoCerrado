@@ -85,8 +85,8 @@ function containerDeDados(id) {
 
 const avisoSemDadosGrafico = "Não há dados para os filtros escolhidos.";
 
-function ativarTooltipDeLinhas(chart, root) {
-    chart.set("maxTooltipDistance", 0);
+function ativarTooltipDeSeries(chart, root, distancia = "xy") {
+    chart.setAll({ maxTooltipDistance: 0, maxTooltipDistanceBy: distancia });
     const cursor = chart.set("cursor", am5xy.XYCursor.new(root, {}));
     cursor.lineX.set("visible", false);
     cursor.lineY.set("visible", false);
@@ -97,13 +97,22 @@ function correspondeAoIndicador(coluna, indicador) {
     return indicador === "all" || (indicadores || [coluna.dataset.category]).includes(indicador);
 }
 
-function mostrarAvisoGrafico(id, mensagem = "") {
+function periodoGraficoFiltrado(idInicio, idFim) {
+    const inicio = document.getElementById(idInicio);
+    const fim = document.getElementById(idFim);
+    return (inicio?.options.length > 0 && inicio.value !== inicio.options[0].value)
+        || (fim?.options.length > 0 && fim.value !== fim.options[fim.options.length - 1].value);
+}
+
+function mostrarAvisoGrafico(id, mensagem = "", filtroAtivo = false) {
     const grafico = document.getElementById(id);
     const card = grafico?.closest(".chart-card");
     if (!card) return;
     const texto = card.matches(".data-card--loading, .data-card--error, .data-card--empty") ? "" : mensagem;
+    const oculto = Boolean(filtroAtivo && (texto || card.classList.contains("data-card--empty")));
+    card.closest("[data-category]")?.classList.toggle("is-filter-empty", oculto);
     let aviso = card.querySelector(":scope > .chart-empty");
-    if (texto && !aviso) {
+    if (texto && !oculto && !aviso) {
         aviso = document.createElement("div");
         aviso.className = "chart-empty";
         aviso.setAttribute("role", "status");
@@ -111,7 +120,7 @@ function mostrarAvisoGrafico(id, mensagem = "") {
     }
     grafico.hidden = Boolean(texto);
     if (aviso) {
-        aviso.hidden = !texto;
+        aviso.hidden = !texto || oculto;
         if (aviso.textContent !== texto) aviso.textContent = texto;
     }
 }
@@ -219,31 +228,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    let pendingFilterRowUpdate = false;
-    const updateFilterContentRows = () => {
-        pendingFilterRowUpdate = false;
-        document.querySelectorAll(".filter-content-row").forEach(row => {
-            const hasVisibleItem = Array.from(row.querySelectorAll("[data-category]")).some(el => {
-                return !el.classList.contains("is-filter-hidden") && getComputedStyle(el).display !== "none";
-            });
-            row.classList.toggle("filter-content-row--visible", hasVisibleItem);
-        });
-    };
-    const scheduleFilterRowUpdate = () => {
-        if (pendingFilterRowUpdate) return;
-        pendingFilterRowUpdate = true;
-        requestAnimationFrame(updateFilterContentRows);
-    };
-
-    document.querySelectorAll("[data-category]").forEach(el => {
-        el.closest(".row")?.classList.add("filter-content-row");
-    });
-    const filterRowObserver = new MutationObserver(scheduleFilterRowUpdate);
-    document.querySelectorAll("[data-category]").forEach(el => {
-        filterRowObserver.observe(el, { attributes: true, attributeFilter: ["class", "style"] });
-    });
-    updateFilterContentRows();
-
     document.querySelectorAll("[data-tab]").forEach(btn => {
         btn.addEventListener("click", () => {
             const tabId = btn.dataset.tab;
@@ -258,11 +242,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const content = parent.querySelector(`[data-tab-content="${tabId}"]`);
             if (content) content.classList.add("active");
             if (typeof window.onTabChange === "function") window.onTabChange(tabId);
-            // Reset indicator filter and show all categorised items
+            // Restaura o indicador padrão da seringueira ao trocar de aba.
             document.querySelectorAll('[data-filter-group="ind"] .filter-btn')
                 .forEach(b => b.classList.toggle("active", b.dataset.filter === "all"));
-            document.querySelectorAll("[data-category]").forEach(el => { el.style.display = ""; });
-            scheduleFilterRowUpdate();
         });
     });
 

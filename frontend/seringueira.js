@@ -370,7 +370,7 @@ function criarGraficoLinhasUF(containerId, dados, campoValor, sufixoTooltip) {
   const ctx = inicializarXY(containerId, { layoutVertical: true });
   if (!ctx) return;
   const { root, chart } = ctx;
-  ativarTooltipDeLinhas(chart, root);
+  ativarTooltipDeSeries(chart, root);
   const dadosGrafico = buildDadosUF(dados, campoValor);
 
   const eixoX = chart.xAxes.push(am5xy.CategoryAxis.new(root, {
@@ -438,7 +438,10 @@ function criarGraficoEstabelecimentos() {
       valueXField: produto, categoryYField: "condicaoProdutor", stacked: true,
       fill: cor, stroke: cor
     }));
-    serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65), tooltipText: `{categoryY} — ${produto}: {valueX}` });
+    serie.columns.template.setAll({
+      cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65), interactive: true,
+      tooltipText: `{categoryY} — ${produto}: {valueX}`
+    });
     serie.data.setAll(dados);
     seriesMap[produto] = serie;
   });
@@ -453,7 +456,7 @@ function criarGraficoIndicadores() {
   const ctx = inicializarXY("chartIndicadoresBorracha", { layoutVertical: true });
   if (!ctx) return;
   const { root, chart } = ctx;
-  ativarTooltipDeLinhas(chart, root);
+  ativarTooltipDeSeries(chart, root);
   const dados = montarIndicadores();
 
   const eixoX  = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 40 }), tooltip: am5.Tooltip.new(root, {}) }));
@@ -487,7 +490,7 @@ function criarGraficoIndicadores() {
 
 // ── APLICAR FILTROS ──────────────────────────────────────────────────
 // Atualiza dados e visibilidade das séries estaduais segundo os filtros.
-function atualizarGraficosUF() {
+function atualizarGraficosUF(filtroAtivo) {
   Object.entries(graficosUF).forEach(([id, g]) => {
     const novos = buildDadosUF(g.dados, g.campoValor);
     g.eixoX.data.setAll(novos);
@@ -495,7 +498,7 @@ function atualizarGraficosUF() {
     atualizarTextoVisualizacao(id, {
       subtitulo: ["Látex coagulado", g.subtitulo, periodoTexto(novos.map(item => item.ano))].filter(Boolean).join(" · ")
     });
-    mostrarAvisoGrafico(id, novos.length ? "" : avisoSemDadosGrafico);
+    mostrarAvisoGrafico(id, novos.length ? "" : avisoSemDadosGrafico, filtroAtivo);
   });
 }
 
@@ -518,13 +521,13 @@ function mensagemSemDadosCenso() {
 }
 
 // Atualiza os gráficos especiais que não seguem o formato comum por UF.
-function atualizarGraficosFixos(indicador) {
+function atualizarGraficosFixos(indicador, filtroAtivo) {
   Object.entries(graficosFixos).forEach(([id, g]) => {
     if (g.isEstab) {
       const dados = g.buildDados();
       g.eixoY.data.setAll(dados);
       atualizarSeriesFiltradas(g, dados);
-      mostrarAvisoGrafico(id, dados.length ? "" : mensagemSemDadosCenso());
+      mostrarAvisoGrafico(id, dados.length ? "" : mensagemSemDadosCenso(), filtroAtivo);
       return;
     }
     const dados = montarIndicadores();
@@ -540,7 +543,7 @@ function atualizarGraficosFixos(indicador) {
       subtitulo: ["Látex coagulado", recorte, periodoTexto(dados.map(item => item.ano))].filter(Boolean).join(" · "),
       ariaLabel: `Indicadores produtivos de látex coagulado — ${recorte}`
     });
-    mostrarAvisoGrafico(id, temDados ? "" : avisoSemDadosGrafico);
+    mostrarAvisoGrafico(id, temDados ? "" : avisoSemDadosGrafico, filtroAtivo);
   });
 }
 
@@ -555,8 +558,10 @@ function aplicarFiltros() {
     const recorteOk = censo ? ufSelecionada("Centro-Oeste") : produtoSelecionado(PRODUTO_BORRACHA);
     coluna.classList.toggle("is-filter-hidden", !correspondeAoIndicador(coluna, indicador) || !recorteOk);
   });
-  atualizarGraficosUF();
-  atualizarGraficosFixos(indicador);
+  const filtroAtivo = indicador !== "all" || estadoFiltros.ufs.size || estadoFiltros.produto.size
+    || periodoGraficoFiltrado("seriAnoInicio", "seriAnoFim");
+  atualizarGraficosUF(filtroAtivo);
+  atualizarGraficosFixos(indicador, filtroAtivo);
   atualizarCardsSeringueira();
   renderizarChips();
 }

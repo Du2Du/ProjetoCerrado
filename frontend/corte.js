@@ -68,7 +68,9 @@ function limparGrafico(id) {
 // Substitui um gráfico sem conteúdo por uma mensagem de estado vazio.
 function mostrarSemDadosChart(id, mensagem = avisoSemDadosGrafico) {
   limparGrafico(id);
-  mostrarAvisoGrafico(id, mensagem);
+  const filtroAtivo = filtrosCorte.indicador !== "all" || filtrosCorte.ufs.size || filtrosCorte.trimestre !== "all"
+    || filtrosCorte.metricaAbate !== "quantidade" || periodoGraficoFiltrado("filtroAnoInicioCorte", "filtroAnoFimCorte");
+  mostrarAvisoGrafico(id, mensagem, filtroAtivo);
 }
 
 // Aplica tipografia e cor comuns aos eixos do dashboard.
@@ -118,7 +120,7 @@ function criarLinhas(id, dados, campoCategoria, series, sufixo = "") {
   if (!dados.length || !seriesValidas.length) return mostrarSemDadosChart(id);
   const root = criarRoot(id);
   const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
-  ativarTooltipDeLinhas(chart, root);
+  ativarTooltipDeSeries(chart, root);
   const eixoX = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: campoCategoria, renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 35 }), tooltip: am5.Tooltip.new(root, {}) }));
   const eixoY = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
   configurarEixo(eixoX); configurarEixo(eixoY); eixoX.data.setAll(dados);
@@ -139,6 +141,7 @@ function criarPizza(id, dados, categoria, valor) {
   const root = criarRoot(id);
   const chart = root.container.children.push(am5percent.PieChart.new(root, { layout: root.verticalLayout, innerRadius: am5.percent(55) }));
   const serie = chart.series.push(am5percent.PieSeries.new(root, { valueField: valor, categoryField: categoria }));
+  serie.slices.template.setAll({ interactive: true, tooltipText: "{category}: {value} cabeças ({valuePercentTotal.formatNumber('0.00')}%)" });
   serie.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
   serie.get("colors").set("colors", PALETA_CORTE.map(cor => am5.color(cor)));
   serie.data.setAll(filtrados);

@@ -392,6 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const commonOptions = {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: { mode: 'nearest', axis: 'x', intersect: false },
             plugins: { legend: { display: false } },
             scales: {
                 x: { grid: { display: false }, ticks: { font: { size: 10 } } },

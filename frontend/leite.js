@@ -237,27 +237,35 @@ function pivotarLeitePorNome(linhas, campoNome, campoValor, nomeSaida) {
   });
 }
 
-// Preenche a tabela municipal respeitando período, municípios e produtos ativos.
-function renderizarTabelaProdutividadeMunicipios(municipios) {
+function anosDeProdutividadeMunicipal(dados) {
+  const anos = dados.flatMap(item => Object.keys(item).filter(chave => /^\d{4}$/.test(chave)));
+  return anosNoPeriodo(ordenarAnos(anos)).slice(-2);
+}
+
+// Calcula as colocações do recorte antes de mostrar os municípios selecionados.
+function renderizarTabelaProdutividadeMunicipios(municipiosDoRecorte) {
   const tabela = document.querySelector("#tabelaProdutividadeMunicipios table");
   if (!tabela) return;
-  tabela.querySelector("tbody").replaceChildren();
-  alternarTabela("tabelaProdutividadeMunicipios", ANOS_PRODUTIVIDADE_MUNICIPIOS.length > 0 && municipios.length > 0);
-  if (!ANOS_PRODUTIVIDADE_MUNICIPIOS.length) return;
-  const anoInicial = ANOS_PRODUTIVIDADE_MUNICIPIOS[0];
-  const anoFinal = ANOS_PRODUTIVIDADE_MUNICIPIOS.at(-1);
+  const corpo = tabela.querySelector("tbody");
+  corpo.replaceChildren();
+  const municipios = new Set(municipiosDoRecorte);
+  const selecionados = new Set(estadoFiltros.municipios);
+  const candidatos = DADOS_LEITE.produtividadeMunicipios.filter(item => municipios.has(item.municipio));
+  const [anoInicial, anoFinal = anoInicial] = anosDeProdutividadeMunicipal(candidatos);
+  const dados = candidatos.filter(item => Number.isFinite(item[anoFinal]))
+    .sort((a, b) => b[anoFinal] - a[anoFinal])
+    .map((item, indice) => ({ item, posicao: indice + 1 }))
+    .filter(({ item }) => !selecionados.size || selecionados.has(item.municipio))
+    .slice(0, LIMITE_MUNICIPIOS_LEITE);
+  alternarTabela("tabelaProdutividadeMunicipios", dados.length > 0);
+  if (!dados.length) return;
   const cabecalho = tabela.querySelectorAll("thead th");
   cabecalho[2].textContent = anoInicial;
   cabecalho[3].textContent = anoFinal;
-  const dados = [...DADOS_LEITE.produtividadeMunicipios]
-    .filter(item => municipios.includes(item.municipio) && Number.isFinite(item[anoFinal]))
-    .sort((a, b) => b[anoFinal] - a[anoFinal])
-    .slice(0, LIMITE_MUNICIPIOS_LEITE);
-  dados.forEach((item, indice) => {
-    const classe = indice === 1 ? " badge-rank--2" : indice === 2 ? " badge-rank--3" : "";
-    const posicao = indice < 3 ? `<span class="badge-rank${classe}">${indice + 1}</span>` : indice + 1;
-    const linha = tabela.querySelector("tbody").insertRow();
-    linha.insertCell().innerHTML = posicao;
+  dados.forEach(({ item, posicao }) => {
+    const classe = posicao === 2 ? " badge-rank--2" : posicao === 3 ? " badge-rank--3" : "";
+    const linha = corpo.insertRow();
+    linha.insertCell().innerHTML = posicao <= 3 ? `<span class="badge-rank${classe}">${posicao}</span>` : posicao;
     linha.insertCell().textContent = item.municipio;
     [anoInicial, anoFinal].forEach(ano => {
       const celula = linha.insertCell();
@@ -591,7 +599,9 @@ function atualizarAvisoLeite(id, temDados) {
       ? `O ranking de consumo só tem dados de ${anos[0]}.`
       : "Não há dados de consumo para essa seleção.";
   }
-  mostrarAvisoGrafico(id, mensagem);
+  const filtroAtivo = estadoFiltros.indicador !== "all" || estadoFiltros.ufs.length || estadoFiltros.regioes.length
+    || estadoFiltros.municipios.length || estadoFiltros.produtos.length || periodoGraficoFiltrado("filtroAnoInicio", "filtroAnoFim");
+  mostrarAvisoGrafico(id, mensagem, filtroAtivo);
 }
 // Preenche um select e tenta preservar opções que já estavam marcadas.
 function setSelectOptions(id, valores) {
@@ -716,7 +726,7 @@ function graficoLinhas(id, categoria, series = null, sufixo = "", alturaSemLegen
   if (!elemento) return;
   const root = criarRoot(id);
   const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
-  ativarTooltipDeLinhas(chart, root);
+  ativarTooltipDeSeries(chart, root);
   const xA = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: categoria, renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 35 }), tooltip: am5.Tooltip.new(root, {}) }));
   const yA = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
   eixo(xA); eixo(yA);
@@ -794,13 +804,15 @@ function graficoBarras(id, categoria, valor, horizontal = false, sufixo = "", qu
   }
   const s = chart.series.push(am5xy.ColumnSeries.new(root, {
     xAxis: horizontal ? vA : cA, yAxis: horizontal ? cA : vA,
+    baseAxis: cA,
     valueXField: horizontal ? valor : undefined, valueYField: horizontal ? undefined : valor,
-    categoryYField: horizontal ? categoria : undefined, categoryXField: horizontal ? undefined : categoria
+    categoryYField: horizontal ? categoria : undefined, categoryXField: horizontal ? undefined : categoria,
+    tooltip: am5.Tooltip.new(root, { labelText: horizontal ? `{categoryY}: {valueX}${sufixo}` : `{categoryX}: {valueY}${sufixo}` })
   }));
   s.columns.template.setAll({
-    cornerRadiusTL: 3, cornerRadiusTR: 3, cornerRadiusBR: horizontal ? 3 : 0,
-    tooltipText: horizontal ? `{categoryY}: {valueX}${sufixo}` : `{categoryX}: {valueY}${sufixo}`
+    cornerRadiusTL: 3, cornerRadiusTR: 3, cornerRadiusBR: horizontal ? 3 : 0
   });
+  ativarTooltipDeSeries(chart, root);
   s.columns.template.adapters.add("fill", (_fill, target) => am5.color(P[(target.dataItem?.get("index") || 0) % P.length]));
   s.columns.template.adapters.add("stroke", (_stroke, target) => am5.color(P[(target.dataItem?.get("index") || 0) % P.length]));
   graficos[id] = {
@@ -834,18 +846,20 @@ function graficoBarrasAgrupadas(id, categoria, series, sufixo = "", horizontal =
   series.forEach((cfg, idx) => {
     const s = chart.series.push(am5xy.ColumnSeries.new(root, {
       name: cfg.nome, xAxis: horizontal ? eixoValor : eixoCategoria, yAxis: horizontal ? eixoCategoria : eixoValor,
+      baseAxis: eixoCategoria,
       valueXField: horizontal ? cfg.campo : undefined, valueYField: horizontal ? undefined : cfg.campo,
       categoryXField: horizontal ? undefined : categoria, categoryYField: horizontal ? categoria : undefined,
-      clustered: true
+      clustered: true,
+      tooltip: am5.Tooltip.new(root, {
+        labelText: horizontal ? `{categoryY} — ${cfg.nome}: {valueX}${sufixo}` : `{categoryX} — ${cfg.nome}: {valueY}${sufixo}`
+      })
     }));
     const formato = horizontal ? { height: am5.percent(55), cornerRadiusTR: 3, cornerRadiusBR: 3 }
       : { width: am5.percent(55), cornerRadiusTL: 3, cornerRadiusTR: 3 };
-    s.columns.template.setAll({
-      ...formato, fill: am5.color(P[idx]), stroke: am5.color(P[idx]),
-      tooltipText: horizontal ? `{categoryY} — ${cfg.nome}: {valueX}${sufixo}` : `{categoryX} — ${cfg.nome}: {valueY}${sufixo}`
-    });
+    s.columns.template.setAll({ ...formato, fill: am5.color(P[idx]), stroke: am5.color(P[idx]) });
     seriesMap[cfg.nome] = s;
   });
+  ativarTooltipDeSeries(chart, root, horizontal ? "y" : "x");
   criarLegenda(chart, root).data.setAll(chart.series.values);
   graficos[id] = {
     // Atualiza dados e mostra somente séries comparativas ainda aplicáveis.
@@ -871,6 +885,11 @@ function graficoPizza(id, categoria, valor, alturaSemLegenda = 0) {
   const chart = root.container.children.push(am5percent.PieChart.new(root, { layout: root.verticalLayout, innerRadius: am5.percent(55) }));
   const s = chart.series.push(am5percent.PieSeries.new(root, { valueField: valor, categoryField: categoria }));
   s.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
+  s.slices.template.setAll({
+    interactive: true,
+    tooltipText: valor === "percentualParticipacao" ? "{category}: {value.formatNumber('0.00')}%"
+      : "{category}: {value} mi L ({valuePercentTotal.formatNumber('0.00')}%)"
+  });
   s.get("colors").set("colors", P.map(c => am5.color(c)));
   const l = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 10 }));
   l.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
@@ -891,7 +910,6 @@ function graficoPizza(id, categoria, valor, alturaSemLegenda = 0) {
   if (alturaSemLegenda) {
     s.labels.template.set("forceHidden", true);
     s.ticks.template.set("forceHidden", true);
-    s.slices.template.set("tooltipText", "{category}: {valuePercentTotal.formatNumber('0.00')}%");
     l.set("layout", root.verticalLayout);
     l.labels.template.set("oversizedBehavior", "wrap");
     chart.events.on("boundschanged", ajustarLegenda);
@@ -952,10 +970,10 @@ function aplicarFiltros() {
   const ufsProducao = SERIES_PRODUCAO_UF.filter(uf => ufSelecionadaLeite(uf) && ufNoRecorteRegionalLeite(uf));
   const recorteSoMesorregioes = filtroMesorregiaoAtivo();
   const ufsCO = recorteSoMesorregioes ? [] : SERIES_UF_CO.filter(ufSelecionadaLeite);
-  const municipios = seriesSelecionadas(municipiosDisponiveisLeite(), estadoFiltros.municipios);
-  ANOS_PRODUTIVIDADE_MUNICIPIOS = anosNoPeriodo(ordenarAnos(DADOS_LEITE.produtividadeMunicipios
-    .filter(item => municipios.includes(item.municipio))
-    .flatMap(item => Object.keys(item).filter(chave => /^\d{4}$/.test(chave))))).slice(-2);
+  const municipiosDoRecorte = municipiosDisponiveisLeite();
+  const municipios = seriesSelecionadas(municipiosDoRecorte, estadoFiltros.municipios);
+  ANOS_PRODUTIVIDADE_MUNICIPIOS = anosDeProdutividadeMunicipal(DADOS_LEITE.produtividadeMunicipios
+    .filter(item => municipios.includes(item.municipio)));
   const comparacaoVacasMeso = serieComparativa(anosVacasMeso);
   atualizarTextoVisualizacao("chartVacasGoias", {
     subtitulo: ["Cabeças", periodoTexto(anosVacasMeso)].filter(Boolean).join(" — ")
@@ -1021,7 +1039,7 @@ function aplicarFiltros() {
     titulo: anosMeso.length ? `Distribuição por Mesorregião (${anosMeso.at(-1)})` : "Distribuição por Mesorregião"
   });
 
-  renderizarTabelaProdutividadeMunicipios(municipios);
+  renderizarTabelaProdutividadeMunicipios(municipiosDoRecorte);
   const ranking = filtrarLinhasPorAno(DADOS_LEITE.rankingConsumo)
     .filter(item => temIntersecaoProduto(item.produto) && ufNoRankingLeite(item.estado));
   const anoRanking = ordenarAnos(ranking.map(item => item.ano)).at(-1);

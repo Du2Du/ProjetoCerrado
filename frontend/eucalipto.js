@@ -201,14 +201,17 @@ function atualizarAvisoEucalipto(id, temDados) {
     mensagem = dadosRankingNoPeriodo().length ? "Nenhum município do ranking atende aos filtros escolhidos."
       : "Não há dados do ranking no período escolhido.";
   }
-  mostrarAvisoGrafico(id, mensagem);
+  const filtroAtivo = filtrosAtivos.indicador !== "all" || filtrosAtivos.produtos.length || filtrosAtivos.ufs.length
+    || filtrosAtivos.municipios.length || filtrosAtivos.topRanking !== 10 || filtrosAtivos.minimoRanking !== 0
+    || periodoGraficoFiltrado("filtroAnoInicioEucalipto", "filtroAnoFimEucalipto");
+  mostrarAvisoGrafico(id, mensagem, filtroAtivo);
 }
 
 // Cria um gráfico de linhas reutilizável para os diferentes produtos.
 function criarGraficoLinhasProdutos(containerId, dataSource, unidadePadrao) {
   if (!existe(containerId)) return;
   const { root, chart } = inicializarXY(containerId, { layoutVertical: true });
-  ativarTooltipDeLinhas(chart, root);
+  ativarTooltipDeSeries(chart, root);
   const eixoX = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 40 }), tooltip: am5.Tooltip.new(root, {}) }));
   const eixoY = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
   configurarEixo(eixoX); configurarEixo(eixoY);
@@ -272,7 +275,10 @@ function criarGraficoValorProducao() {
       stroke: am5.color(produto.cor),
       stacked: true
     }));
-    serie.columns.template.setAll({ cornerRadiusTL: 2, cornerRadiusTR: 2, width: am5.percent(60), tooltipText: `${produto.nome} ({categoryX}): R$ {valueY} mil` });
+    serie.columns.template.setAll({
+      cornerRadiusTL: 2, cornerRadiusTR: 2, width: am5.percent(60), interactive: true,
+      tooltipText: `${produto.nome} ({categoryX}): R$ {valueY} mil`
+    });
     series[produto.campo] = serie;
   });
   const legenda = criarLegenda(chart, root);
@@ -312,10 +318,13 @@ function criarGraficoRankingProducao() {
     yAxis: eixoY,
     valueXField: "quantidadeProduzida",
     categoryYField: "municipio",
+    baseAxis: eixoY,
     fill: am5.color(P[0]),
-    stroke: am5.color(P[0])
+    stroke: am5.color(P[0]),
+    tooltip: am5.Tooltip.new(root, { labelText: "#{ranking} {localidade}: {valueX} m³" })
   }));
-  serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65), tooltipText: "#{ranking} {localidade}: {valueX} m³" });
+  serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65) });
+  ativarTooltipDeSeries(chart, root);
 
   graficos[containerId] = {
     // Atualiza categorias, colunas e estado vazio do ranking.
@@ -344,9 +353,12 @@ function criarGraficoParticipacaoValor() {
     xAxis: eixoX,
     yAxis: eixoY,
     valueXField: "percentualParticipacaoValor",
-    categoryYField: "produto"
+    categoryYField: "produto",
+    baseAxis: eixoY,
+    tooltip: am5.Tooltip.new(root, { labelText: "{categoryY}: {valueX}%" })
   }));
-  serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65), tooltipText: "{categoryY}: {valueX}%" });
+  serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65) });
+  ativarTooltipDeSeries(chart, root);
   serie.columns.template.adapters.add("fill", (fill, target) => am5.color(target.dataItem?.dataContext?.cor || P[0]));
   serie.columns.template.adapters.add("stroke", (stroke, target) => am5.color(target.dataItem?.dataContext?.cor || P[0]));
 
