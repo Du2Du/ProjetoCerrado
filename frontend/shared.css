@@ -623,6 +623,11 @@
     }
 
     /* ── CHART CARDS ───────────────────────────────────────── */
+    .is-filter-hidden,
+    .filter-content-row:not(.filter-content-row--visible) {
+        display: none !important;
+    }
+
     .tab-content-obs [data-tab-content]>.filter-content-row--visible {
         margin-top: 1.5rem;
     }

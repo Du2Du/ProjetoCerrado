@@ -196,16 +196,12 @@ function anoFinalSelecionado() {
 
 // Alterna entre o gráfico e sua mensagem de ausência de dados.
 function atualizarAvisoEucalipto(id, temDados) {
-  let mensagem = avisoIndicadorGrafico(id, filtrosAtivos.indicador);
-  if (!mensagem && id !== "chartRankingProducaoEucalipto" && (filtrosAtivos.ufs.length || filtrosAtivos.municipios.length)) {
-    mensagem = "Este gráfico só tem dados para o Centro-Oeste inteiro.";
+  let mensagem = temDados ? "" : avisoSemDadosGrafico;
+  if (!temDados && id === "chartRankingProducaoEucalipto") {
+    mensagem = dadosRankingNoPeriodo().length ? "Nenhum município do ranking atende aos filtros escolhidos."
+      : "Não há dados do ranking no período escolhido.";
   }
-  if (!mensagem && !temDados && id === "chartRankingProducaoEucalipto") {
-    mensagem = "Nenhum município do ranking atende aos filtros escolhidos.";
-    if (!produtoCompativelComRanking()) mensagem = "O ranking só inclui madeira para papel e celulose.";
-    else if (!dadosRankingNoPeriodo().length) mensagem = "Não há dados do ranking no período escolhido.";
-  }
-  mostrarAvisoGrafico(id, mensagem || (temDados ? "" : avisoSemDadosGrafico));
+  mostrarAvisoGrafico(id, mensagem);
 }
 
 // Cria um gráfico de linhas reutilizável para os diferentes produtos.
@@ -437,8 +433,7 @@ function atualizarKpis() {
 
 // Atualiza séries, KPIs, chips e visibilidade a partir do estado corrente.
 function atualizarGraficos() {
-  // Ponto único de renderização após qualquer filtro: primeiro atualiza as
-  // séries e depois os elementos derivados (KPIs, chips e visibilidade).
+  atualizarVisibilidadeCards();
   const produtos = produtosSelecionados();
   graficos.chartQuantidadeProduzidaEucalipto?.update(filtrarPeriodo(dadosQuantidadeProduzida), produtos);
   graficos.chartRankingProducaoEucalipto?.update(dadosRankingFiltrados());
@@ -446,17 +441,16 @@ function atualizarGraficos() {
   graficos.chartParticipacaoValorEucalipto?.update(dadosParticipacaoFiltrados());
   atualizarKpis();
   atualizarResumoFiltros();
-  atualizarVisibilidadeCards();
 }
 
-// Mantém os destaques alinhados com os filtros do painel.
+// Mantém os gráficos e destaques alinhados com os filtros do painel.
 function atualizarVisibilidadeCards() {
   const filtroLocal = filtrosAtivos.ufs.length || filtrosAtivos.municipios.length;
-  document.querySelectorAll("[data-category] > .kpi-card").forEach(card => {
-    const coluna = card.parentElement;
-    const categoriaOk = filtrosAtivos.indicador === "all" || coluna.dataset.category === filtrosAtivos.indicador;
-    const localidadeOk = !filtroLocal || coluna.dataset.category === "ranking";
-    coluna.classList.toggle("is-filter-hidden", !categoriaOk || !localidadeOk);
+  const rankingCompativel = produtoCompativelComRanking();
+  document.querySelectorAll("[data-category]").forEach(coluna => {
+    const ranking = coluna.dataset.category === "ranking";
+    const recorteOk = ranking ? rankingCompativel : !filtroLocal;
+    coluna.classList.toggle("is-filter-hidden", !correspondeAoIndicador(coluna, filtrosAtivos.indicador) || !recorteOk);
   });
 }
 

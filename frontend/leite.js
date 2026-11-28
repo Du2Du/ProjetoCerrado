@@ -584,26 +584,14 @@ function filtroMesorregiaoAtivo() {
 }
 
 function atualizarAvisoLeite(id, temDados) {
-  let mensagem = avisoIndicadorGrafico(id, estadoFiltros.indicador);
-  if (!mensagem && estadoFiltros.produtos.length && id !== "chartRankingConsumo") {
-    mensagem = "O filtro de produto vale só para o ranking de consumo.";
-  }
-  if (!mensagem && estadoFiltros.ufs.length && ["chartLeiteRegiao", "chartProdutividade", "chartVacasRegiao", "chartVacasRegiaoSerie"].includes(id)) {
-    mensagem = "Este gráfico mostra dados por região. Desmarque o filtro de estado para ver os dados.";
-  }
-  if (!mensagem && filtroMesorregiaoAtivo() && ["chartRebanhoCO", "chartProducaoCentroOesteUf"].includes(id)) {
-    mensagem = "Este gráfico tem dados por estado. Desmarque o filtro de mesorregião para ver os dados.";
-  }
-  if (!mensagem && !temDados && id === "chartRankingConsumo") {
+  let mensagem = temDados ? "" : avisoSemDadosGrafico;
+  if (!temDados && id === "chartRankingConsumo") {
     const anos = ordenarAnos(DADOS_LEITE.rankingConsumo.map(item => item.ano));
     mensagem = anos.length === 1 && !anosNoPeriodo(anos).length
       ? `O ranking de consumo só tem dados de ${anos[0]}.`
       : "Não há dados de consumo para essa seleção.";
   }
-  if (!mensagem && !temDados && !ufSelecionadaLeite("GO") && ["chartGoiasMeso", "chartGoiasMesoPie", "chartVacasGoias", "chartVacasMesoSerie"].includes(id)) {
-    mensagem = "Este gráfico só tem dados de Goiás.";
-  }
-  mostrarAvisoGrafico(id, mensagem || (temDados ? "" : avisoSemDadosGrafico));
+  mostrarAvisoGrafico(id, mensagem);
 }
 // Preenche um select e tenta preservar opções que já estavam marcadas.
 function setSelectOptions(id, valores) {
@@ -868,6 +856,7 @@ function aplicarFiltros() {
   // Este é o ciclo central de renderização do dashboard. Ele parte sempre de
   // `estadoFiltros`, filtra as coleções originais e distribui os resultados aos
   // gráficos, tabelas, KPIs e indicadores de visibilidade.
+  atualizarVisibilidadeCards();
   atualizarRetratoRegionalLeite();
   const anosVacasRegiao = anosNoPeriodo(metadadosApi.anosVacas || []);
   const anosMeso = anosNoPeriodo(ordenarAnos(DADOS_LEITE.producaoMeso.map(d => d.ano)));
@@ -956,22 +945,28 @@ function aplicarFiltros() {
   atualizarCardsLeite();
   atualizarCardsSecundariosLeite();
 
-  atualizarVisibilidadeCards();
   atualizarResumoFiltros();
 }
 
-// Atualiza os indicadores disponíveis e a visibilidade de destaques e tabelas.
+// Atualiza os indicadores disponíveis e oculta cards incompatíveis com o recorte.
 function atualizarVisibilidadeCards() {
   const aba = document.querySelector("[data-tab-content].active");
   const categorias = new Set(Array.from(aba?.querySelectorAll("[data-category]") || [], el => el.dataset.category));
   document.querySelectorAll('[data-filter-group="indicador"] .filter-btn').forEach(btn => {
     btn.hidden = btn.dataset.filter !== "all" && !categorias.has(btn.dataset.filter);
   });
-  document.querySelectorAll("[data-category]").forEach(el => {
-    if (el.querySelector(".chart-area")) return;
-    const categoriaOk = estadoFiltros.indicador === "all" || el.dataset.category === estadoFiltros.indicador;
-    const produtoOk = !estadoFiltros.produtos.length || el.dataset.category === "mercado";
-    el.classList.toggle("is-filter-hidden", !categoriaOk || !produtoOk);
+  const temFiltroUf = estadoFiltros.ufs.length > 0;
+  const centroOesteCompativel = !filtroMesorregiaoAtivo()
+    && (!temFiltroUf || estadoFiltros.ufs.some(localidadeCentroOeste));
+  document.querySelectorAll("[data-category]").forEach(coluna => {
+    const grafico = coluna.querySelector(".chart-area");
+    const id = grafico?.id;
+    const produtoOk = !estadoFiltros.produtos.length
+      || (grafico ? id === "chartRankingConsumo" : coluna.dataset.category === "mercado");
+    const localidadeOk = (!ALVOS_API.regioes.includes(id) || !temFiltroUf)
+      && (!ALVOS_API.mesorregioes.includes(id) || ufSelecionadaLeite("GO"))
+      && (!ALVOS_API.centroOeste.includes(id) || centroOesteCompativel);
+    coluna.classList.toggle("is-filter-hidden", !correspondeAoIndicador(coluna, estadoFiltros.indicador) || !produtoOk || !localidadeOk);
   });
 }
 // Converte o estado atual em chips de leitura rápida.

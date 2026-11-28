@@ -76,12 +76,9 @@ function containerDeDados(id) {
 
 const avisoSemDadosGrafico = "Não há dados para os filtros escolhidos.";
 
-function avisoIndicadorGrafico(id, indicador) {
-    const grafico = document.getElementById(id);
-    const categoria = grafico?.closest("[data-category]")?.dataset.category;
-    const categorias = grafico?.dataset.indicadores?.split(" ") || [categoria];
-    return indicador !== "all" && categoria && !categorias.includes(indicador)
-        ? "Este gráfico mostra outro indicador." : "";
+function correspondeAoIndicador(coluna, indicador) {
+    const indicadores = coluna.querySelector(".chart-area[data-indicadores]")?.dataset.indicadores.split(" ");
+    return indicador === "all" || (indicadores || [coluna.dataset.category]).includes(indicador);
 }
 
 function mostrarAvisoGrafico(id, mensagem = "") {

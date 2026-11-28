@@ -169,10 +169,6 @@ function montarIndicadores() {
   }));
 }
 
-function atualizarAvisoSeringueira(id, temDados, indicador, mensagem = avisoSemDadosGrafico) {
-  mostrarAvisoGrafico(id, avisoIndicadorGrafico(id, indicador) || (temDados ? "" : mensagem));
-}
-
 // Atualiza subtítulo e descrição acessível de um card.
 function atualizarTextoVisualizacao(id, { subtitulo, ariaLabel } = {}) {
   const container = containerVisualizacao(id);
@@ -490,7 +486,7 @@ function criarGraficoIndicadores() {
 
 // ── APLICAR FILTROS ──────────────────────────────────────────────────
 // Atualiza dados e visibilidade das séries estaduais segundo os filtros.
-function atualizarGraficosUF(indicador) {
+function atualizarGraficosUF() {
   Object.entries(graficosUF).forEach(([id, g]) => {
     const novos = buildDadosUF(g.dados, g.campoValor);
     g.eixoX.data.setAll(novos);
@@ -498,7 +494,7 @@ function atualizarGraficosUF(indicador) {
     atualizarTextoVisualizacao(id, {
       subtitulo: ["Látex coagulado", g.subtitulo, periodoTexto(novos.map(item => item.ano))].filter(Boolean).join(" · ")
     });
-    atualizarAvisoSeringueira(id, novos.length > 0, indicador, mensagemSemDadosPam());
+    mostrarAvisoGrafico(id, novos.length ? "" : avisoSemDadosGrafico);
   });
 }
 
@@ -514,12 +510,7 @@ function atualizarSeriesFiltradas(grafico, dados, campos) {
   return visiveis.length > 0;
 }
 
-function mensagemSemDadosPam() {
-  return produtoSelecionado(PRODUTO_BORRACHA) ? avisoSemDadosGrafico : "Sem dados históricos para látex líquido.";
-}
-
 function mensagemSemDadosCenso() {
-  if (!ufSelecionada("Centro-Oeste")) return "O Censo não tem dados de estabelecimentos por estado.";
   const anos = ordenarAnos(dadosEstabelecimentos.filter(item => produtoSelecionado(item.produto)).map(item => item.ano));
   return anos.length === 1 && (anos[0] < estadoFiltros.anoInicio || anos[0] > estadoFiltros.anoFim)
     ? `O Censo só tem dados de estabelecimentos de ${anos[0]}.` : avisoSemDadosGrafico;
@@ -532,7 +523,7 @@ function atualizarGraficosFixos(indicador) {
       const dados = g.buildDados();
       g.eixoY.data.setAll(dados);
       atualizarSeriesFiltradas(g, dados);
-      atualizarAvisoSeringueira(id, dados.length > 0, indicador, mensagemSemDadosCenso());
+      mostrarAvisoGrafico(id, dados.length ? "" : mensagemSemDadosCenso());
       return;
     }
     const dados = montarIndicadores();
@@ -548,7 +539,7 @@ function atualizarGraficosFixos(indicador) {
       subtitulo: ["Látex coagulado", recorte, periodoTexto(dados.map(item => item.ano))].filter(Boolean).join(" · "),
       ariaLabel: `Indicadores produtivos de látex coagulado — ${recorte}`
     });
-    atualizarAvisoSeringueira(id, temDados, indicador, mensagemSemDadosPam());
+    mostrarAvisoGrafico(id, temDados ? "" : avisoSemDadosGrafico);
   });
 }
 
@@ -558,12 +549,13 @@ function aplicarFiltros() {
   // registrados, mantendo chips e KPIs alinhados com a mesma seleção.
   const indicador = document.querySelector('[data-filter-group="ind"] .filter-btn.active')?.dataset.filter || "all";
   atualizarOpcoesSeringueira();
-  atualizarGraficosUF(indicador);
-  atualizarGraficosFixos(indicador);
-  document.querySelectorAll("#fl-co [data-category] > .kpi-card").forEach(card => {
-    const coluna = card.parentElement;
-    coluna.style.display = indicador === "all" || coluna.dataset.category === indicador ? "" : "none";
+  document.querySelectorAll("#fl-co [data-category]").forEach(coluna => {
+    const censo = coluna.querySelector("#chartEstabelecimentosSeringueira");
+    const recorteOk = censo ? ufSelecionada("Centro-Oeste") : produtoSelecionado(PRODUTO_BORRACHA);
+    coluna.classList.toggle("is-filter-hidden", !correspondeAoIndicador(coluna, indicador) || !recorteOk);
   });
+  atualizarGraficosUF();
+  atualizarGraficosFixos(indicador);
   atualizarCardsSeringueira();
   renderizarChips();
 }
@@ -727,7 +719,6 @@ function inicializarFiltrosUI() {
     labelDropdown("seriProdutoBtn", [], "Todos");
     // reset indicador
     document.querySelectorAll('[data-filter-group="ind"] .filter-btn').forEach(b => b.classList.toggle("active", b.dataset.filter === "all"));
-    document.querySelectorAll("[data-category]").forEach(el => { el.style.display = ""; });
     aplicarFiltros();
   });
 
