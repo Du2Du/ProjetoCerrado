@@ -83,6 +83,17 @@ function localidadeCentroOeste(uf) {
     return codigosCentroOeste.has(codigoUfPainel(uf));
 }
 
+function ehTotalCentroOesteDaApi(registro) {
+    return registro.estado === "Centro-Oeste"
+        || (registro.nivel_territorial === "Grande Região" && registro.regiao === "Centro-Oeste");
+}
+
+// Usa o total oficial quando a API também retorna os registros estaduais.
+function registrosTotaisCentroOeste(registros) {
+    const totais = registros.filter(ehTotalCentroOesteDaApi);
+    return totais.length ? totais : registros.filter(registro => !registro.nivel_territorial);
+}
+
 window.atualizarKpiComApi = atualizarKpiComApi;
 
 // Resolve o card visual que deve receber loading, vazio ou erro.
@@ -100,6 +111,14 @@ function ativarTooltipDeSeries(chart, root, distancia = "xy") {
     const cursor = chart.set("cursor", am5xy.XYCursor.new(root, {}));
     cursor.lineX.set("visible", false);
     cursor.lineY.set("visible", false);
+}
+
+function quebrarRotulosDeBarrasHorizontais(rotulos, chart, elemento) {
+    rotulos.setAll({ oversizedBehavior: "wrap", maxWidth: 260 });
+    chart.events.on("boundschanged", () => {
+        const largura = Math.floor(elemento.clientWidth * 0.45);
+        if (largura > 0) rotulos.set("maxWidth", Math.min(260, largura));
+    });
 }
 
 function correspondeAoIndicador(coluna, indicador) {

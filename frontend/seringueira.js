@@ -260,9 +260,11 @@ async function carregarDadosApiSeringueira() {
 
   if (resposta.pam.status === "fulfilled") {
     try {
-      const pam = resposta.pam.value;
+      const pam = resposta.pam.value
+        .map(item => ehTotalCentroOesteDaApi(item) ? { ...item, estado: "Centro-Oeste" } : item)
+        .filter(item => item.estado);
       const mapear = (campoOrigem, campoDestino, unidadeMedida) => pam
-        .filter(item => item.estado && temMedicao(item[campoOrigem]))
+        .filter(item => temMedicao(item[campoOrigem]))
         .map(item => ({
           ano: Number(item.ano), estado: item.estado, produto: PRODUTO_BORRACHA,
           unidadeMedida, [campoDestino]: Number(item[campoOrigem])
@@ -289,10 +291,13 @@ async function carregarDadosApiSeringueira() {
   }
 
   if (resposta.censo.status === "fulfilled") {
-    dadosEstabelecimentos = resposta.censo.value.filter(item => temMedicao(item.numeroEstabelecimentos)).map(item => ({
-      ano: Number(item.ano), produto: item.produto, condicaoProdutor: item.condicaoProdutor,
-      numeroEstabelecimentos: Number(item.numeroEstabelecimentos)
-    })).filter(item => item.produto && Number.isFinite(item.numeroEstabelecimentos));
+    dadosEstabelecimentos = registrosTotaisCentroOeste(resposta.censo.value)
+      .filter(item => temMedicao(item.numeroEstabelecimentos))
+      .map(item => ({
+        ano: Number(item.ano), produto: item.produto, condicaoProdutor: item.condicaoProdutor,
+        numeroEstabelecimentos: Number(item.numeroEstabelecimentos)
+      }))
+      .filter(item => item.produto && Number.isFinite(item.numeroEstabelecimentos));
     definirEstadoVisualizacao(ALVOS_API.estabelecimentos, "ready");
     marcarFonteApi(ALVOS_API.estabelecimentos);
   } else {
@@ -399,33 +404,35 @@ function criarGraficoEstabelecimentos() {
       });
     return [...porCondicao.values()];
   };
-  const eixoX = chart.xAxes.push(am5xy.CategoryAxis.new(root, {
+  const eixoY = chart.yAxes.push(am5xy.CategoryAxis.new(root, {
     categoryField: "condicaoProdutor",
-    renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 45 })
+    renderer: am5xy.AxisRendererY.new(root, { inversed: true, minGridDistance: 36 })
   }));
-  const eixoY = chart.yAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererY.new(root, {}) }));
+  const eixoX = chart.xAxes.push(am5xy.ValueAxis.new(root, { min: 0, renderer: am5xy.AxisRendererX.new(root, {}) }));
   configurarEixo(eixoX); configurarEixo(eixoY);
-  eixoX.get("renderer").labels.template.setAll({ oversizedBehavior: "wrap", textAlign: "center" });
+  quebrarRotulosDeBarrasHorizontais(eixoY.get("renderer").labels.template, chart, root.dom);
 
   const seriesMap = {};
   produtos.forEach((produto, indice) => {
     const cor = am5.color(P[indice % P.length]);
     const serie = chart.series.push(am5xy.ColumnSeries.new(root, {
       name: produto, xAxis: eixoX, yAxis: eixoY,
-      valueYField: produto, categoryXField: "condicaoProdutor",
-      fill: cor, stroke: cor
+      valueXField: produto, categoryYField: "condicaoProdutor", baseAxis: eixoY,
+      fill: cor, stroke: cor,
+      tooltip: am5.Tooltip.new(root, { labelText: `{categoryY} — ${produto}: {valueX}` })
     }));
     serie.columns.template.setAll({
-      cornerRadiusTL: 4, cornerRadiusTR: 4, width: am5.percent(65), interactive: true,
-      tooltipText: `{categoryX} — ${produto}: {valueY}`
+      cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65)
     });
     seriesMap[produto] = serie;
   });
 
+  ativarTooltipDeSeries(chart, root, "y");
   const legenda = criarLegenda(chart, root);
   atualizarEstabelecimentos = filtroAtivo => {
     const dados = buildDados();
-    eixoX.data.setAll(dados);
+    root.dom.style.height = `${Math.max(320, dados.length * 52 + 90)}px`;
+    eixoY.data.setAll(dados);
     atualizarSeriesFiltradas({ seriesMap, legenda }, dados);
     mostrarAvisoGrafico(id, dados.length ? "" : mensagemSemDadosCenso(), filtroAtivo);
   };
@@ -451,7 +458,10 @@ function atualizarSeriesFiltradas(grafico, dados) {
     const visivel = dados.some(item => temMedicao(item[chave]));
     serie.data.setAll(visivel ? dados : []);
     serie.set("forceHidden", !visivel);
-    if (serie instanceof am5xy.ColumnSeries) serie.set("clustered", visivel);
+    if (serie instanceof am5xy.ColumnSeries) {
+      serie.set("clustered", visivel);
+      serie.get("tooltip").set("forceHidden", !visivel);
+    }
     if (visivel) visiveis.push(serie);
   });
   grafico.legenda.data.setAll(visiveis);

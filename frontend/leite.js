@@ -765,14 +765,6 @@ function graficoLinhas(id, categoria, series = null, sufixo = "", alturaSemLegen
   };
   chart.appear(800, 80);
 }
-function quebrarRotulosDeBarrasHorizontais(rotulos, chart, elemento) {
-  rotulos.setAll({ oversizedBehavior: "wrap", maxWidth: 260 });
-  chart.events.on("boundschanged", () => {
-    const largura = Math.floor(elemento.clientWidth * 0.45);
-    if (largura > 0) rotulos.set("maxWidth", Math.min(260, largura));
-  });
-}
-
 // Cria barras verticais ou horizontais para uma única medida.
 function graficoBarras(id, categoria, valor, horizontal = false, sufixo = "", quebrarRotulos = false) {
   const elemento = document.getElementById(id);

@@ -259,7 +259,7 @@ function criarGraficoLinhasProdutos(containerId, dataSource, unidadePadrao) {
 function criarGraficoValorProducao() {
   const containerId = "chartValorProducaoEucalipto";
   const { root, chart } = inicializarXY(containerId, { layoutVertical: true });
-  const eixoX = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 40 }), tooltip: am5.Tooltip.new(root, {}) }));
+  const eixoX = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 40 }) }));
   const eixoY = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
   configurarEixo(eixoX); configurarEixo(eixoY);
 
@@ -272,14 +272,13 @@ function criarGraficoValorProducao() {
       valueYField: produto.campo,
       categoryXField: "ano",
       fill: am5.color(produto.cor),
-      stroke: am5.color(produto.cor)
+      stroke: am5.color(produto.cor),
+      tooltip: am5.Tooltip.new(root, { labelText: `${produto.nome} ({categoryX}): R$ {valueY} mil` })
     }));
-    serie.columns.template.setAll({
-      cornerRadiusTL: 2, cornerRadiusTR: 2, width: am5.percent(60), interactive: true,
-      tooltipText: `${produto.nome} ({categoryX}): R$ {valueY} mil`
-    });
+    serie.columns.template.setAll({ cornerRadiusTL: 2, cornerRadiusTR: 2, width: am5.percent(60) });
     series[produto.campo] = serie;
   });
+  ativarTooltipDeSeries(chart, root, "x");
   const legenda = criarLegenda(chart, root);
 
   graficos[containerId] = {
@@ -292,6 +291,7 @@ function criarGraficoValorProducao() {
         const visivel = ativos.has(campo);
         serie.data.setAll(visivel ? data : []);
         serie.setAll({ visible: visivel, forceHidden: !visivel, clustered: visivel });
+        serie.get("tooltip").set("forceHidden", !visivel);
       });
       legenda.data.setAll([...ativos].map(campo => series[campo]));
       atualizarAvisoEucalipto(containerId, ativos.size > 0);
@@ -693,7 +693,7 @@ async function carregarDadosEucalipto() {
     if (resultado.status === "fulfilled") {
       if (nome === "quantidade") dadosQuantidadeProduzida = resultado.value;
       if (nome === "ranking") dadosRankingProducao = resultado.value;
-      if (nome === "valor") dadosValorProducao = resultado.value;
+      if (nome === "valor") dadosValorProducao = registrosTotaisCentroOeste(resultado.value);
       if (nome === "participacao") dadosParticipacaoValor = resultado.value;
       estadoApiEucalipto[nome] = true;
       window.dashboardDataUi.definirEstado(ALVOS_API_EUCALIPTO[nome], "ready");
