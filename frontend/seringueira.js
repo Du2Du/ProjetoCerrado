@@ -526,7 +526,7 @@ function renderizarChips() {
         estadoFiltros.ufs.delete(btn.dataset.value);
         const cb = document.querySelector(`#seriUfMenu input[value="${btn.dataset.value}"]`);
         if (cb) cb.checked = false;
-        labelDropdown("seriUfBtn", [...estadoFiltros.ufs], "Todas");
+        labelDropdown("seriUfBtn", [...estadoFiltros.ufs], "Todos");
       } else if (tipo === "produto") {
         estadoFiltros.produto.delete(btn.dataset.value);
         const cb = document.querySelector(`#seriProdutoMenu input[value="${btn.dataset.value}"]`);
@@ -593,7 +593,7 @@ function atualizarOpcoesSeringueira() {
   const localidades = dados.map(item => item.estado);
   const produtos = [...dados, ...dadosEstabelecimentos].map(item => item.produto);
   [
-    ["Uf", "ufs", localidades, "Todas"],
+    ["Uf", "ufs", localidades, "Todos"],
     ["Produto", "produto", produtos, "Todos"]
   ].forEach(([nome, chave, valores, vazio]) => {
     const opcoes = [...new Set(valores.filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR"));
@@ -629,7 +629,7 @@ function inicializarFiltrosUI() {
   conectarBusca("buscaUfSeri", "seriUfMenu");
   document.getElementById("seriUfMenu")?.addEventListener("change", () => {
     estadoFiltros.ufs = new Set(Array.from(document.querySelectorAll("#seriUfMenu input:checked")).map(i => i.value));
-    labelDropdown("seriUfBtn", [...estadoFiltros.ufs], "Todas");
+    labelDropdown("seriUfBtn", [...estadoFiltros.ufs], "Todos");
     aplicarFiltros();
   });
 
@@ -647,7 +647,7 @@ function inicializarFiltrosUI() {
     if (selectInicio) selectInicio.value = String(periodoPadrao.inicio);
     if (selectFim)    selectFim.value    = String(periodoPadrao.fim);
     document.querySelectorAll("#seriUfMenu input, #seriProdutoMenu input").forEach(i => i.checked = false);
-    labelDropdown("seriUfBtn",     [], "Todas");
+    labelDropdown("seriUfBtn",     [], "Todos");
     labelDropdown("seriProdutoBtn", [], "Todos");
     // reset indicador
     document.querySelectorAll('[data-filter-group="ind"] .filter-btn').forEach(b => b.classList.toggle("active", b.dataset.filter === "all"));

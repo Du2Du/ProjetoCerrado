@@ -1198,7 +1198,7 @@ function limparFiltros() {
 // Sincroniza os textos dos dropdowns com `estadoFiltros`.
 function atualizarLabelsDropdowns() {
   atualizarLabelDropdown("filtroRegiaoBtn", estadoFiltros.regioes, "Todas");
-  atualizarLabelDropdown("filtroUfBtn", estadoFiltros.ufs, "Todas");
+  atualizarLabelDropdown("filtroUfBtn", estadoFiltros.ufs, "Todos");
   atualizarLabelDropdown("filtroMunicipioBtn", estadoFiltros.municipios, "Todos");
   atualizarLabelDropdown("filtroProdutoBtn", estadoFiltros.produtos, "Todos");
 }

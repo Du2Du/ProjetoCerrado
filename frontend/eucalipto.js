@@ -501,7 +501,7 @@ function lerFiltrosFormulario() {
 // Atualiza os rótulos dos três dropdowns após qualquer mudança.
 function atualizarLabelsDropdowns() {
   atualizarLabelDropdown("filtroProdutoEucaliptoBtn", filtrosAtivos.produtos, "Todos");
-  atualizarLabelDropdown("filtroUfEucaliptoBtn", filtrosAtivos.ufs, "Todas");
+  atualizarLabelDropdown("filtroUfEucaliptoBtn", filtrosAtivos.ufs, "Todos");
   atualizarLabelDropdown("filtroMunicipioEucaliptoBtn", filtrosAtivos.municipios, "Todos");
 }
 

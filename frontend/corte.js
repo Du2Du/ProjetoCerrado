@@ -289,7 +289,7 @@ function renderizarFiltrosMultiselect() {
     botaoId: "filtroUfCorteBtn",
     valores,
     selecionados: filtrosCorte.ufs,
-    todosLabel: "Todas"
+    todosLabel: "Todos"
   });
 }
 
