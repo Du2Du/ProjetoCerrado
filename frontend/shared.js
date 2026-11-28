@@ -103,8 +103,7 @@ function ativarTooltipDeSeries(chart, root, distancia = "xy") {
 }
 
 function correspondeAoIndicador(coluna, indicador) {
-    const indicadores = coluna.querySelector(".chart-area[data-indicadores]")?.dataset.indicadores.split(" ");
-    return indicador === "all" || (indicadores || [coluna.dataset.category]).includes(indicador);
+    return indicador === "all" || coluna.dataset.category === indicador;
 }
 
 function periodoGraficoFiltrado(idInicio, idFim) {

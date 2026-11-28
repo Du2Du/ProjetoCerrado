@@ -559,8 +559,6 @@ function renderizarTabelaRegioes(dados) {
   percentual.innerHTML = `<strong>${formatoPercentual.format(totalPercentual)}%</strong>`;
 }
 
-// Verifica a presença de containers opcionais usados em páginas diferentes.
-function existe(id) { return !!document.getElementById(id); }
 // Padroniza tipografia e cor de um eixo do amCharts.
 function eixo(axis) {
   axis.get("renderer").labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif", fill: am5.color("#5a5a5a") });

@@ -272,8 +272,7 @@ function criarGraficoValorProducao() {
       valueYField: produto.campo,
       categoryXField: "ano",
       fill: am5.color(produto.cor),
-      stroke: am5.color(produto.cor),
-      stacked: true
+      stroke: am5.color(produto.cor)
     }));
     serie.columns.template.setAll({
       cornerRadiusTL: 2, cornerRadiusTR: 2, width: am5.percent(60), interactive: true,
@@ -284,7 +283,7 @@ function criarGraficoValorProducao() {
   const legenda = criarLegenda(chart, root);
 
   graficos[containerId] = {
-    // Atualiza as colunas empilhadas e os produtos visíveis.
+    // Cada produto visível ocupa uma posição no grupo de colunas do ano.
     update(data, produtos) {
       const ativos = new Set(produtos.filter(produto => data.some(row => temMedicao(row[produto.campo])))
         .map(produto => produto.campo));
@@ -292,8 +291,7 @@ function criarGraficoValorProducao() {
       Object.entries(series).forEach(([campo, serie]) => {
         const visivel = ativos.has(campo);
         serie.data.setAll(visivel ? data : []);
-        serie.set("visible", visivel);
-        serie.set("forceHidden", !visivel);
+        serie.setAll({ visible: visivel, forceHidden: !visivel, clustered: visivel });
       });
       legenda.data.setAll([...ativos].map(campo => series[campo]));
       atualizarAvisoEucalipto(containerId, ativos.size > 0);
