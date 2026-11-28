@@ -150,10 +150,65 @@ function ligarCliqueDeFiltro(alvo, obterAcao) {
     });
 }
 
-function pontoDeLinhaFiltravel(root, estilo, obterAcao) {
-    const sprite = am5.Circle.new(root, estilo);
-    ligarCliqueDeFiltro(sprite, obterAcao);
+function pontoDeLinhaFiltravel(root, estilo) {
+    const sprite = am5.Circle.new(root, { ...estilo, interactive: true, cursorOverStyle: "pointer" });
     return am5.Bullet.new(root, { sprite });
+}
+
+function distanciaAoTrecho(ponto, inicio, fim) {
+    const dx = fim.x - inicio.x;
+    const dy = fim.y - inicio.y;
+    const comprimento = dx * dx + dy * dy;
+    const proporcao = comprimento ? ((ponto.x - inicio.x) * dx + (ponto.y - inicio.y) * dy) / comprimento : 0;
+    const passo = Math.max(0, Math.min(1, proporcao));
+    return Math.hypot(ponto.x - inicio.x - passo * dx, ponto.y - inicio.y - passo * dy);
+}
+
+function distanciaDaColuna(ponto, item) {
+    const [esquerda, direita, topo, base] = ["left", "right", "top", "bottom"].map(campo => item.get(campo));
+    const dx = Math.max(Math.min(esquerda, direita) - ponto.x, ponto.x - Math.max(esquerda, direita), 0);
+    const dy = Math.max(Math.min(topo, base) - ponto.y, ponto.y - Math.max(topo, base), 0);
+    return Math.hypot(dx, dy);
+}
+
+// O amCharts pode deixar barras finas e partes de uma linha fora da área clicável
+// do canvas. A posição do clique é comparada com os dados desenhados no gráfico.
+function ligarFiltroEmXY(chart, obterAcao) {
+    const root = chart.root;
+    const selecionar = evento => {
+        const ponto = chart.plotContainer.toLocal(root.documentPointToRoot({ x: evento.clientX, y: evento.clientY }));
+        if (!chart.inPlot(ponto)) return;
+        let melhorDistancia = evento.pointerType === "touch" ? 12 : 7;
+        let maisProximo;
+        for (const serie of chart.series.values) {
+            if (!serie.isVisible() || serie.isHiding()) continue;
+            const colunas = serie instanceof am5xy.ColumnSeries;
+            let anterior;
+            for (const item of serie.dataItems) {
+                let distancia;
+                if (colunas) {
+                    if (!item.get("graphics")?.isVisible()) continue;
+                    distancia = distanciaDaColuna(ponto, item);
+                } else {
+                    const atual = Number.isFinite(item.get("valueY")) ? item.get("point") : null;
+                    if (!atual) {
+                        if (!serie.get("connect")) anterior = undefined;
+                        continue;
+                    }
+                    distancia = distanciaAoTrecho(ponto, anterior || atual, atual);
+                    anterior = atual;
+                }
+                if (distancia < melhorDistancia) {
+                    melhorDistancia = distancia;
+                    maisProximo = { serie, item };
+                }
+            }
+        }
+        const acao = maisProximo && obterAcao(maisProximo.serie, maisProximo.item);
+        if (acao) queueMicrotask(acao);
+    };
+    root.dom.addEventListener("click", selecionar);
+    root.addDisposer({ dispose: () => root.dom.removeEventListener("click", selecionar) });
 }
 
 function ligarRotuloDeFiltro(eixo, obterAcao) {

@@ -211,33 +211,6 @@ function filtrarProdutoPeloGraficoEucalipto(campo) {
   return alternarOpcoesDoGrafico(opcaoDeFiltro("filtroProdutoEucaliptoMenu", campo));
 }
 
-// As colunas muito estreitas também respondem ao clique próximo às suas bordas.
-function ligarFiltroDoValorEucalipto(chart, root) {
-  root.dom.addEventListener("click", evento => {
-    const ponto = chart.plotContainer.toLocal(root.documentPointToRoot({ x: evento.clientX, y: evento.clientY }));
-    if (!chart.inPlot(ponto)) return;
-    let campo;
-    let distancia = Infinity;
-    for (const serie of chart.series.values) {
-      if (!serie.isVisible()) continue;
-      for (const item of serie.dataItems) {
-        if (!item.get("graphics")?.isVisible()) continue;
-        const esquerda = item.get("left");
-        const direita = item.get("right");
-        const topo = item.get("top");
-        const base = item.get("bottom");
-        const ateCentro = Math.abs(ponto.x - (esquerda + direita) / 2);
-        if (ateCentro < distancia && ponto.x >= esquerda - 2 && ponto.x <= direita + 2
-            && ponto.y >= Math.min(topo, base) - 2 && ponto.y <= Math.max(topo, base) + 2) {
-          distancia = ateCentro;
-          campo = serie.get("valueYField");
-        }
-      }
-    }
-    filtrarProdutoPeloGraficoEucalipto(campo)?.();
-  });
-}
-
 // Cria um gráfico de linhas reutilizável para os diferentes produtos.
 function criarGraficoLinhasProdutos(containerId, dataSource, unidadePadrao) {
   if (!existe(containerId)) return;
@@ -247,6 +220,7 @@ function criarGraficoLinhasProdutos(containerId, dataSource, unidadePadrao) {
   const eixoY = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
   configurarEixo(eixoX); configurarEixo(eixoY);
   ligarAnoDeFiltro(eixoX, "filtroAnoInicioEucalipto", "filtroAnoFimEucalipto");
+  ligarFiltroEmXY(chart, serie => filtrarProdutoPeloGraficoEucalipto(serie.get("valueYField")));
 
   const series = {};
   produtosEucalipto.forEach(produto => {
@@ -261,12 +235,10 @@ function criarGraficoLinhasProdutos(containerId, dataSource, unidadePadrao) {
       fill: am5.color(produto.cor),
       tooltip: am5.Tooltip.new(root, { labelText: `${produto.nome}: {valueY} ${produto.unidade || unidadePadrao}` })
     }));
-    serie.strokes.template.setAll({ strokeWidth: 2.5 });
-    const filtrar = () => filtrarProdutoPeloGraficoEucalipto(produto.campo);
-    ligarCliqueDeFiltro(serie.strokes.template, filtrar);
+    serie.strokes.template.setAll({ strokeWidth: 2.5, interactive: true, cursorOverStyle: "pointer" });
     serie.bullets.push(() => pontoDeLinhaFiltravel(root, {
       radius: 3, fill: serie.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2
-    }, filtrar));
+    }));
     series[produto.campo] = serie;
   });
   const legenda = criarLegenda(chart, root);
@@ -318,7 +290,7 @@ function criarGraficoValorProducao() {
     series[produto.campo] = serie;
   });
   ativarTooltipDeSeries(chart, root, "x");
-  ligarFiltroDoValorEucalipto(chart, root);
+  ligarFiltroEmXY(chart, serie => filtrarProdutoPeloGraficoEucalipto(serie.get("valueYField")));
   const legenda = criarLegenda(chart, root);
 
   graficos[containerId] = {
@@ -361,10 +333,12 @@ function criarGraficoRankingProducao() {
     stroke: am5.color(P[0]),
     tooltip: am5.Tooltip.new(root, { labelText: "#{ranking} {localidade}: {valueX} m³" })
   }));
-  serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65) });
+  serie.columns.template.setAll({
+    cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65), interactive: true, cursorOverStyle: "pointer"
+  });
   const filtrarMunicipio = item => alternarOpcoesDoGrafico(
     opcaoDeFiltro("filtroMunicipioEucaliptoMenu", item?.dataContext?.municipio));
-  ligarCliqueDeFiltro(serie.columns.template, filtrarMunicipio);
+  ligarFiltroEmXY(chart, (_serie, item) => filtrarMunicipio(item));
   ligarRotuloDeFiltro(eixoY, filtrarMunicipio);
   ativarTooltipDeSeries(chart, root);
 
@@ -399,9 +373,11 @@ function criarGraficoParticipacaoValor() {
     baseAxis: eixoY,
     tooltip: am5.Tooltip.new(root, { labelText: "{categoryY}: {valueX}%" })
   }));
-  serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65) });
+  serie.columns.template.setAll({
+    cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65), interactive: true, cursorOverStyle: "pointer"
+  });
   const filtrar = item => filtrarProdutoPeloGraficoEucalipto(item?.dataContext?.campoProduto);
-  ligarCliqueDeFiltro(serie.columns.template, filtrar);
+  ligarFiltroEmXY(chart, (_serie, item) => filtrar(item));
   ligarRotuloDeFiltro(eixoY, filtrar);
   ativarTooltipDeSeries(chart, root);
   serie.columns.template.adapters.add("fill", (fill, target) => am5.color(target.dataItem?.dataContext?.cor || P[0]));
