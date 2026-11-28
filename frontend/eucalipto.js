@@ -207,6 +207,37 @@ function atualizarAvisoEucalipto(id, temDados) {
   mostrarAvisoGrafico(id, mensagem, filtroAtivo);
 }
 
+function filtrarProdutoPeloGraficoEucalipto(campo) {
+  return alternarOpcoesDoGrafico(opcaoDeFiltro("filtroProdutoEucaliptoMenu", campo));
+}
+
+// As colunas muito estreitas também respondem ao clique próximo às suas bordas.
+function ligarFiltroDoValorEucalipto(chart, root) {
+  root.dom.addEventListener("click", evento => {
+    const ponto = chart.plotContainer.toLocal(root.documentPointToRoot({ x: evento.clientX, y: evento.clientY }));
+    if (!chart.inPlot(ponto)) return;
+    let campo;
+    let distancia = Infinity;
+    for (const serie of chart.series.values) {
+      if (!serie.isVisible()) continue;
+      for (const item of serie.dataItems) {
+        if (!item.get("graphics")?.isVisible()) continue;
+        const esquerda = item.get("left");
+        const direita = item.get("right");
+        const topo = item.get("top");
+        const base = item.get("bottom");
+        const ateCentro = Math.abs(ponto.x - (esquerda + direita) / 2);
+        if (ateCentro < distancia && ponto.x >= esquerda - 2 && ponto.x <= direita + 2
+            && ponto.y >= Math.min(topo, base) - 2 && ponto.y <= Math.max(topo, base) + 2) {
+          distancia = ateCentro;
+          campo = serie.get("valueYField");
+        }
+      }
+    }
+    filtrarProdutoPeloGraficoEucalipto(campo)?.();
+  });
+}
+
 // Cria um gráfico de linhas reutilizável para os diferentes produtos.
 function criarGraficoLinhasProdutos(containerId, dataSource, unidadePadrao) {
   if (!existe(containerId)) return;
@@ -215,6 +246,7 @@ function criarGraficoLinhasProdutos(containerId, dataSource, unidadePadrao) {
   const eixoX = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 40 }), tooltip: am5.Tooltip.new(root, {}) }));
   const eixoY = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
   configurarEixo(eixoX); configurarEixo(eixoY);
+  ligarAnoDeFiltro(eixoX, "filtroAnoInicioEucalipto", "filtroAnoFimEucalipto");
 
   const series = {};
   produtosEucalipto.forEach(produto => {
@@ -230,10 +262,15 @@ function criarGraficoLinhasProdutos(containerId, dataSource, unidadePadrao) {
       tooltip: am5.Tooltip.new(root, { labelText: `${produto.nome}: {valueY} ${produto.unidade || unidadePadrao}` })
     }));
     serie.strokes.template.setAll({ strokeWidth: 2.5 });
-    serie.bullets.push(() => am5.Bullet.new(root, { sprite: am5.Circle.new(root, { radius: 3, fill: serie.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2 }) }));
+    const filtrar = () => filtrarProdutoPeloGraficoEucalipto(produto.campo);
+    ligarCliqueDeFiltro(serie.strokes.template, filtrar);
+    serie.bullets.push(() => pontoDeLinhaFiltravel(root, {
+      radius: 3, fill: serie.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2
+    }, filtrar));
     series[produto.campo] = serie;
   });
   const legenda = criarLegenda(chart, root);
+  ligarLegendaDeFiltro(legenda, serie => filtrarProdutoPeloGraficoEucalipto(serie?.get("valueYField")));
 
   graficos[containerId] = {
     // Atualiza o período e alterna os produtos selecionados.
@@ -262,6 +299,7 @@ function criarGraficoValorProducao() {
   const eixoX = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 40 }) }));
   const eixoY = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
   configurarEixo(eixoX); configurarEixo(eixoY);
+  ligarAnoDeFiltro(eixoX, "filtroAnoInicioEucalipto", "filtroAnoFimEucalipto");
 
   const series = {};
   produtosEucalipto.forEach(produto => {
@@ -275,11 +313,15 @@ function criarGraficoValorProducao() {
       stroke: am5.color(produto.cor),
       tooltip: am5.Tooltip.new(root, { labelText: `${produto.nome} ({categoryX}): R$ {valueY} mil` })
     }));
-    serie.columns.template.setAll({ cornerRadiusTL: 2, cornerRadiusTR: 2, width: am5.percent(60) });
+    serie.columns.template.setAll({
+      cornerRadiusTL: 2, cornerRadiusTR: 2, width: am5.percent(60), interactive: true, cursorOverStyle: "pointer"
+    });
     series[produto.campo] = serie;
   });
   ativarTooltipDeSeries(chart, root, "x");
+  ligarFiltroDoValorEucalipto(chart, root);
   const legenda = criarLegenda(chart, root);
+  ligarLegendaDeFiltro(legenda, serie => filtrarProdutoPeloGraficoEucalipto(serie?.get("valueYField")));
 
   graficos[containerId] = {
     // Cada produto visível ocupa uma posição no grupo de colunas do ano.
@@ -322,6 +364,10 @@ function criarGraficoRankingProducao() {
     tooltip: am5.Tooltip.new(root, { labelText: "#{ranking} {localidade}: {valueX} m³" })
   }));
   serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65) });
+  const filtrarMunicipio = item => alternarOpcoesDoGrafico(
+    opcaoDeFiltro("filtroMunicipioEucaliptoMenu", item?.dataContext?.municipio));
+  ligarCliqueDeFiltro(serie.columns.template, filtrarMunicipio);
+  ligarRotuloDeFiltro(eixoY, filtrarMunicipio);
   ativarTooltipDeSeries(chart, root);
 
   graficos[containerId] = {
@@ -356,6 +402,9 @@ function criarGraficoParticipacaoValor() {
     tooltip: am5.Tooltip.new(root, { labelText: "{categoryY}: {valueX}%" })
   }));
   serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65) });
+  const filtrar = item => filtrarProdutoPeloGraficoEucalipto(item?.dataContext?.campoProduto);
+  ligarCliqueDeFiltro(serie.columns.template, filtrar);
+  ligarRotuloDeFiltro(eixoY, filtrar);
   ativarTooltipDeSeries(chart, root);
   serie.columns.template.adapters.add("fill", (fill, target) => am5.color(target.dataItem?.dataContext?.cor || P[0]));
   serie.columns.template.adapters.add("stroke", (stroke, target) => am5.color(target.dataItem?.dataContext?.cor || P[0]));
@@ -393,6 +442,7 @@ function dadosParticipacaoFiltrados() {
   return produtosSelecionados()
     .map(produto => ({
       produto: produto.nomeCurto,
+      campoProduto: produto.campo,
       percentualParticipacaoValor: itemAno[produto.campo],
       cor: produto.cor,
       ano,
@@ -464,16 +514,28 @@ function atualizarVisibilidadeCards() {
 
 // Converte o estado atual em chips exibidos acima dos resultados.
 function atualizarResumoFiltros() {
-  const target = document.getElementById("filtrosAtivosEucalipto");
-  if (!target) return;
-  const chips = [
-    `Indicador: ${filtrosAtivos.indicador === "all" ? "todos" : filtrosAtivos.indicador}`,
-    filtrosAtivos.anoInicio ? `Período: ${filtrosAtivos.anoInicio}-${filtrosAtivos.anoFim}` : "",
-    filtrosAtivos.produtos.length ? `Produtos: ${filtrosAtivos.produtos.length}` : "",
-    filtrosAtivos.ufs.length ? `UF do ranking: ${filtrosAtivos.ufs.join(", ")}` : "",
-    filtrosAtivos.municipios.length ? `Municípios do ranking: ${filtrosAtivos.municipios.length}` : ""
-  ].filter(Boolean);
-  target.innerHTML = chips.map(texto => `<span class="filter-chip">${texto}</span>`).join("");
+  const grupo = document.querySelector('[data-filter-group="indicador"]');
+  const chips = chipDePeriodo("filtroAnoInicioEucalipto", "filtroAnoFimEucalipto");
+  if (filtrosAtivos.indicador !== "all") {
+    chips.unshift([`Indicador: ${grupo.querySelector(".active").textContent}`,
+      () => grupo.querySelector('[data-filter="all"]').click()]);
+  }
+  for (const [id, padrao] of [["filtroTopRankingEucalipto", "10"], ["filtroFaixaRankingEucalipto", "0"]]) {
+    const select = document.getElementById(id);
+    if (select.value !== padrao) {
+      chips.push([select.selectedOptions[0].textContent, () => {
+        select.value = padrao;
+        lerFiltrosFormulario();
+      }]);
+    }
+  }
+  renderizarChipsDeFiltro("filtrosAtivosEucalipto", [
+    ...chips,
+    ...filtrosAtivos.produtos.map(campo => chipDeOpcao("filtroProdutoEucaliptoMenu", campo,
+      `Produto: ${produtosEucalipto.find(produto => produto.campo === campo).nome}`)),
+    ...filtrosAtivos.ufs.map(uf => chipDeOpcao("filtroUfEucaliptoMenu", uf, `UF do ranking: ${uf}`)),
+    ...filtrosAtivos.municipios.map(municipio => chipDeOpcao("filtroMunicipioEucaliptoMenu", municipio, `Município: ${municipio}`))
+  ]);
 }
 
 // Copia controles do DOM para o estado e inicia uma nova renderização.

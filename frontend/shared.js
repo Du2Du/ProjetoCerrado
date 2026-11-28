@@ -113,6 +113,118 @@ function ativarTooltipDeSeries(chart, root, distancia = "xy") {
     cursor.lineY.set("visible", false);
 }
 
+// A seleção no gráfico percorre o mesmo caminho que a do controle no painel.
+function controleDeFiltroDisponivel(controle) {
+    return controle && !controle.disabled
+        && !controle.closest(".filter-cluster")?.matches("[hidden], .is-filter-hidden")
+        && !controle.closest(".filter-bar[hidden]");
+}
+
+function opcaoDeFiltro(menuId, valor, normalizar = String) {
+    if (valor == null) return;
+    const menu = document.getElementById(menuId);
+    const botao = menu?.closest(".dropdown")?.querySelector(".filter-dropdown-btn");
+    if (!controleDeFiltroDisponivel(botao)) return;
+    return Array.from(menu.querySelectorAll('input[type="checkbox"]:enabled'))
+        .find(input => normalizar(input.value) === normalizar(valor));
+}
+
+function alternarOpcoesDoGrafico(...opcoes) {
+    const disponiveis = opcoes.filter(Boolean);
+    if (!disponiveis.length) return;
+    return () => {
+        const marcar = disponiveis.some(opcao => !opcao.checked);
+        disponiveis.forEach(opcao => { opcao.checked = marcar; });
+        // Uma categoria composta atualiza todos os controles antes de redesenhar.
+        disponiveis[0].dispatchEvent(new Event("change", { bubbles: true }));
+    };
+}
+
+function ligarCliqueDeFiltro(alvo, obterAcao) {
+    alvo.set("interactive", true);
+    alvo.adapters.add("cursorOverStyle", (estilo, sprite) => obterAcao(sprite.dataItem) ? "pointer" : estilo);
+    alvo.events.on("click", ({ target }) => {
+        const acao = obterAcao(target.dataItem);
+        // O redesenho pode descartar o gráfico que está entregando este evento.
+        if (acao) queueMicrotask(acao);
+    });
+}
+
+function pontoDeLinhaFiltravel(root, estilo, obterAcao) {
+    const sprite = am5.Circle.new(root, estilo);
+    ligarCliqueDeFiltro(sprite, obterAcao);
+    return am5.Bullet.new(root, { sprite });
+}
+
+function ligarLegendaDeFiltro(legenda, obterAcao) {
+    legenda.set("clickTarget", "none");
+    ligarCliqueDeFiltro(legenda.itemContainers.template, item => obterAcao(item?.dataContext));
+}
+
+function ligarRotuloDeFiltro(eixo, obterAcao) {
+    const rotulos = eixo.get("renderer").labels.template;
+    rotulos.setup = rotulo => {
+        // O fundo transparente torna todo o rótulo uma área de clique.
+        rotulo.set("background", am5.Rectangle.new(eixo.root, { fill: am5.color(0), fillOpacity: 0 }));
+    };
+    ligarCliqueDeFiltro(rotulos, obterAcao);
+}
+
+function definirPeriodoDosControles(inicio, fim, primeiro, ultimo) {
+    inicio.value = primeiro;
+    fim.value = ultimo;
+    inicio.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function ligarAnoDeFiltro(eixo, idInicio, idFim) {
+    ligarRotuloDeFiltro(eixo, item => {
+        const ano = item?.get("category");
+        if (!ano) return;
+        const inicio = document.getElementById(idInicio);
+        const fim = document.getElementById(idFim);
+        if (![inicio, fim].every(select => controleDeFiltroDisponivel(select)
+            && Array.from(select.options).some(opcao => opcao.value === ano && !opcao.disabled))) return;
+        return () => definirPeriodoDosControles(inicio, fim, ano, ano);
+    });
+}
+
+function chipDePeriodo(idInicio, idFim) {
+    const inicio = document.getElementById(idInicio);
+    const fim = document.getElementById(idFim);
+    if (!inicio.value || !fim.value) return [];
+    const texto = `Período: ${inicio.value}–${fim.value}`;
+    const remover = periodoGraficoFiltrado(idInicio, idFim)
+        ? () => definirPeriodoDosControles(inicio, fim, inicio.options[0].value, fim.options[fim.options.length - 1].value)
+        : undefined;
+    return [[texto, remover]];
+}
+
+function chipDeOpcao(menuId, valor, texto) {
+    return [texto, () => {
+        const opcao = opcaoDeFiltro(menuId, valor);
+        if (opcao?.checked) opcao.click();
+    }];
+}
+
+function renderizarChipsDeFiltro(id, chips) {
+    const resumo = document.getElementById(id);
+    resumo.replaceChildren(...chips.map(([texto, remover]) => {
+        const chip = document.createElement("span");
+        chip.className = "filter-chip";
+        chip.textContent = texto;
+        if (remover) {
+            const botao = document.createElement("button");
+            botao.type = "button";
+            botao.className = "filter-chip__x";
+            botao.setAttribute("aria-label", `Remover filtro ${texto}`);
+            botao.textContent = "×";
+            botao.addEventListener("click", remover);
+            chip.append(botao);
+        }
+        return chip;
+    }));
+}
+
 function quebrarRotulosDeBarrasHorizontais(rotulos, chart, elemento) {
     rotulos.setAll({ oversizedBehavior: "wrap", maxWidth: 260 });
     chart.events.on("boundschanged", () => {

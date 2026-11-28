@@ -712,8 +712,25 @@ function serieComparativa(anos, nomeInicio = "Início", nomeFim = "Fim") {
   ];
 }
 
+function opcaoDeFiltroLeite(campo, valor) {
+  const menus = {
+    estado: "filtroUfMenu", regiao: "filtroRegiaoMenu", mesorregiao: "filtroRegiaoMenu",
+    municipio: "filtroMunicipioMenu", produto: "filtroProdutoMenu"
+  };
+  return opcaoDeFiltro(menus[campo], valor, campo === "estado" ? codigoUfPainel : String);
+}
+
+function filtrarDadoPeloGraficoLeite(categoria, item) {
+  const dado = item?.dataContext;
+  if (!dado) return;
+  if (categoria === "categoria") {
+    return alternarOpcoesDoGrafico(opcaoDeFiltroLeite("produto", dado.produto), opcaoDeFiltroLeite("estado", dado.estado));
+  }
+  return alternarOpcoesDoGrafico(opcaoDeFiltroLeite(categoria, dado[categoria]));
+}
+
 // Cria um gráfico de linhas reutilizável e registra seu método de atualização.
-function graficoLinhas(id, categoria, series = null, sufixo = "", alturaSemLegenda = 0) {
+function graficoLinhas(id, categoria, campoFiltro, series = null, sufixo = "", alturaSemLegenda = 0) {
   const elemento = document.getElementById(id);
   if (!elemento) return;
   const root = criarRoot(id);
@@ -722,6 +739,8 @@ function graficoLinhas(id, categoria, series = null, sufixo = "", alturaSemLegen
   const xA = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: categoria, renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 35 }), tooltip: am5.Tooltip.new(root, {}) }));
   const yA = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
   eixo(xA); eixo(yA);
+  ligarAnoDeFiltro(xA, "filtroAnoInicio", "filtroAnoFim");
+  const filtrarSerie = nome => alternarOpcoesDoGrafico(opcaoDeFiltroLeite(campoFiltro, nome));
   const criarSerie = (nome, idx) => {
     const s = chart.series.push(am5xy.LineSeries.new(root, {
       name: nome, xAxis: xA, yAxis: yA, valueYField: nome, categoryXField: categoria,
@@ -729,10 +748,15 @@ function graficoLinhas(id, categoria, series = null, sufixo = "", alturaSemLegen
       tooltip: am5.Tooltip.new(root, { labelText: `{name}: {valueY}${sufixo}` })
     }));
     s.strokes.template.setAll({ strokeWidth: 2 });
-    s.bullets.push(() => am5.Bullet.new(root, { sprite: am5.Circle.new(root, { radius: 3, fill: s.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2 }) }));
+    const filtrar = () => filtrarSerie(nome);
+    ligarCliqueDeFiltro(s.strokes.template, filtrar);
+    s.bullets.push(() => pontoDeLinhaFiltravel(root, {
+      radius: 3, fill: s.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2
+    }, filtrar));
   };
   series?.forEach(criarSerie);
   const legenda = criarLegenda(chart, root);
+  ligarLegendaDeFiltro(legenda, serie => filtrarSerie(serie?.get("name")));
   if (alturaSemLegenda) {
     const ajustarAltura = () => {
       // Reserva espaço para as linhas quando a legenda ocupa várias fileiras.
@@ -796,6 +820,9 @@ function graficoBarras(id, categoria, valor, horizontal = false, sufixo = "", qu
   s.columns.template.setAll({
     cornerRadiusTL: 3, cornerRadiusTR: 3, cornerRadiusBR: horizontal ? 3 : 0
   });
+  const filtrar = item => filtrarDadoPeloGraficoLeite(categoria, item);
+  ligarCliqueDeFiltro(s.columns.template, filtrar);
+  ligarRotuloDeFiltro(cA, filtrar);
   ativarTooltipDeSeries(chart, root);
   s.columns.template.adapters.add("fill", (_fill, target) => am5.color(P[(target.dataItem?.get("index") || 0) % P.length]));
   s.columns.template.adapters.add("stroke", (_stroke, target) => am5.color(P[(target.dataItem?.get("index") || 0) % P.length]));
@@ -827,6 +854,8 @@ function graficoBarrasAgrupadas(id, categoria, series, sufixo = "", horizontal =
     rendererCategoria.labels.template.setAll({ oversizedBehavior: "truncate", maxWidth: 100 });
   }
   const seriesMap = {};
+  const filtrar = item => filtrarDadoPeloGraficoLeite(categoria, item);
+  ligarRotuloDeFiltro(eixoCategoria, filtrar);
   series.forEach((cfg, idx) => {
     const s = chart.series.push(am5xy.ColumnSeries.new(root, {
       name: cfg.nome, xAxis: horizontal ? eixoValor : eixoCategoria, yAxis: horizontal ? eixoCategoria : eixoValor,
@@ -841,6 +870,7 @@ function graficoBarrasAgrupadas(id, categoria, series, sufixo = "", horizontal =
     const formato = horizontal ? { height: am5.percent(55), cornerRadiusTR: 3, cornerRadiusBR: 3 }
       : { width: am5.percent(55), cornerRadiusTL: 3, cornerRadiusTR: 3 };
     s.columns.template.setAll({ ...formato, fill: am5.color(P[idx]), stroke: am5.color(P[idx]) });
+    ligarCliqueDeFiltro(s.columns.template, filtrar);
     seriesMap[cfg.nome] = s;
   });
   ativarTooltipDeSeries(chart, root, horizontal ? "y" : "x");
@@ -869,10 +899,13 @@ function graficoPizza(id, categoria, valor, alturaSemLegenda = 0) {
   const chart = root.container.children.push(am5percent.PieChart.new(root, { layout: root.verticalLayout, innerRadius: am5.percent(55) }));
   const s = chart.series.push(am5percent.PieSeries.new(root, { valueField: valor, categoryField: categoria }));
   s.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
-  s.slices.template.setAll({ interactive: true, tooltipText: "" });
+  s.slices.template.setAll({ toggleKey: "none", tooltipText: "" });
+  const filtrar = item => filtrarDadoPeloGraficoLeite(categoria, item);
+  ligarCliqueDeFiltro(s.slices.template, filtrar);
   s.get("colors").set("colors", P.map(c => am5.color(c)));
   const l = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 10 }));
   l.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
+  ligarLegendaDeFiltro(l, filtrar);
   let categoriasVisiveis = 0;
   const ajustarLegenda = () => {
     const largura = elemento.clientWidth || 260;
@@ -911,19 +944,19 @@ function graficoPizza(id, categoria, valor, alturaSemLegenda = 0) {
 
 // Instancia todos os gráficos e seus controladores antes da primeira filtragem.
 function inicializarEstruturaGraficos() {
-  graficoLinhas("chartLeiteSeries", "ano", SERIES_PRODUCAO_UF, " bi L");
+  graficoLinhas("chartLeiteSeries", "ano", "estado", SERIES_PRODUCAO_UF, " bi L");
   graficoPizza("chartLeiteRegiao", "regiao", "percentualParticipacao");
   graficoBarras("chartProdutividade", "regiao", "produtividadeLitrosPorVacaAno", true, " L/vaca/ano");
   graficoBarras("chartVacasRegiao", "regiao", "quantidadeVacasOrdenhadas", true);
-  graficoLinhas("chartVacasRegiaoSerie", "ano", SERIES_REGIAO);
-  graficoLinhas("chartGoiasMeso", "ano", SERIES_MESO);
+  graficoLinhas("chartVacasRegiaoSerie", "ano", "regiao", SERIES_REGIAO);
+  graficoLinhas("chartGoiasMeso", "ano", "mesorregiao", SERIES_MESO);
   graficoPizza("chartGoiasMesoPie", "mesorregiao", "producao", 280);
   graficoBarrasAgrupadas("chartVacasGoias", "mesorregiao", [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }], "", true);
-  graficoLinhas("chartVacasMesoSerie", "ano", SERIES_VACAS_MESO, "", 370);
+  graficoLinhas("chartVacasMesoSerie", "ano", "mesorregiao", SERIES_VACAS_MESO, "", 370);
   graficoBarras("chartLeiteProducaoCO", "estado", "producaoLeiteMilhoesLitros", false, " mil L");
   graficoBarras("chartProducaoCentroOesteUf", "estado", "producaoLeiteMilhoesLitros", false, " mil L", true);
-  graficoLinhas("chartRebanhoCO", "ano", SERIES_UF_CO);
-  graficoLinhas("chartMunicipios", "ano", null, " mil L", 370);
+  graficoLinhas("chartRebanhoCO", "ano", "estado", SERIES_UF_CO);
+  graficoLinhas("chartMunicipios", "ano", "municipio", null, " mil L", 370);
   graficoBarrasAgrupadas("chartMunicipiosBars", "municipio", [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }]);
   graficoBarrasAgrupadas("chartProdutividadeMunicipios", "municipio", [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }], " L/vaca/ano");
   graficoBarras("chartRankingConsumo", "categoria", "melhorPosicao", true, "", true);
@@ -1061,17 +1094,20 @@ function atualizarVisibilidadeCards() {
 }
 // Converte o estado atual em chips de leitura rápida.
 function atualizarResumoFiltros() {
-  const target = document.getElementById("filtrosAtivosLeite");
-  if (!target) return;
-  const chips = [
-    `Indicador: ${estadoFiltros.indicador === "all" ? "todos" : estadoFiltros.indicador}`,
-    estadoFiltros.anoInicio ? `Período: ${estadoFiltros.anoInicio}-${estadoFiltros.anoFim}` : "",
-    estadoFiltros.regioes.length ? `${document.getElementById("labelFiltroRegiao").textContent}: ${estadoFiltros.regioes.length}` : "",
-    estadoFiltros.ufs.length ? `UF: ${estadoFiltros.ufs.length}` : "",
-    estadoFiltros.municipios.length ? `Municípios: ${estadoFiltros.municipios.length}` : "",
-    estadoFiltros.produtos.length ? `Produto do ranking: ${estadoFiltros.produtos.length}` : ""
-  ].filter(Boolean);
-  target.innerHTML = chips.map(texto => `<span class="filter-chip">${texto}</span>`).join("");
+  const grupo = document.querySelector('[data-filter-group="indicador"]');
+  const chips = chipDePeriodo("filtroAnoInicio", "filtroAnoFim");
+  if (estadoFiltros.indicador !== "all") {
+    chips.unshift([`Indicador: ${grupo.querySelector(".active").textContent}`,
+      () => grupo.querySelector('[data-filter="all"]').click()]);
+  }
+  const regiao = document.getElementById("labelFiltroRegiao").textContent;
+  renderizarChipsDeFiltro("filtrosAtivosLeite", [
+    ...chips,
+    ...estadoFiltros.regioes.map(valor => chipDeOpcao("filtroRegiaoMenu", valor, `${regiao}: ${valor}`)),
+    ...estadoFiltros.ufs.map(uf => chipDeOpcao("filtroUfMenu", uf, `UF: ${uf}`)),
+    ...estadoFiltros.municipios.map(municipio => chipDeOpcao("filtroMunicipioMenu", municipio, `Município: ${municipio}`)),
+    ...estadoFiltros.produtos.map(produto => chipDeOpcao("filtroProdutoMenu", produto, `Produto: ${produto}`))
+  ]);
 }
 // Copia valores dos controles para `estadoFiltros` e redesenha o dashboard.
 function lerFiltrosDeFormulario() {
