@@ -79,10 +79,6 @@ function configurarEixo(axis) {
   axis.get("renderer").labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif", fill: am5.color("#5a5a5a") });
 }
 
-function filtrarUfPeloGraficoCorte(uf) {
-  return alternarOpcoesDoGrafico(opcaoDeFiltro("filtroUfCorteMenu", uf, codigoUfPainel));
-}
-
 // Cria uma legenda centralizada e devolve sua referência para receber as séries.
 function criarLegenda(chart, root) {
   const legend = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 8 }));
@@ -129,20 +125,13 @@ function criarLinhas(id, dados, campoCategoria, series, sufixo = "") {
   const eixoX = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: campoCategoria, renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 35 }), tooltip: am5.Tooltip.new(root, {}) }));
   const eixoY = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
   configurarEixo(eixoX); configurarEixo(eixoY); eixoX.data.setAll(dados);
-  ligarAnoDeFiltro(eixoX, "filtroAnoInicioCorte", "filtroAnoFimCorte");
   seriesValidas.forEach((nome, idx) => {
     const serie = chart.series.push(am5xy.LineSeries.new(root, { name: nome, xAxis: eixoX, yAxis: eixoY, valueYField: nome, categoryXField: campoCategoria, connect: false, stroke: am5.color(PALETA_CORTE[idx % PALETA_CORTE.length]), fill: am5.color(PALETA_CORTE[idx % PALETA_CORTE.length]), tooltip: am5.Tooltip.new(root, { labelText: `{name}: {valueY}${sufixo}` }) }));
     serie.strokes.template.setAll({ strokeWidth: 2 });
-    const filtrar = () => filtrarUfPeloGraficoCorte(nome);
-    ligarCliqueDeFiltro(serie.strokes.template, filtrar);
-    serie.bullets.push(() => pontoDeLinhaFiltravel(root, {
-      radius: 3, fill: serie.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2
-    }, filtrar));
+    serie.bullets.push(() => am5.Bullet.new(root, { sprite: am5.Circle.new(root, { radius: 3, fill: serie.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2 }) }));
     serie.data.setAll(dados);
   });
-  const legenda = criarLegenda(chart, root);
-  ligarLegendaDeFiltro(legenda, serie => filtrarUfPeloGraficoCorte(serie?.get("name")));
-  legenda.data.setAll(chart.series.values);
+  criarLegenda(chart, root).data.setAll(chart.series.values);
   chart.appear(600, 60);
 }
 
@@ -153,15 +142,12 @@ function criarPizza(id, dados, categoria, valor) {
   const root = criarRoot(id);
   const chart = root.container.children.push(am5percent.PieChart.new(root, { layout: root.verticalLayout, innerRadius: am5.percent(55) }));
   const serie = chart.series.push(am5percent.PieSeries.new(root, { valueField: valor, categoryField: categoria }));
-  serie.slices.template.setAll({ toggleKey: "none", tooltipText: "" });
-  const filtrar = item => filtrarUfPeloGraficoCorte(item?.get("category"));
-  ligarCliqueDeFiltro(serie.slices.template, filtrar);
+  serie.slices.template.setAll({ interactive: true, tooltipText: "" });
   serie.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
   serie.get("colors").set("colors", PALETA_CORTE.map(cor => am5.color(cor)));
   serie.data.setAll(filtrados);
   const legend = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 10 }));
   legend.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
-  ligarLegendaDeFiltro(legend, filtrar);
   legend.data.setAll(serie.dataItems);
   chart.appear(600, 60);
 }
@@ -262,15 +248,15 @@ function labelSelecao(set, total, todosLabel) {
 }
 
 // Reconstrói um dropdown pesquisável e conecta cada checkbox ao estado central.
-function renderizarMultiselect({ menuId, buscaId, botaoId, valores, selecionados, todosLabel }) {
+function renderizarMultiselect({ menuId, buscaId, botaoId, valores, selecionados, todosLabel, label = v => v, onChange }) {
   const menu = porId(menuId);
   const busca = porId(buscaId);
   const botao = porId(botaoId);
   if (!menu || !botao) return;
   const termo = (busca?.value || "").toLocaleLowerCase("pt-BR");
-  const visiveis = new Set(valores.filter(valor => valor.toLocaleLowerCase("pt-BR").includes(termo)));
+  const visiveis = valores.filter(valor => label(valor).toLocaleLowerCase("pt-BR").includes(termo));
   botao.textContent = labelSelecao(selecionados, valores.length, todosLabel);
-  menu.replaceChildren(...valores.map(valor => {
+  menu.replaceChildren(...visiveis.map(valor => {
     const opcao = document.createElement("label");
     opcao.className = "filter-option";
     const input = document.createElement("input");
@@ -278,15 +264,15 @@ function renderizarMultiselect({ menuId, buscaId, botaoId, valores, selecionados
     input.value = valor;
     input.checked = selecionados.has(valor);
     const texto = document.createElement("span");
-    texto.textContent = valor;
-    opcao.style.display = visiveis.has(valor) ? "" : "none";
+    texto.textContent = label(valor);
     opcao.append(input, texto);
     return opcao;
   }));
-  if (!visiveis.size) menu.append("Nenhum resultado");
+  if (!visiveis.length) menu.textContent = "Nenhum resultado";
   menu.querySelectorAll('input[type="checkbox"]').forEach(input => {
     input.addEventListener("change", () => {
       if (input.checked) selecionados.add(input.value); else selecionados.delete(input.value);
+      onChange?.();
       atualizarDashboardCorte();
     });
   });
@@ -324,8 +310,6 @@ function atualizarPastagensCorte() {
     selecionados,
     todosLabel: "Todos"
   });
-  renderizarChipsDeFiltro("filtrosAtivosCorte", Array.from(selecionados, municipio =>
-    chipDeOpcao("filtroMunicipioPastagensCorteMenu", municipio, `Município: ${municipio}`)));
 }
 
 // Mantém o período escolhido quando ele ainda existe no indicador ativo.
@@ -345,26 +329,16 @@ function sincronizarAnosCorte() {
 
 // Materializa os filtros ativos em chips de leitura rápida.
 function atualizarChipsFiltros() {
-  const chips = chipDePeriodo("filtroAnoInicioCorte", "filtroAnoFimCorte");
-  if (filtrosCorte.indicador !== "all") {
-    const botao = document.querySelector('[data-filter-group="indicador"] .filter-btn.active');
-    chips.unshift([`Indicador: ${botao.textContent}`,
-      () => document.querySelector('[data-filter-group="indicador"] [data-filter="all"]').click()]);
-  }
-  chips.push(...Array.from(filtrosCorte.ufs, uf => chipDeOpcao("filtroUfCorteMenu", uf, `UF: ${uf}`)));
+  const el = porId("filtrosAtivosCorte");
+  if (!el) return;
+  const chips = [];
+  if (filtrosCorte.anoInicio) chips.push(`Período: ${periodoLabel()}`);
+  if (filtrosCorte.indicador !== "all") chips.push(`Indicador: ${filtrosCorte.indicador}`);
+  if (filtrosCorte.ufs.size) chips.push(`UF: ${[...filtrosCorte.ufs].join(", ")}`);
   if (filtrosCorte.indicador !== "rebanho" && filtrosCorte.trimestre !== "all") {
-    chips.push([`Trimestre do abate: ${filtrosCorte.trimestre}`, () => {
-      filtrosCorte.trimestre = porId("filtroTrimestreCorte").value = "all";
-      atualizarDashboardCorte();
-    }]);
+    chips.push(`Trimestre do abate: ${filtrosCorte.trimestre}`);
   }
-  if (filtrosCorte.indicador !== "rebanho" && filtrosCorte.metricaAbate !== "quantidade") {
-    chips.push(["Métrica: Peso das carcaças", () => {
-      filtrosCorte.metricaAbate = porId("filtroMetricaAbate").value = "quantidade";
-      atualizarDashboardCorte();
-    }]);
-  }
-  renderizarChipsDeFiltro("filtrosAtivosCorte", chips);
+  el.innerHTML = chips.map(chip => `<span class="filter-chip">${chip}</span>`).join("");
 }
 
 function categoriaVisivelCorte(categoria) {
@@ -414,7 +388,7 @@ function atualizarDashboardCorte() {
     .toggle("is-filter-hidden", !abaDados || filtrosCorte.indicador === "rebanho");
   porId("filtroMunicipioPastagensCorte").classList.toggle("is-filter-hidden", !abaPastagens);
   porId("filtroMetricaAbate").disabled = filtrosCorte.indicador === "rebanho";
-  porId("filtrosAtivosCorte").classList.toggle("is-filter-hidden", !abaDados && !abaPastagens);
+  porId("filtrosAtivosCorte").classList.toggle("is-filter-hidden", !abaDados);
   atualizarVisibilidadeIndicador();
   if (abaPastagens) atualizarPastagensCorte();
   if (!abaDados) return;
@@ -457,11 +431,7 @@ function limparFiltrosCorte() {
 
 // Conecta controles de filtro às respectivas propriedades de `filtrosCorte`.
 function configurarEventosFiltrosCorte() {
-  porId("filtroAnoInicioCorte")?.addEventListener("change", event => {
-    filtrosCorte.anoInicio = Number(event.target.value);
-    filtrosCorte.anoFim = Number(porId("filtroAnoFimCorte").value);
-    atualizarDashboardCorte();
-  });
+  porId("filtroAnoInicioCorte")?.addEventListener("change", event => { filtrosCorte.anoInicio = Number(event.target.value); atualizarDashboardCorte(); });
   porId("filtroAnoFimCorte")?.addEventListener("change", event => { filtrosCorte.anoFim = Number(event.target.value); atualizarDashboardCorte(); });
   porId("filtroTrimestreCorte")?.addEventListener("change", event => { filtrosCorte.trimestre = event.target.value; atualizarDashboardCorte(); });
   porId("filtroMetricaAbate")?.addEventListener("change", event => { filtrosCorte.metricaAbate = event.target.value; atualizarDashboardCorte(); });

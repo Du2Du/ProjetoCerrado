@@ -359,7 +359,6 @@ function criarGraficoLinhasUF(containerId, dados, campoValor, sufixoTooltip) {
   }));
   const eixoY = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
   configurarEixo(eixoX); configurarEixo(eixoY);
-  ligarAnoDeFiltro(eixoX, "seriAnoInicio", "seriAnoFim");
   eixoX.data.setAll(dadosGrafico);
 
   const seriesMap = {};
@@ -372,17 +371,14 @@ function criarGraficoLinhasUF(containerId, dados, campoValor, sufixoTooltip) {
       tooltip: am5.Tooltip.new(root, { labelText: `${uf}: {valueY} ${sufixoTooltip}` })
     }));
     serie.strokes.template.setAll({ strokeWidth: uf === "Centro-Oeste" ? 3 : 2 });
-    const filtrarUf = () => alternarOpcoesDoGrafico(opcaoDeFiltro("seriUfMenu", uf));
-    ligarCliqueDeFiltro(serie.strokes.template, filtrarUf);
-    serie.bullets.push(() => pontoDeLinhaFiltravel(root, {
-      radius: uf === "Centro-Oeste" ? 4 : 3, fill: serie.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2
-    }, filtrarUf));
+    serie.bullets.push(() => am5.Bullet.new(root, {
+      sprite: am5.Circle.new(root, { radius: uf === "Centro-Oeste" ? 4 : 3, fill: serie.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2 })
+    }));
     serie.data.setAll(dadosGrafico);
     seriesMap[uf] = serie;
   });
 
   const legenda = criarLegenda(chart, root);
-  ligarLegendaDeFiltro(legenda, serie => alternarOpcoesDoGrafico(opcaoDeFiltro("seriUfMenu", serie?.get("name"))));
   chart.appear(1000, 100);
   const subtitulo = containerVisualizacao(containerId).querySelector(".chart-card__sub").textContent;
   graficosUF[containerId] = { eixoX, seriesMap, dados, campoValor, legenda, subtitulo };
@@ -428,13 +424,11 @@ function criarGraficoEstabelecimentos() {
     serie.columns.template.setAll({
       cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65)
     });
-    ligarCliqueDeFiltro(serie.columns.template, () => alternarOpcoesDoGrafico(opcaoDeFiltro("seriProdutoMenu", produto)));
     seriesMap[produto] = serie;
   });
 
   ativarTooltipDeSeries(chart, root, "y");
   const legenda = criarLegenda(chart, root);
-  ligarLegendaDeFiltro(legenda, serie => alternarOpcoesDoGrafico(opcaoDeFiltro("seriProdutoMenu", serie?.get("name"))));
   atualizarEstabelecimentos = filtroAtivo => {
     const dados = buildDados();
     root.dom.style.height = `${Math.max(320, dados.length * 52 + 90)}px`;
@@ -501,17 +495,47 @@ function aplicarFiltros() {
 // ── CHIPS ────────────────────────────────────────────────────────────
 // Materializa período, UFs e produtos como chips removíveis.
 function renderizarChips() {
-  const indicador = document.querySelector('[data-filter-group="ind"] .filter-btn.active');
-  const chips = chipDePeriodo("seriAnoInicio", "seriAnoFim");
-  if (indicador && indicador.dataset.filter !== "all") {
-    chips.unshift([`Indicador: ${indicador.textContent}`,
-      () => document.querySelector('[data-filter-group="ind"] [data-filter="all"]').click()]);
+  const container = document.getElementById("seriChips");
+  if (!container) return;
+  const chips = [];
+
+  if (estadoFiltros.anoInicio !== periodoPadrao.inicio || estadoFiltros.anoFim !== periodoPadrao.fim) {
+    chips.push(`<span class="filter-chip">Período: ${estadoFiltros.anoInicio}–${estadoFiltros.anoFim}<button class="filter-chip__x" data-clear="periodo" aria-label="Remover filtro de período"><span class="material-symbol" aria-hidden="true">close</span></button></span>`);
   }
-  renderizarChipsDeFiltro("seriChips", [
-    ...chips,
-    ...Array.from(estadoFiltros.ufs, uf => chipDeOpcao("seriUfMenu", uf, `UF: ${uf}`)),
-    ...Array.from(estadoFiltros.produto, produto => chipDeOpcao("seriProdutoMenu", produto, `Produto: ${produto}`))
-  ]);
+  estadoFiltros.ufs.forEach(uf => {
+    chips.push(`<span class="filter-chip">${uf}<button class="filter-chip__x" data-clear="uf" data-value="${uf}" aria-label="Remover ${uf}"><span class="material-symbol" aria-hidden="true">close</span></button></span>`);
+  });
+  estadoFiltros.produto.forEach(p => {
+    const label = p.replace("Borracha (", "").replace(")", "");
+    chips.push(`<span class="filter-chip">${label}<button class="filter-chip__x" data-clear="produto" data-value="${p}" aria-label="Remover ${p}"><span class="material-symbol" aria-hidden="true">close</span></button></span>`);
+  });
+
+  container.innerHTML = chips.length
+    ? chips.join("")
+    : '<span class="filter-chip-vazio">Nenhum filtro ativo</span>';
+
+  container.querySelectorAll(".filter-chip__x").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tipo = btn.dataset.clear;
+      if (tipo === "periodo") {
+        estadoFiltros.anoInicio = periodoPadrao.inicio; estadoFiltros.anoFim = periodoPadrao.fim;
+        const si = document.getElementById("seriAnoInicio");
+        const sf = document.getElementById("seriAnoFim");
+        if (si) si.value = String(periodoPadrao.inicio); if (sf) sf.value = String(periodoPadrao.fim);
+      } else if (tipo === "uf") {
+        estadoFiltros.ufs.delete(btn.dataset.value);
+        const cb = document.querySelector(`#seriUfMenu input[value="${btn.dataset.value}"]`);
+        if (cb) cb.checked = false;
+        labelDropdown("seriUfBtn", [...estadoFiltros.ufs], "Todas");
+      } else if (tipo === "produto") {
+        estadoFiltros.produto.delete(btn.dataset.value);
+        const cb = document.querySelector(`#seriProdutoMenu input[value="${btn.dataset.value}"]`);
+        if (cb) cb.checked = false;
+        labelDropdown("seriProdutoBtn", [...estadoFiltros.produto], "Todos");
+      }
+      aplicarFiltros();
+    });
+  });
 }
 
 // ── INIT FILTROS UI ──────────────────────────────────────────────────
@@ -591,7 +615,6 @@ function inicializarFiltrosUI() {
   if (selectInicio && selectFim) {
     selectInicio.addEventListener("change", () => {
       estadoFiltros.anoInicio = Number(selectInicio.value);
-      estadoFiltros.anoFim = Number(selectFim.value);
       if (estadoFiltros.anoFim < estadoFiltros.anoInicio) { estadoFiltros.anoFim = estadoFiltros.anoInicio; selectFim.value = String(estadoFiltros.anoInicio); }
       aplicarFiltros();
     });
