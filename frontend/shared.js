@@ -46,12 +46,22 @@ function temMedicao(valor) {
 }
 
 // Dá prioridade a estado e aceita o campo anterior durante a transição das APIs.
-function normalizarEstadoDaApi(registros) {
+function normalizarEstadoDaApi(registros, { identificarBrasil = false } = {}) {
     return registros.map(registro => {
+        if (identificarBrasil && registro?.nivel_territorial === "Brasil") {
+            return { ...registro, estado: "Brasil" };
+        }
         if (!registro || !Object.hasOwn(registro, "uf")) return registro;
         const { uf, ...dados } = registro;
         return { ...dados, estado: dados.estado ?? uf };
     });
+}
+
+// Mantém a base dos percentuais ao agrupar as categorias fora do filtro.
+function participacaoComComplemento(dados, recorte, categoria, medida, complemento) {
+    if (!recorte.length || recorte.length === dados.length) return recorte;
+    const restantes = dados.filter(item => !recorte.includes(item)).reduce((total, item) => total + item[medida], 0);
+    return restantes > 0 ? [...recorte, { [categoria]: complemento, [medida]: restantes }] : recorte;
 }
 
 const codigosUfPainel = new Map([

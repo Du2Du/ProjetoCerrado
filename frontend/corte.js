@@ -4,7 +4,7 @@
  * Fluxo principal:
  * 1. `carregarDadosCorte` busca rebanho e abate em paralelo.
  * 2. As respostas são normalizadas e armazenadas em `DADOS_CORTE`.
- * 3. Após as requisições, `inicializarGraficosCorte` configura filtros e gráficos.
+ * 3. Após as requisições, `atualizarDashboardCorte` prepara os gráficos.
  * 4. Cada interação altera `filtrosCorte` e chama `atualizarDashboardCorte`.
  */
 const PALETA_CORTE = ["#8b3a1a", "#c8943a", "#4a7c3f", "#6fa65e", "#2d5c24", "#d4843a", "#a0622b", "#e8a84c", "#5c4033", "#3a6b4a"];
@@ -22,6 +22,7 @@ const filtrosCorte = {
   anoInicio: null,
   anoFim: null,
   ufs: new Set(),
+  municipiosPastagens: new Set(),
   trimestre: "all",
   metricaAbate: "quantidade"
 };
@@ -170,12 +171,16 @@ function criarGraficoRebanho() {
 
   const anoFinal = Math.max(...anos);
   atualizarTexto("tituloRebanhoPartic", `Participação no Rebanho das UFs Exibidas (${anoFinal || filtrosCorte.anoFim})`);
-  const ufsParticipacao = dadosBase.filter(item => !["Brasil", "Centro-Oeste"].includes(item.estado));
-  if (!ufsParticipacao.length) {
+  const ufsParticipacao = DADOS_CORTE.rebanhoCorte
+    .filter(item => !["Brasil", "Centro-Oeste"].includes(item.estado) && item[anoFinal] > 0)
+    .map(item => ({ estado: item.estado, quantidadeCabecas: item[anoFinal] }));
+  const ufsSelecionadas = ufsParticipacao.filter(item => ufSelecionadaCorte(item.estado));
+  if (!ufsSelecionadas.length) {
     mostrarSemDadosChart("chartRebanhoPartic", "Selecione um estado para ver a participação no rebanho.");
     return;
   }
-  criarPizza("chartRebanhoPartic", ufsParticipacao.filter(item => item[String(anoFinal)]).map(item => ({ estado: item.estado, quantidadeCabecas: item[String(anoFinal)] })), "estado", "quantidadeCabecas");
+  const dadosParticipacao = participacaoComComplemento(ufsParticipacao, ufsSelecionadas, "estado", "quantidadeCabecas", "Demais UFs");
+  criarPizza("chartRebanhoPartic", dadosParticipacao, "estado", "quantidadeCabecas");
 }
 
 // Agrega os registros trimestrais de abate segundo a métrica selecionada.
@@ -288,6 +293,25 @@ function renderizarFiltrosMultiselect() {
   });
 }
 
+function atualizarPastagensCorte() {
+  const linhas = Array.from(porId("tabelaPastagensCorte").tBodies[0].rows);
+  const selecionados = filtrosCorte.municipiosPastagens;
+  const municipios = linhas.map(linha => {
+    const municipio = linha.cells[1].textContent.trim();
+    linha.hidden = selecionados.size > 0 && !selecionados.has(municipio);
+    return municipio;
+  });
+  porId("filtroMunicipioPastagensCorteBtn").disabled = !municipios.length;
+  renderizarMultiselect({
+    menuId: "filtroMunicipioPastagensCorteMenu",
+    buscaId: "buscaMunicipioPastagensCorte",
+    botaoId: "filtroMunicipioPastagensCorteBtn",
+    valores: municipios,
+    selecionados,
+    todosLabel: "Todos"
+  });
+}
+
 // Mantém o período escolhido quando ele ainda existe no indicador ativo.
 function sincronizarAnosCorte() {
   const anos = anosDisponiveisCorte();
@@ -354,15 +378,19 @@ function renderizarAbaAtivaCorte() {
 
 // Sincroniza período, gráficos visíveis, multiselects e resumo dos filtros.
 function atualizarDashboardCorte() {
-  const abaDados = document.querySelector("[data-tab-content].active")?.id === "ct-rebanho";
+  const aba = document.querySelector("[data-tab-content].active")?.id;
+  const abaDados = aba === "ct-rebanho";
+  const abaPastagens = aba === "ct-pastagens";
   ["filtroAnoInicioCorte", "filtroUfCorteBtn"].forEach(id => {
     porId(id)?.closest(".filter-cluster").classList.toggle("is-filter-hidden", !abaDados);
   });
   porId("filtroTrimestreCorte")?.closest(".filter-cluster").classList
     .toggle("is-filter-hidden", !abaDados || filtrosCorte.indicador === "rebanho");
+  porId("filtroMunicipioPastagensCorte").classList.toggle("is-filter-hidden", !abaPastagens);
   porId("filtroMetricaAbate").disabled = filtrosCorte.indicador === "rebanho";
   porId("filtrosAtivosCorte").classList.toggle("is-filter-hidden", !abaDados);
   atualizarVisibilidadeIndicador();
+  if (abaPastagens) atualizarPastagensCorte();
   if (!abaDados) return;
 
   // Centraliza toda atualização visual: corrige o período, redesenha a aba
@@ -382,6 +410,12 @@ function atualizarDashboardCorte() {
 
 // Restaura o estado inicial dos filtros e solicita uma renderização completa.
 function limparFiltrosCorte() {
+  if (porId("ct-pastagens").classList.contains("active")) {
+    filtrosCorte.municipiosPastagens.clear();
+    porId("buscaMunicipioPastagensCorte").value = "";
+    atualizarPastagensCorte();
+    return;
+  }
   filtrosCorte.indicador = "all";
   filtrosCorte.anoInicio = null;
   filtrosCorte.anoFim = null;
@@ -403,12 +437,7 @@ function configurarEventosFiltrosCorte() {
   porId("filtroMetricaAbate")?.addEventListener("change", event => { filtrosCorte.metricaAbate = event.target.value; atualizarDashboardCorte(); });
   porId("btnLimparFiltrosCorte")?.addEventListener("click", limparFiltrosCorte);
   porId("buscaUfCorte")?.addEventListener("input", renderizarFiltrosMultiselect);
-}
-
-// Prepara filtros e dispara a primeira renderização após a carga dos dados.
-function inicializarGraficosCorte() {
-  configurarEventosFiltrosCorte();
-  atualizarDashboardCorte();
+  porId("buscaMunicipioPastagensCorte")?.addEventListener("input", atualizarPastagensCorte);
 }
 
 window.onFilterChange = function (filterId, group) {
@@ -443,7 +472,7 @@ async function buscarEndpointCorte(nome) {
     if (!resposta.ok) throw new Error(`${nome}: HTTP ${resposta.status}`);
     const dados = await resposta.json();
     if (!Array.isArray(dados) || !dados.length) throw new Error(`${nome}: resposta vazia`);
-    return normalizarEstadoDaApi(dados);
+    return normalizarEstadoDaApi(dados, { identificarBrasil: true });
   } finally {
     window.clearTimeout(timeout);
   }
@@ -613,4 +642,5 @@ async function carregarDadosCorte() {
 
 // Os gráficos só são criados depois da primeira tentativa de carga, inclusive
 // quando há falha, para que os estados vazios/erro possam ser renderizados.
-carregarDadosCorte().finally(() => am5.ready(inicializarGraficosCorte));
+configurarEventosFiltrosCorte();
+carregarDadosCorte().finally(() => am5.ready(atualizarDashboardCorte));

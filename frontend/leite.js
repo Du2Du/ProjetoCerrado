@@ -207,7 +207,7 @@ async function buscarEndpointLeite(nome) {
     if (!resposta.ok) throw new Error(`${nome}: HTTP ${resposta.status}`);
     const dados = await resposta.json();
     if (!Array.isArray(dados) || !dados.length) throw new ErroDadosVazios(`${nome}: resposta vazia`);
-    return normalizarEstadoDaApi(dados);
+    return normalizarEstadoDaApi(dados, { identificarBrasil: nome === ENDPOINTS_LEITE.producao });
   } finally {
     window.clearTimeout(timeout);
   }
@@ -309,8 +309,7 @@ async function carregarDadosNovaApiLeite() {
   };
 
   processar("producao", linhas => {
-    linhas = linhas.map(item => item.nivel_territorial === "Brasil" ? { ...item, estado: "Brasil" } : item)
-      .filter(item => item.estado && temMedicao(item.producaoBilhoesLitros));
+    linhas = linhas.filter(item => item.estado && temMedicao(item.producaoBilhoesLitros));
     SERIES_PRODUCAO_UF = [...new Set(linhas.map(item => item.estado))];
     DADOS_LEITE.producaoBilhoes = pivotarLeitePorAno(linhas, "estado", "producaoBilhoesLitros", "Ano");
     metadadosApi.anosProducao = ordenarAnos(linhas.map(item => item.ano));
@@ -687,11 +686,6 @@ function ufNoRankingLeite(uf) {
   return ufSelecionadaLeite(uf) && ufNoRecorteRegionalLeite(uf);
 }
 
-function participacaoComComplemento(dados, recorte, categoria, medida, complemento) {
-  if (!recorte.length || recorte.length === dados.length) return recorte;
-  const restantes = dados.filter(item => !recorte.includes(item)).reduce((total, item) => total + item[medida], 0);
-  return restantes > 0 ? [...recorte, { [categoria]: complemento, [medida]: restantes }] : recorte;
-}
 // Transpõe séries para linhas anuais prontas para os gráficos de evolução.
 function dadosPorAno(data, campoNome, anos, series) {
   return anos.map(ano => {

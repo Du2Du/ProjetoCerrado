@@ -498,6 +498,10 @@
         padding-top: 1.5rem;
     }
 
+    .filter-bar:not(:has(.filter-cluster:not([hidden], .is-filter-hidden) :is(select, .filter-dropdown-btn):enabled)) .filter-actions {
+        display: none;
+    }
+
     .filter-action-btn {
         min-height: 2rem;
         font-family: var(--font-d);

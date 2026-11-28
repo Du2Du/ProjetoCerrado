@@ -232,6 +232,19 @@
         <option value="4º">4º trimestre</option>
       </select>
     </div>
+    <div id="filtroMunicipioPastagensCorte" class="filter-cluster filter-cluster--wide is-filter-hidden">
+      <span id="labelMunicipioPastagensCorte" class="filter-label">Município</span>
+      <div class="dropdown" data-bs-auto-close="outside">
+        <button id="filtroMunicipioPastagensCorteBtn" class="filter-dropdown-btn" type="button"
+          data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"
+          aria-labelledby="labelMunicipioPastagensCorte filtroMunicipioPastagensCorteBtn">Todos</button>
+        <div class="dropdown-menu filter-dropdown-menu">
+          <input id="buscaMunicipioPastagensCorte" class="filter-search w-100 mb-2" type="search"
+            placeholder="Buscar município" aria-label="Buscar município" />
+          <div id="filtroMunicipioPastagensCorteMenu"></div>
+        </div>
+      </div>
+    </div>
     <div class="filter-actions">
       <button id="btnLimparFiltrosCorte" class="filter-action-btn" type="button">Limpar filtros</button>
     </div>
@@ -307,7 +320,7 @@
               <div class="chart-card" role="figure"
                 aria-label="Gráfico: Participação no rebanho das UFs exibidas">
                 <div id="tituloRebanhoPartic" class="chart-card__title">Participação no Rebanho das UFs Exibidas</div>
-                <div class="chart-card__sub">Cabeças no ano final filtrado</div>
+                <div class="chart-card__sub">Percentual do rebanho das UFs com dados no ano</div>
                 <div id="chartRebanhoPartic" class="chart-area chart-area--tall" aria-hidden="true"></div>
               </div>
             </div>
@@ -421,7 +434,8 @@
                   <div class="chart-card__sub">Hectares (2021)</div>
                 </div>
                 <div class="table-responsive">
-                  <table class="table table-obs" aria-label="Maiores municípios em pastagem do Centro-Oeste">
+                  <table id="tabelaPastagensCorte" class="table table-obs"
+                    aria-label="Maiores municípios em pastagem do Centro-Oeste">
                     <thead>
                       <tr>
                         <th scope="col">#</th>
