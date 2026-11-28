@@ -140,9 +140,7 @@ function criarLinhas(id, dados, campoCategoria, series, sufixo = "") {
     }, filtrar));
     serie.data.setAll(dados);
   });
-  const legenda = criarLegenda(chart, root);
-  ligarLegendaDeFiltro(legenda, serie => filtrarUfPeloGraficoCorte(serie?.get("name")));
-  legenda.data.setAll(chart.series.values);
+  criarLegenda(chart, root).data.setAll(chart.series.values);
   chart.appear(600, 60);
 }
 
@@ -161,7 +159,6 @@ function criarPizza(id, dados, categoria, valor) {
   serie.data.setAll(filtrados);
   const legend = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 10 }));
   legend.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
-  ligarLegendaDeFiltro(legend, filtrar);
   legend.data.setAll(serie.dataItems);
   chart.appear(600, 60);
 }

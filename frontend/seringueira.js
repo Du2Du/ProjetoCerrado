@@ -382,7 +382,6 @@ function criarGraficoLinhasUF(containerId, dados, campoValor, sufixoTooltip) {
   });
 
   const legenda = criarLegenda(chart, root);
-  ligarLegendaDeFiltro(legenda, serie => alternarOpcoesDoGrafico(opcaoDeFiltro("seriUfMenu", serie?.get("name"))));
   chart.appear(1000, 100);
   const subtitulo = containerVisualizacao(containerId).querySelector(".chart-card__sub").textContent;
   graficosUF[containerId] = { eixoX, seriesMap, dados, campoValor, legenda, subtitulo };
@@ -434,7 +433,6 @@ function criarGraficoEstabelecimentos() {
 
   ativarTooltipDeSeries(chart, root, "y");
   const legenda = criarLegenda(chart, root);
-  ligarLegendaDeFiltro(legenda, serie => alternarOpcoesDoGrafico(opcaoDeFiltro("seriProdutoMenu", serie?.get("name"))));
   atualizarEstabelecimentos = filtroAtivo => {
     const dados = buildDados();
     root.dom.style.height = `${Math.max(320, dados.length * 52 + 90)}px`;

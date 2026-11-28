@@ -756,7 +756,6 @@ function graficoLinhas(id, categoria, campoFiltro, series = null, sufixo = "", a
   };
   series?.forEach(criarSerie);
   const legenda = criarLegenda(chart, root);
-  ligarLegendaDeFiltro(legenda, serie => filtrarSerie(serie?.get("name")));
   if (alturaSemLegenda) {
     const ajustarAltura = () => {
       // Reserva espaço para as linhas quando a legenda ocupa várias fileiras.
@@ -905,7 +904,6 @@ function graficoPizza(id, categoria, valor, alturaSemLegenda = 0) {
   s.get("colors").set("colors", P.map(c => am5.color(c)));
   const l = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 10 }));
   l.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
-  ligarLegendaDeFiltro(l, filtrar);
   let categoriasVisiveis = 0;
   const ajustarLegenda = () => {
     const largura = elemento.clientWidth || 260;
