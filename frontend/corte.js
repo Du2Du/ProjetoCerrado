@@ -141,7 +141,7 @@ function criarPizza(id, dados, categoria, valor) {
   const root = criarRoot(id);
   const chart = root.container.children.push(am5percent.PieChart.new(root, { layout: root.verticalLayout, innerRadius: am5.percent(55) }));
   const serie = chart.series.push(am5percent.PieSeries.new(root, { valueField: valor, categoryField: categoria }));
-  serie.slices.template.setAll({ interactive: true, tooltipText: "{category}: {value} cabeças ({valuePercentTotal.formatNumber('0.00')}%)" });
+  serie.slices.template.setAll({ interactive: true, tooltipText: "" });
   serie.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
   serie.get("colors").set("colors", PALETA_CORTE.map(cor => am5.color(cor)));
   serie.data.setAll(filtrados);

@@ -885,11 +885,7 @@ function graficoPizza(id, categoria, valor, alturaSemLegenda = 0) {
   const chart = root.container.children.push(am5percent.PieChart.new(root, { layout: root.verticalLayout, innerRadius: am5.percent(55) }));
   const s = chart.series.push(am5percent.PieSeries.new(root, { valueField: valor, categoryField: categoria }));
   s.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
-  s.slices.template.setAll({
-    interactive: true,
-    tooltipText: valor === "percentualParticipacao" ? "{category}: {value.formatNumber('0.00')}%"
-      : "{category}: {value} mi L ({valuePercentTotal.formatNumber('0.00')}%)"
-  });
+  s.slices.template.setAll({ interactive: true, tooltipText: "" });
   s.get("colors").set("colors", P.map(c => am5.color(c)));
   const l = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 10 }));
   l.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
