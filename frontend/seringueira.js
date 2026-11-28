@@ -360,7 +360,6 @@ function criarGraficoLinhasUF(containerId, dados, campoValor, sufixoTooltip) {
   const eixoY = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
   configurarEixo(eixoX); configurarEixo(eixoY);
   ligarAnoDeFiltro(eixoX, "seriAnoInicio", "seriAnoFim");
-  ligarFiltroEmXY(chart, serie => alternarOpcoesDoGrafico(opcaoDeFiltro("seriUfMenu", serie.get("name"))));
   eixoX.data.setAll(dadosGrafico);
 
   const seriesMap = {};
@@ -372,12 +371,12 @@ function criarGraficoLinhasUF(containerId, dados, campoValor, sufixoTooltip) {
       stroke: am5.color(cor), fill: am5.color(cor),
       tooltip: am5.Tooltip.new(root, { labelText: `${uf}: {valueY} ${sufixoTooltip}` })
     }));
-    serie.strokes.template.setAll({
-      strokeWidth: uf === "Centro-Oeste" ? 3 : 2, interactive: true, cursorOverStyle: "pointer"
-    });
+    serie.strokes.template.setAll({ strokeWidth: uf === "Centro-Oeste" ? 3 : 2 });
+    const filtrarUf = () => alternarOpcoesDoGrafico(opcaoDeFiltro("seriUfMenu", uf));
+    ligarCliqueDeFiltro(serie.strokes.template, filtrarUf);
     serie.bullets.push(() => pontoDeLinhaFiltravel(root, {
       radius: uf === "Centro-Oeste" ? 4 : 3, fill: serie.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2
-    }));
+    }, filtrarUf));
     serie.data.setAll(dadosGrafico);
     seriesMap[uf] = serie;
   });
@@ -426,13 +425,13 @@ function criarGraficoEstabelecimentos() {
       tooltip: am5.Tooltip.new(root, { labelText: `{categoryY} — ${produto}: {valueX}` })
     }));
     serie.columns.template.setAll({
-      cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65), interactive: true, cursorOverStyle: "pointer"
+      cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65)
     });
+    ligarCliqueDeFiltro(serie.columns.template, () => alternarOpcoesDoGrafico(opcaoDeFiltro("seriProdutoMenu", produto)));
     seriesMap[produto] = serie;
   });
 
   ativarTooltipDeSeries(chart, root, "y");
-  ligarFiltroEmXY(chart, serie => alternarOpcoesDoGrafico(opcaoDeFiltro("seriProdutoMenu", serie.get("name"))));
   const legenda = criarLegenda(chart, root);
   atualizarEstabelecimentos = filtroAtivo => {
     const dados = buildDados();

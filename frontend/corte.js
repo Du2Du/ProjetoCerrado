@@ -130,13 +130,14 @@ function criarLinhas(id, dados, campoCategoria, series, sufixo = "") {
   const eixoY = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
   configurarEixo(eixoX); configurarEixo(eixoY); eixoX.data.setAll(dados);
   ligarAnoDeFiltro(eixoX, "filtroAnoInicioCorte", "filtroAnoFimCorte");
-  ligarFiltroEmXY(chart, serie => filtrarUfPeloGraficoCorte(serie.get("name")));
   seriesValidas.forEach((nome, idx) => {
     const serie = chart.series.push(am5xy.LineSeries.new(root, { name: nome, xAxis: eixoX, yAxis: eixoY, valueYField: nome, categoryXField: campoCategoria, connect: false, stroke: am5.color(PALETA_CORTE[idx % PALETA_CORTE.length]), fill: am5.color(PALETA_CORTE[idx % PALETA_CORTE.length]), tooltip: am5.Tooltip.new(root, { labelText: `{name}: {valueY}${sufixo}` }) }));
-    serie.strokes.template.setAll({ strokeWidth: 2, interactive: true, cursorOverStyle: "pointer" });
+    serie.strokes.template.setAll({ strokeWidth: 2 });
+    const filtrar = () => filtrarUfPeloGraficoCorte(nome);
+    ligarCliqueDeFiltro(serie.strokes.template, filtrar);
     serie.bullets.push(() => pontoDeLinhaFiltravel(root, {
       radius: 3, fill: serie.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2
-    }));
+    }, filtrar));
     serie.data.setAll(dados);
   });
   criarLegenda(chart, root).data.setAll(chart.series.values);

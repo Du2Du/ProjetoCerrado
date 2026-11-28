@@ -741,17 +741,18 @@ function graficoLinhas(id, categoria, campoFiltro, series = null, sufixo = "", a
   eixo(xA); eixo(yA);
   ligarAnoDeFiltro(xA, "filtroAnoInicio", "filtroAnoFim");
   const filtrarSerie = nome => alternarOpcoesDoGrafico(opcaoDeFiltroLeite(campoFiltro, nome));
-  ligarFiltroEmXY(chart, serie => filtrarSerie(serie.get("name")));
   const criarSerie = (nome, idx) => {
     const s = chart.series.push(am5xy.LineSeries.new(root, {
       name: nome, xAxis: xA, yAxis: yA, valueYField: nome, categoryXField: categoria,
       stroke: am5.color(P[idx % P.length]), fill: am5.color(P[idx % P.length]),
       tooltip: am5.Tooltip.new(root, { labelText: `{name}: {valueY}${sufixo}` })
     }));
-    s.strokes.template.setAll({ strokeWidth: 2, interactive: true, cursorOverStyle: "pointer" });
+    s.strokes.template.setAll({ strokeWidth: 2 });
+    const filtrar = () => filtrarSerie(nome);
+    ligarCliqueDeFiltro(s.strokes.template, filtrar);
     s.bullets.push(() => pontoDeLinhaFiltravel(root, {
       radius: 3, fill: s.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2
-    }));
+    }, filtrar));
   };
   series?.forEach(criarSerie);
   const legenda = criarLegenda(chart, root);
@@ -816,10 +817,10 @@ function graficoBarras(id, categoria, valor, horizontal = false, sufixo = "", qu
     tooltip: am5.Tooltip.new(root, { labelText: horizontal ? `{categoryY}: {valueX}${sufixo}` : `{categoryX}: {valueY}${sufixo}` })
   }));
   s.columns.template.setAll({
-    cornerRadiusTL: 3, cornerRadiusTR: 3, cornerRadiusBR: horizontal ? 3 : 0, interactive: true, cursorOverStyle: "pointer"
+    cornerRadiusTL: 3, cornerRadiusTR: 3, cornerRadiusBR: horizontal ? 3 : 0
   });
   const filtrar = item => filtrarDadoPeloGraficoLeite(categoria, item);
-  ligarFiltroEmXY(chart, (_serie, item) => filtrar(item));
+  ligarCliqueDeFiltro(s.columns.template, filtrar);
   ligarRotuloDeFiltro(cA, filtrar);
   ativarTooltipDeSeries(chart, root);
   s.columns.template.adapters.add("fill", (_fill, target) => am5.color(P[(target.dataItem?.get("index") || 0) % P.length]));
@@ -854,7 +855,6 @@ function graficoBarrasAgrupadas(id, categoria, series, sufixo = "", horizontal =
   const seriesMap = {};
   const filtrar = item => filtrarDadoPeloGraficoLeite(categoria, item);
   ligarRotuloDeFiltro(eixoCategoria, filtrar);
-  ligarFiltroEmXY(chart, (_serie, item) => filtrar(item));
   series.forEach((cfg, idx) => {
     const s = chart.series.push(am5xy.ColumnSeries.new(root, {
       name: cfg.nome, xAxis: horizontal ? eixoValor : eixoCategoria, yAxis: horizontal ? eixoCategoria : eixoValor,
@@ -868,9 +868,8 @@ function graficoBarrasAgrupadas(id, categoria, series, sufixo = "", horizontal =
     }));
     const formato = horizontal ? { height: am5.percent(55), cornerRadiusTR: 3, cornerRadiusBR: 3 }
       : { width: am5.percent(55), cornerRadiusTL: 3, cornerRadiusTR: 3 };
-    s.columns.template.setAll({
-      ...formato, fill: am5.color(P[idx]), stroke: am5.color(P[idx]), interactive: true, cursorOverStyle: "pointer"
-    });
+    s.columns.template.setAll({ ...formato, fill: am5.color(P[idx]), stroke: am5.color(P[idx]) });
+    ligarCliqueDeFiltro(s.columns.template, filtrar);
     seriesMap[cfg.nome] = s;
   });
   ativarTooltipDeSeries(chart, root, horizontal ? "y" : "x");
