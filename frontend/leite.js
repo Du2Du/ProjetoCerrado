@@ -29,9 +29,9 @@ let linhasMunicipais = [];
 let linhasMesorregionais = [];
 let SERIES_REGIAO = [];
 let SERIES_UF_CO = [];
-let TODOS_MUNICIPIOS = [];
 let ANOS_PRODUTIVIDADE_MUNICIPIOS = [];
 let PERIODO_PADRAO = { inicio: "", fim: "" };
+const LIMITE_MUNICIPIOS_LEITE = 10;
 
 const estadoFiltros = {
   indicador: "all",
@@ -251,7 +251,8 @@ function renderizarTabelaProdutividadeMunicipios(municipios) {
   cabecalho[3].textContent = anoFinal;
   const dados = [...DADOS_LEITE.produtividadeMunicipios]
     .filter(item => municipios.includes(item.municipio) && Number.isFinite(item[anoFinal]))
-    .sort((a, b) => b[anoFinal] - a[anoFinal]);
+    .sort((a, b) => b[anoFinal] - a[anoFinal])
+    .slice(0, LIMITE_MUNICIPIOS_LEITE);
   dados.forEach((item, indice) => {
     const classe = indice === 1 ? " badge-rank--2" : indice === 2 ? " badge-rank--3" : "";
     const posicao = indice < 3 ? `<span class="badge-rank${classe}">${indice + 1}</span>` : indice + 1;
@@ -300,7 +301,8 @@ async function carregarDadosNovaApiLeite() {
   };
 
   processar("producao", linhas => {
-    linhas = linhas.filter(item => item.estado && temMedicao(item.producaoBilhoesLitros));
+    linhas = linhas.map(item => item.nivel_territorial === "Brasil" ? { ...item, estado: "Brasil" } : item)
+      .filter(item => item.estado && temMedicao(item.producaoBilhoesLitros));
     SERIES_PRODUCAO_UF = [...new Set(linhas.map(item => item.estado))];
     DADOS_LEITE.producaoBilhoes = pivotarLeitePorAno(linhas, "estado", "producaoBilhoesLitros", "Ano");
     metadadosApi.anosProducao = ordenarAnos(linhas.map(item => item.ano));
@@ -337,7 +339,6 @@ async function carregarDadosNovaApiLeite() {
 
   processar("municipios", linhas => {
     linhasMunicipais = linhas;
-    TODOS_MUNICIPIOS = [...new Set(linhasMunicipais.filter(item => temMedicao(item.producao)).map(item => item.municipio))];
     DADOS_LEITE.municipiosProducao = pivotarLeitePorAno(linhasMunicipais, "municipio", "producao");
     DADOS_LEITE.produtividadeMunicipios = pivotarLeitePorNome(
       linhasMunicipais.filter(item => Number(item.vacas) > 0 && temMedicao(item.producao))
@@ -569,6 +570,7 @@ function criarLegenda(chart, root) {
   l.labels.template.setAll({ fontSize: 11, fontFamily: "Arial,sans-serif" });
   return l;
 }
+
 // Oculta tabelas sem resultados, preservando seus estados de carregamento e erro.
 function alternarTabela(id, visivel) {
   const tabela = document.getElementById(id);
@@ -599,7 +601,7 @@ function setSelectOptions(id, valores) {
   select.innerHTML = valores.map(v => `<option value="${v}"${selecionadosAtuais.has(v) ? " selected" : ""}>${v}</option>`).join("");
 }
 // Reconstrói as opções marcáveis de um dropdown.
-function setDropdownOptions(menuId, valores, selecionados = []) {
+function setDropdownOptions(menuId, valores, selecionados = [], limite = Infinity) {
   const menu = document.getElementById(menuId);
   if (!menu) return;
   menu.replaceChildren(...valores.map(valor => {
@@ -611,6 +613,7 @@ function setDropdownOptions(menuId, valores, selecionados = []) {
     input.type = "checkbox";
     input.value = valor;
     input.checked = selecionados.includes(valor);
+    input.disabled = !input.checked && selecionados.length >= limite;
     const texto = document.createElement("span");
     texto.textContent = valor;
     label.append(input, texto);
@@ -708,16 +711,16 @@ function serieComparativa(anos, nomeInicio = "Início", nomeFim = "Fim") {
 }
 
 // Cria um gráfico de linhas reutilizável e registra seu método de atualização.
-function graficoLinhas(id, categoria, series, sufixo = "", alturaSemLegenda = 0) {
+function graficoLinhas(id, categoria, series = null, sufixo = "", alturaSemLegenda = 0) {
   const elemento = document.getElementById(id);
   if (!elemento) return;
   const root = criarRoot(id);
   const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
+  ativarTooltipDeLinhas(chart, root);
   const xA = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: categoria, renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 35 }), tooltip: am5.Tooltip.new(root, {}) }));
   const yA = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
   eixo(xA); eixo(yA);
-  const seriesMap = {};
-  series.forEach((nome, idx) => {
+  const criarSerie = (nome, idx) => {
     const s = chart.series.push(am5xy.LineSeries.new(root, {
       name: nome, xAxis: xA, yAxis: yA, valueYField: nome, categoryXField: categoria,
       stroke: am5.color(P[idx % P.length]), fill: am5.color(P[idx % P.length]),
@@ -725,8 +728,8 @@ function graficoLinhas(id, categoria, series, sufixo = "", alturaSemLegenda = 0)
     }));
     s.strokes.template.setAll({ strokeWidth: 2 });
     s.bullets.push(() => am5.Bullet.new(root, { sprite: am5.Circle.new(root, { radius: 3, fill: s.get("fill"), stroke: root.interfaceColors.get("background"), strokeWidth: 2 }) }));
-    seriesMap[nome] = s;
-  });
+  };
+  series?.forEach(criarSerie);
   const legenda = criarLegenda(chart, root);
   if (alturaSemLegenda) {
     const ajustarAltura = () => {
@@ -739,11 +742,18 @@ function graficoLinhas(id, categoria, series, sufixo = "", alturaSemLegenda = 0)
   legenda.data.setAll(chart.series.values);
   graficos[id] = {
     // Substitui dados e alterna apenas as séries selecionadas no filtro.
-    update(data, seriesAtivas = series) {
-      const ativos = new Set(seriesAtivas.filter(nome => data.some(item => Number.isFinite(item[nome]))));
+    update(data, seriesAtivas = series ?? []) {
+      const nomesAtivos = seriesAtivas.filter(nome => data.some(item => Number.isFinite(item[nome])));
+      const ativos = new Set(nomesAtivos);
+      if (!series && (chart.series.length !== nomesAtivos.length
+        || chart.series.values.some((s, indice) => s.get("name") !== nomesAtivos[indice]))) {
+        chart.series.clear();
+        nomesAtivos.forEach(criarSerie);
+        legenda.data.setAll(chart.series.values);
+      }
       xA.data.setAll(data);
-      Object.entries(seriesMap).forEach(([nome, s]) => {
-        const visivel = ativos.has(nome);
+      chart.series.values.forEach(s => {
+        const visivel = ativos.has(s.get("name"));
         s.data.setAll(data);
         s.set("visible", visivel);
         s.set("forceHidden", !visivel);
@@ -753,9 +763,18 @@ function graficoLinhas(id, categoria, series, sufixo = "", alturaSemLegenda = 0)
   };
   chart.appear(800, 80);
 }
+function quebrarRotulosDeBarrasHorizontais(rotulos, chart, elemento) {
+  rotulos.setAll({ oversizedBehavior: "wrap", maxWidth: 260 });
+  chart.events.on("boundschanged", () => {
+    const largura = Math.floor(elemento.clientWidth * 0.45);
+    if (largura > 0) rotulos.set("maxWidth", Math.min(260, largura));
+  });
+}
+
 // Cria barras verticais ou horizontais para uma única medida.
 function graficoBarras(id, categoria, valor, horizontal = false, sufixo = "", quebrarRotulos = false) {
-  if (!existe(id)) return;
+  const elemento = document.getElementById(id);
+  if (!elemento) return;
   const root = criarRoot(id);
   const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
   const cA = (horizontal ? chart.yAxes : chart.xAxes).push(am5xy.CategoryAxis.new(root, {
@@ -765,7 +784,9 @@ function graficoBarras(id, categoria, valor, horizontal = false, sufixo = "", qu
   const vA = (horizontal ? chart.xAxes : chart.yAxes).push(am5xy.ValueAxis.new(root, { renderer: horizontal ? am5xy.AxisRendererX.new(root, {}) : am5xy.AxisRendererY.new(root, {}) }));
   eixo(cA); eixo(vA);
   const rotulos = cA.get("renderer").labels.template;
-  if (quebrarRotulos) {
+  if (quebrarRotulos && horizontal) {
+    quebrarRotulosDeBarrasHorizontais(rotulos, chart, elemento);
+  } else if (quebrarRotulos) {
     rotulos.setAll({ oversizedBehavior: "wrap", textAlign: "center" });
     cA.onPrivate("cellWidth", largura => rotulos.set("maxWidth", largura));
   } else {
@@ -774,10 +795,12 @@ function graficoBarras(id, categoria, valor, horizontal = false, sufixo = "", qu
   const s = chart.series.push(am5xy.ColumnSeries.new(root, {
     xAxis: horizontal ? vA : cA, yAxis: horizontal ? cA : vA,
     valueXField: horizontal ? valor : undefined, valueYField: horizontal ? undefined : valor,
-    categoryYField: horizontal ? categoria : undefined, categoryXField: horizontal ? undefined : categoria,
-    tooltip: am5.Tooltip.new(root, { labelText: `{categoryX}{categoryY}: {valueX}{valueY}${sufixo}` })
+    categoryYField: horizontal ? categoria : undefined, categoryXField: horizontal ? undefined : categoria
   }));
-  s.columns.template.setAll({ cornerRadiusTL: 3, cornerRadiusTR: 3, cornerRadiusBR: horizontal ? 3 : 0 });
+  s.columns.template.setAll({
+    cornerRadiusTL: 3, cornerRadiusTR: 3, cornerRadiusBR: horizontal ? 3 : 0,
+    tooltipText: horizontal ? `{categoryY}: {valueX}${sufixo}` : `{categoryX}: {valueY}${sufixo}`
+  });
   s.columns.template.adapters.add("fill", (_fill, target) => am5.color(P[(target.dataItem?.get("index") || 0) % P.length]));
   s.columns.template.adapters.add("stroke", (_stroke, target) => am5.color(P[(target.dataItem?.get("index") || 0) % P.length]));
   graficos[id] = {
@@ -803,11 +826,7 @@ function graficoBarrasAgrupadas(id, categoria, series, sufixo = "", horizontal =
   const eixoValor = (horizontal ? chart.xAxes : chart.yAxes).push(am5xy.ValueAxis.new(root, { renderer: rendererValor }));
   eixo(eixoCategoria); eixo(eixoValor);
   if (horizontal) {
-    rendererCategoria.labels.template.setAll({ oversizedBehavior: "wrap", maxWidth: 260 });
-    chart.events.on("boundschanged", () => {
-      const largura = Math.floor(elemento.clientWidth * 0.45);
-      if (largura > 0) rendererCategoria.labels.template.set("maxWidth", Math.min(260, largura));
-    });
+    quebrarRotulosDeBarrasHorizontais(rendererCategoria.labels.template, chart, elemento);
   } else {
     rendererCategoria.labels.template.setAll({ oversizedBehavior: "truncate", maxWidth: 100 });
   }
@@ -817,12 +836,14 @@ function graficoBarrasAgrupadas(id, categoria, series, sufixo = "", horizontal =
       name: cfg.nome, xAxis: horizontal ? eixoValor : eixoCategoria, yAxis: horizontal ? eixoCategoria : eixoValor,
       valueXField: horizontal ? cfg.campo : undefined, valueYField: horizontal ? undefined : cfg.campo,
       categoryXField: horizontal ? undefined : categoria, categoryYField: horizontal ? categoria : undefined,
-      clustered: true,
-      tooltip: am5.Tooltip.new(root, { labelText: `${cfg.nome}: ${horizontal ? "{valueX}" : "{valueY}"}${sufixo}` })
+      clustered: true
     }));
     const formato = horizontal ? { height: am5.percent(55), cornerRadiusTR: 3, cornerRadiusBR: 3 }
       : { width: am5.percent(55), cornerRadiusTL: 3, cornerRadiusTR: 3 };
-    s.columns.template.setAll({ ...formato, fill: am5.color(P[idx]), stroke: am5.color(P[idx]) });
+    s.columns.template.setAll({
+      ...formato, fill: am5.color(P[idx]), stroke: am5.color(P[idx]),
+      tooltipText: horizontal ? `{categoryY} — ${cfg.nome}: {valueX}${sufixo}` : `{categoryX} — ${cfg.nome}: {valueY}${sufixo}`
+    });
     seriesMap[cfg.nome] = s;
   });
   criarLegenda(chart, root).data.setAll(chart.series.values);
@@ -843,8 +864,9 @@ function graficoBarrasAgrupadas(id, categoria, series, sufixo = "", horizontal =
   chart.appear(800, 80);
 }
 // Cria uma pizza e mantém legenda e fatias sincronizadas nas atualizações.
-function graficoPizza(id, categoria, valor) {
-  if (!existe(id)) return;
+function graficoPizza(id, categoria, valor, alturaSemLegenda = 0) {
+  const elemento = document.getElementById(id);
+  if (!elemento) return;
   const root = criarRoot(id);
   const chart = root.container.children.push(am5percent.PieChart.new(root, { layout: root.verticalLayout, innerRadius: am5.percent(55) }));
   const s = chart.series.push(am5percent.PieSeries.new(root, { valueField: valor, categoryField: categoria }));
@@ -852,12 +874,38 @@ function graficoPizza(id, categoria, valor) {
   s.get("colors").set("colors", P.map(c => am5.color(c)));
   const l = chart.children.push(am5.Legend.new(root, { centerX: am5.p50, x: am5.p50, marginTop: 10 }));
   l.labels.template.setAll({ fontSize: 10, fontFamily: "Arial,sans-serif" });
+  let categoriasVisiveis = 0;
+  const ajustarLegenda = () => {
+    const largura = elemento.clientWidth || 260;
+    const alturaItem = largura < 270 ? 42 : 34;
+    const alturaLegenda = categoriasVisiveis * alturaItem;
+    l.labels.template.set("maxWidth", Math.max(80, largura - 100));
+    l.itemContainers.template.set("height", alturaItem);
+    l.set("height", alturaLegenda);
+    const altura = `${alturaSemLegenda + alturaLegenda}px`;
+    if (elemento.style.height !== altura) {
+      elemento.style.height = altura;
+      root.resize();
+    }
+  };
+  if (alturaSemLegenda) {
+    s.labels.template.set("forceHidden", true);
+    s.ticks.template.set("forceHidden", true);
+    s.slices.template.set("tooltipText", "{category}: {valuePercentTotal.formatNumber('0.00')}%");
+    l.set("layout", root.verticalLayout);
+    l.labels.template.set("oversizedBehavior", "wrap");
+    chart.events.on("boundschanged", ajustarLegenda);
+  }
   graficos[id] = {
     // Substitui fatias e reconstrói a legenda com os novos itens.
     update(data) {
       s.data.setAll(data);
       l.data.setAll(s.dataItems);
       atualizarAvisoLeite(id, data.length > 0);
+      if (alturaSemLegenda) {
+        categoriasVisiveis = data.length;
+        ajustarLegenda();
+      }
     }
   };
   chart.appear(800, 80);
@@ -871,16 +919,16 @@ function inicializarEstruturaGraficos() {
   graficoBarras("chartVacasRegiao", "regiao", "quantidadeVacasOrdenhadas", true);
   graficoLinhas("chartVacasRegiaoSerie", "ano", SERIES_REGIAO);
   graficoLinhas("chartGoiasMeso", "ano", SERIES_MESO);
-  graficoPizza("chartGoiasMesoPie", "mesorregiao", "producao");
+  graficoPizza("chartGoiasMesoPie", "mesorregiao", "producao", 280);
   graficoBarrasAgrupadas("chartVacasGoias", "mesorregiao", [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }], "", true);
   graficoLinhas("chartVacasMesoSerie", "ano", SERIES_VACAS_MESO, "", 370);
   graficoBarras("chartLeiteProducaoCO", "estado", "producaoLeiteMilhoesLitros", false, " mil L");
   graficoBarras("chartProducaoCentroOesteUf", "estado", "producaoLeiteMilhoesLitros", false, " mil L", true);
   graficoLinhas("chartRebanhoCO", "ano", SERIES_UF_CO);
-  graficoLinhas("chartMunicipios", "ano", TODOS_MUNICIPIOS);
+  graficoLinhas("chartMunicipios", "ano", null, " mil L", 370);
   graficoBarrasAgrupadas("chartMunicipiosBars", "municipio", [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }]);
   graficoBarrasAgrupadas("chartProdutividadeMunicipios", "municipio", [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }], " L/vaca/ano");
-  graficoBarras("chartRankingConsumo", "categoria", "melhorPosicao", true);
+  graficoBarras("chartRankingConsumo", "categoria", "melhorPosicao", true, "", true);
 }
 
 // Distribui dados filtrados a gráficos, tabelas, KPIs e estados visuais.
@@ -894,7 +942,6 @@ function aplicarFiltros() {
   const anosMeso = anosNoPeriodo(ordenarAnos(DADOS_LEITE.producaoMeso.map(d => d.ano)));
   const anosVacasMeso = anosNoPeriodo(ordenarAnos(DADOS_LEITE.vacasMeso.flatMap(d => Object.keys(d).filter(k => /^\d{4}$/.test(k)))));
   const anosRebanho = anosNoPeriodo(ordenarAnos(DADOS_LEITE.rebanhoCO.flatMap(d => Object.keys(d).filter(k => /^\d{4}$/.test(k)))));
-  const anosMunicipios = anosNoPeriodo(ordenarAnos(DADOS_LEITE.municipiosProducao.map(d => d.ano)));
   const regioesSelecionadas = estadoFiltros.regioes;
   const regioes = estadoFiltros.ufs.length ? [] : seriesSelecionadas(SERIES_REGIAO, regioesSelecionadas);
   const retratoRegional = dados => dados.filter(item => regioes.includes(item.regiao));
@@ -947,12 +994,21 @@ function aplicarFiltros() {
   graficos.chartProducaoCentroOesteUf?.update(producaoCO);
   graficos.chartRebanhoCO?.update(dadosPorAno(DADOS_LEITE.rebanhoCO.filter(d => d.estado !== "Centro-Oeste"), "estado", anosRebanho, ufsCO), ufsCO);
 
-  graficos.chartMunicipios?.update(filtrarLinhasPorAno(DADOS_LEITE.municipiosProducao).map(d => ({ ...d, ano: String(d.ano) })), municipios);
-  graficos.chartMunicipiosBars?.update(municipios.map(municipio => ({ municipio, "Início": DADOS_LEITE.municipiosProducao.find(d => String(d.ano) === anosMunicipios[0])?.[municipio], "Fim": DADOS_LEITE.municipiosProducao.find(d => String(d.ano) === anosMunicipios.at(-1))?.[municipio] })).filter(d => d.Início !== undefined || d.Fim !== undefined).sort((a, b) => (b.Fim || 0) - (a.Fim || 0)).slice(0, 10), [{ nome: "Início", campo: "Início" }, { nome: "Fim", campo: "Fim" }]);
-  const anoProdutividadeAtual = ANOS_PRODUTIVIDADE_MUNICIPIOS.at(-1);
+  const producaoMunicipal = filtrarLinhasPorAno(DADOS_LEITE.municipiosProducao)
+    .filter(item => municipios.some(municipio => Number.isFinite(item[municipio])));
+  const producaoInicial = producaoMunicipal[0];
+  const producaoFinal = producaoMunicipal.at(-1);
+  const comparativoMunicipal = municipios.map(municipio => ({
+    municipio, "Início": producaoInicial?.[municipio], "Fim": producaoFinal?.[municipio]
+  })).filter(item => Number.isFinite(item.Início) || Number.isFinite(item.Fim))
+    .sort((a, b) => (b.Fim ?? -Infinity) - (a.Fim ?? -Infinity))
+    .slice(0, LIMITE_MUNICIPIOS_LEITE);
+  const municipiosLinha = estadoFiltros.municipios.length ? municipios : comparativoMunicipal.map(item => item.municipio);
+  graficos.chartMunicipios?.update(producaoMunicipal.map(item => ({ ...item, ano: String(item.ano) })), municipiosLinha);
+  graficos.chartMunicipiosBars?.update(comparativoMunicipal);
   const produtividadeMunicipal = DADOS_LEITE.produtividadeMunicipios
     .filter(item => municipios.includes(item.municipio) && ANOS_PRODUTIVIDADE_MUNICIPIOS.some(ano => Number.isFinite(item[ano])))
-    .sort((a, b) => (b[anoProdutividadeAtual] ?? -1) - (a[anoProdutividadeAtual] ?? -1));
+    .slice(0, LIMITE_MUNICIPIOS_LEITE);
   const comparacaoProdutividade = serieComparativa(ANOS_PRODUTIVIDADE_MUNICIPIOS);
   graficos.chartProdutividadeMunicipios?.update(
     dadosAgrupadosPorAnos(produtividadeMunicipal, "municipio", comparacaoProdutividade),
@@ -973,7 +1029,9 @@ function aplicarFiltros() {
   atualizarTextoVisualizacao("chartRankingConsumo", {
     subtitulo: `Aquisição domiciliar per capita — ${recorteRanking}${anoRanking ? ` · POF ${anoRanking}` : ""}`
   });
-  graficos.chartRankingConsumo?.update(ranking.filter(item => String(item.ano) === anoRanking));
+  const rankingAno = ranking.filter(item => String(item.ano) === anoRanking);
+  document.getElementById("chartRankingConsumo")?.style.setProperty("--categorias-visiveis", rankingAno.length);
+  graficos.chartRankingConsumo?.update(rankingAno);
   atualizarCardsLeite();
   atualizarCardsSecundariosLeite();
 
@@ -1010,7 +1068,7 @@ function atualizarResumoFiltros() {
   const chips = [
     `Indicador: ${estadoFiltros.indicador === "all" ? "todos" : estadoFiltros.indicador}`,
     estadoFiltros.anoInicio ? `Período: ${estadoFiltros.anoInicio}-${estadoFiltros.anoFim}` : "",
-    estadoFiltros.regioes.length ? `Região: ${estadoFiltros.regioes.length}` : "",
+    estadoFiltros.regioes.length ? `${document.getElementById("labelFiltroRegiao").textContent}: ${estadoFiltros.regioes.length}` : "",
     estadoFiltros.ufs.length ? `UF: ${estadoFiltros.ufs.length}` : "",
     estadoFiltros.municipios.length ? `Municípios: ${estadoFiltros.municipios.length}` : "",
     estadoFiltros.produtos.length ? `Produto do ranking: ${estadoFiltros.produtos.length}` : ""
@@ -1030,7 +1088,7 @@ function lerFiltrosDeFormulario() {
   }
   estadoFiltros.regioes = selecionadosDropdown("filtroRegiaoMenu");
   estadoFiltros.ufs = selecionadosDropdown("filtroUfMenu");
-  estadoFiltros.municipios = selecionadosDropdown("filtroMunicipioMenu");
+  estadoFiltros.municipios = selecionadosDropdown("filtroMunicipioMenu").slice(0, LIMITE_MUNICIPIOS_LEITE);
   estadoFiltros.produtos = selecionadosDropdown("filtroProdutoMenu");
   atualizarOpcoesDependentesLeite();
   atualizarLabelsDropdowns();
@@ -1047,8 +1105,7 @@ function municipiosDisponiveisLeite() {
     .map(item => item.municipio))].sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
-function fontesFiltrosLeite() {
-  const aba = document.querySelector("[data-tab-content].active")?.id || "lt-brasil";
+function fontesFiltrosLeite(aba) {
   const centroOeste = metadadosApi.centroOesteLinhas || [];
   if (aba === "lt-brasil") {
     return {
@@ -1071,7 +1128,13 @@ function fontesFiltrosLeite() {
 }
 
 function atualizarOpcoesDependentesLeite() {
-  const fontes = fontesFiltrosLeite();
+  const aba = document.querySelector("[data-tab-content].active")?.id || "lt-brasil";
+  const fontes = fontesFiltrosLeite(aba);
+  const rotuloRegiao = aba === "lt-mesorregioes" ? "Mesorregião" : "Região";
+  document.getElementById("labelFiltroRegiao").textContent = rotuloRegiao;
+  const buscaRegiao = document.getElementById("buscaRegiao");
+  buscaRegiao.placeholder = `Buscar ${rotuloRegiao.toLocaleLowerCase("pt-BR")}`;
+  buscaRegiao.setAttribute("aria-label", buscaRegiao.placeholder);
   const anos = ordenarAnos(Object.values(fontes).flat().map(item => item.ano ?? item.Ano));
   const noIntervalo = anosNoPeriodo(anos);
   estadoFiltros.anoInicio = noIntervalo[0] || anos[0] || "";
@@ -1082,6 +1145,7 @@ function atualizarOpcoesDependentesLeite() {
     select.value = indice === 0 ? estadoFiltros.anoInicio : estadoFiltros.anoFim;
     select.disabled = !anos.length;
   });
+  document.getElementById("filtroAnoInicio").closest(".filter-cluster").hidden = !anos.length;
 
   const ufs = new Map();
   [
@@ -1111,8 +1175,11 @@ function atualizarOpcoesDependentesLeite() {
   ].forEach(([controle, chave, valores]) => {
     const opcoes = [...new Set(valores)].sort((a, b) => a.localeCompare(b, "pt-BR"));
     estadoFiltros[chave] = estadoFiltros[chave].filter(item => opcoes.includes(item));
-    setDropdownOptions(`filtro${controle}Menu`, opcoes, estadoFiltros[chave]);
-    document.getElementById(`filtro${controle}Btn`).disabled = !opcoes.length;
+    const limite = chave === "municipios" ? LIMITE_MUNICIPIOS_LEITE : Infinity;
+    setDropdownOptions(`filtro${controle}Menu`, opcoes, estadoFiltros[chave], limite);
+    const botao = document.getElementById(`filtro${controle}Btn`);
+    botao.disabled = !opcoes.length;
+    botao.closest(".filter-cluster").hidden = !opcoes.length;
     document.getElementById(`busca${controle}`)?.dispatchEvent(new Event("input"));
   });
 }

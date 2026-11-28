@@ -208,6 +208,7 @@ function atualizarAvisoEucalipto(id, temDados) {
 function criarGraficoLinhasProdutos(containerId, dataSource, unidadePadrao) {
   if (!existe(containerId)) return;
   const { root, chart } = inicializarXY(containerId, { layoutVertical: true });
+  ativarTooltipDeLinhas(chart, root);
   const eixoX = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 40 }), tooltip: am5.Tooltip.new(root, {}) }));
   const eixoY = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
   configurarEixo(eixoX); configurarEixo(eixoY);
@@ -269,10 +270,9 @@ function criarGraficoValorProducao() {
       categoryXField: "ano",
       fill: am5.color(produto.cor),
       stroke: am5.color(produto.cor),
-      stacked: true,
-      tooltip: am5.Tooltip.new(root, { labelText: `${produto.nome}: R$ {valueY} mil` })
+      stacked: true
     }));
-    serie.columns.template.setAll({ cornerRadiusTL: 2, cornerRadiusTR: 2, width: am5.percent(60) });
+    serie.columns.template.setAll({ cornerRadiusTL: 2, cornerRadiusTR: 2, width: am5.percent(60), tooltipText: `${produto.nome} ({categoryX}): R$ {valueY} mil` });
     series[produto.campo] = serie;
   });
   const legenda = criarLegenda(chart, root);
@@ -313,10 +313,9 @@ function criarGraficoRankingProducao() {
     valueXField: "quantidadeProduzida",
     categoryYField: "municipio",
     fill: am5.color(P[0]),
-    stroke: am5.color(P[0]),
-    tooltip: am5.Tooltip.new(root, { labelText: "#{ranking} {localidade}: {valueX} m³" })
+    stroke: am5.color(P[0])
   }));
-  serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65) });
+  serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65), tooltipText: "#{ranking} {localidade}: {valueX} m³" });
 
   graficos[containerId] = {
     // Atualiza categorias, colunas e estado vazio do ranking.
@@ -345,10 +344,9 @@ function criarGraficoParticipacaoValor() {
     xAxis: eixoX,
     yAxis: eixoY,
     valueXField: "percentualParticipacaoValor",
-    categoryYField: "produto",
-    tooltip: am5.Tooltip.new(root, { labelText: "{categoryY}: {valueX}%" })
+    categoryYField: "produto"
   }));
-  serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65) });
+  serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65), tooltipText: "{categoryY}: {valueX}%" });
   serie.columns.template.adapters.add("fill", (fill, target) => am5.color(target.dataItem?.dataContext?.cor || P[0]));
   serie.columns.template.adapters.add("stroke", (stroke, target) => am5.color(target.dataItem?.dataContext?.cor || P[0]));
 

@@ -85,6 +85,13 @@ function containerDeDados(id) {
 
 const avisoSemDadosGrafico = "Não há dados para os filtros escolhidos.";
 
+function ativarTooltipDeLinhas(chart, root) {
+    chart.set("maxTooltipDistance", 0);
+    const cursor = chart.set("cursor", am5xy.XYCursor.new(root, {}));
+    cursor.lineX.set("visible", false);
+    cursor.lineY.set("visible", false);
+}
+
 function correspondeAoIndicador(coluna, indicador) {
     const indicadores = coluna.querySelector(".chart-area[data-indicadores]")?.dataset.indicadores.split(" ");
     return indicador === "all" || (indicadores || [coluna.dataset.category]).includes(indicador);

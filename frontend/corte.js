@@ -118,6 +118,7 @@ function criarLinhas(id, dados, campoCategoria, series, sufixo = "") {
   if (!dados.length || !seriesValidas.length) return mostrarSemDadosChart(id);
   const root = criarRoot(id);
   const chart = root.container.children.push(am5xy.XYChart.new(root, { panX: false, panY: false, layout: root.verticalLayout }));
+  ativarTooltipDeLinhas(chart, root);
   const eixoX = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: campoCategoria, renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 35 }), tooltip: am5.Tooltip.new(root, {}) }));
   const eixoY = chart.yAxes.push(am5xy.ValueAxis.new(root, { renderer: am5xy.AxisRendererY.new(root, {}) }));
   configurarEixo(eixoX); configurarEixo(eixoY); eixoX.data.setAll(dados);

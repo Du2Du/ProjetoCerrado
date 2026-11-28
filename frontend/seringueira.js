@@ -370,6 +370,7 @@ function criarGraficoLinhasUF(containerId, dados, campoValor, sufixoTooltip) {
   const ctx = inicializarXY(containerId, { layoutVertical: true });
   if (!ctx) return;
   const { root, chart } = ctx;
+  ativarTooltipDeLinhas(chart, root);
   const dadosGrafico = buildDadosUF(dados, campoValor);
 
   const eixoX = chart.xAxes.push(am5xy.CategoryAxis.new(root, {
@@ -435,10 +436,9 @@ function criarGraficoEstabelecimentos() {
     const serie = chart.series.push(am5xy.ColumnSeries.new(root, {
       name: produto, xAxis: eixoX, yAxis: eixoY,
       valueXField: produto, categoryYField: "condicaoProdutor", stacked: true,
-      fill: cor, stroke: cor,
-      tooltip: am5.Tooltip.new(root, { labelText: `${produto}: {valueX}` })
+      fill: cor, stroke: cor
     }));
-    serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65) });
+    serie.columns.template.setAll({ cornerRadiusTR: 4, cornerRadiusBR: 4, height: am5.percent(65), tooltipText: `{categoryY} — ${produto}: {valueX}` });
     serie.data.setAll(dados);
     seriesMap[produto] = serie;
   });
@@ -453,6 +453,7 @@ function criarGraficoIndicadores() {
   const ctx = inicializarXY("chartIndicadoresBorracha", { layoutVertical: true });
   if (!ctx) return;
   const { root, chart } = ctx;
+  ativarTooltipDeLinhas(chart, root);
   const dados = montarIndicadores();
 
   const eixoX  = chart.xAxes.push(am5xy.CategoryAxis.new(root, { categoryField: "ano", renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 40 }), tooltip: am5.Tooltip.new(root, {}) }));

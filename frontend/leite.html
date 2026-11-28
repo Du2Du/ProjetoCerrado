@@ -147,12 +147,25 @@
       display: none !important;
     }
 
+    .filter-cluster[hidden] {
+      display: none;
+    }
+
+    #chartRankingConsumo {
+      --altura-categoria: 32px;
+      height: max(370px, calc(48px + var(--categorias-visiveis, 0) * var(--altura-categoria)));
+    }
+
     @media (max-width: 768px) {
 
       .filter-cluster,
       .filter-actions {
         width: 100%;
         min-width: 0;
+      }
+
+      #chartRankingConsumo {
+        --altura-categoria: 46px;
       }
     }
   </style>
@@ -193,7 +206,7 @@
       </div>
     </div>
     <div class="filter-cluster filter-cluster--wide">
-      <span class="filter-label">Região</span>
+      <span id="labelFiltroRegiao" class="filter-label">Região</span>
       <div class="dropdown" data-bs-auto-close="outside">
         <button id="filtroRegiaoBtn" class="filter-dropdown-btn" type="button" data-bs-toggle="dropdown"
           data-bs-auto-close="outside" aria-expanded="false">Todas</button>
@@ -224,6 +237,7 @@
         <div class="dropdown-menu filter-dropdown-menu">
           <input id="buscaMunicipio" class="filter-search w-100 mb-2" type="search" placeholder="Buscar município"
             aria-label="Buscar município" />
+          <p class="small text-muted mb-2">Selecione até 10 municípios.</p>
           <div id="filtroMunicipioMenu"></div>
         </div>
       </div>
@@ -355,8 +369,8 @@
               </div>
             </div>
           </div>
-<div class="row g-4">
-            <div class="col-lg-6" data-category="mercado">
+          <div class="row g-4">
+            <div class="col-12 col-lg-10" data-category="mercado">
               <div class="chart-card" role="figure" aria-label="Gráfico: Ranking de consumo por UF">
                 <div class="chart-card__title">Ranking de Consumo por UF</div>
                 <div class="chart-card__sub">Aquisição domiciliar per capita</div>
