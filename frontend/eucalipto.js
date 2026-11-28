@@ -270,6 +270,7 @@ function criarGraficoLinhasProdutos(containerId, dataSource, unidadePadrao) {
     series[produto.campo] = serie;
   });
   const legenda = criarLegenda(chart, root);
+  ligarLegendaDeFiltro(legenda, serie => filtrarProdutoPeloGraficoEucalipto(serie?.get("valueYField")));
 
   graficos[containerId] = {
     // Atualiza o período e alterna os produtos selecionados.
@@ -320,6 +321,7 @@ function criarGraficoValorProducao() {
   ativarTooltipDeSeries(chart, root, "x");
   ligarFiltroDoValorEucalipto(chart, root);
   const legenda = criarLegenda(chart, root);
+  ligarLegendaDeFiltro(legenda, serie => filtrarProdutoPeloGraficoEucalipto(serie?.get("valueYField")));
 
   graficos[containerId] = {
     // Cada produto visível ocupa uma posição no grupo de colunas do ano.

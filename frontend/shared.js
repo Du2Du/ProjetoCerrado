@@ -156,6 +156,11 @@ function pontoDeLinhaFiltravel(root, estilo, obterAcao) {
     return am5.Bullet.new(root, { sprite });
 }
 
+function ligarLegendaDeFiltro(legenda, obterAcao) {
+    legenda.set("clickTarget", "none");
+    ligarCliqueDeFiltro(legenda.itemContainers.template, item => obterAcao(item?.dataContext));
+}
+
 function ligarRotuloDeFiltro(eixo, obterAcao) {
     const rotulos = eixo.get("renderer").labels.template;
     rotulos.setup = rotulo => {
